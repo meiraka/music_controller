@@ -1,0 +1,10 @@
+syntax: glob
+*.pyc
+*.pyo
+.*
+build/*
+dist/*
+debian/musiccontroller*
+debian/files
+python-module-stampdir/musiccontroller
+musiccontroller.egg-info*
