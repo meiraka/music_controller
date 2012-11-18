@@ -49,7 +49,7 @@ class Error(Exception):
 
 class Client(Object):
 	'''
-	MPD client. This can connect, control and manage mpd.
+	MPD client. This object can connect, control and manage mpd.
 
 	Attributes:
 		config -- connection settings for this client.
@@ -264,7 +264,7 @@ class Playlist(Object):
 		self.__connection = connection
 		self.__playback = playback
 		self.__config = config
-		self.__data = None
+		self.__data = []
 		self.__selected = []
 		self.__focused = []
 		self.__connection.bind(self.__connection.CONNECTED,self.__update_cache)
@@ -415,7 +415,7 @@ class Config(Object):
 		try:
 			if not os.path.exists(self.path):
 				os.makedirs(self.path)
-			f = codecs.open('config.json','w','utf8')
+			f = codecs.open(self.path + 'config.json','w','utf8')
 			f.write(dumps)
 			f.close()
 		except ValueError:
@@ -438,6 +438,7 @@ class Config(Object):
 			if len(profiles) == 0:
 				raise IndexError(0)
 		self.__config[u'profiles'] = profiles
+		self.save()
 		self.call(self.CONFIG_CHANGED)
 
 	profiles = property(__get_profiles,__set_profiles)
