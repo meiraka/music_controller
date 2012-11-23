@@ -3,6 +3,7 @@ import wx
 import client
 import frame
 import environment
+import thread
 
 class App(wx.App):
 	"""
@@ -12,11 +13,12 @@ class App(wx.App):
 		"""init this app"""
 		self.config_dir = environment.config_dir
 		self.client = client.Client(self.config_dir)
+		if params.has_key('debug'):self.__debug = True
+		else:self.__debug = False
 		wx.App.__init__(self)
 
 	def connect_default(self):
-		self.client.config.profiles = [[u'server',u'192.168.0.4',u'6600',False,u'']]
-		self.client.connect()
+		thread.start_new_thread(self.client.connect,())
 
 	def MainLoop(self):
 		wx.App.MainLoop(self)
@@ -26,7 +28,7 @@ class App(wx.App):
 		"""
 
 		self.connect_default()
-		self.frame = frame.Frame(None,self.client)
+		self.frame = frame.Frame(None,self.client,self.__debug)
 		self.frame.Show()
 		return True
 
