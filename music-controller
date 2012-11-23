@@ -1,0 +1,7 @@
+#!/usr/bin/python
+
+try:
+	import src as musiccontroller
+	musiccontroller.run()
+except:
+	import musiccontroller
