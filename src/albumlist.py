@@ -71,5 +71,6 @@ class AlbumList(wx.ListCtrl):
 		"""
 		index = self.GetNextItem(-1,wx.LIST_NEXT_ALL,wx.LIST_STATE_SELECTED)
 		if not index == -1 and index < len(self.index_song):
+			self.playlist.focused = self.index_song[index]
 
 		
