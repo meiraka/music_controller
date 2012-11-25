@@ -254,6 +254,8 @@ class Playback(Object,threading.Thread):
 		
 class Playlist(Object):
 	UPDATE = 'update'
+	FOCUS = 'focus'
+	SELECT = 'select'
 
 	class Song(Song):
 		def __init__(self,song,connection):
@@ -270,7 +272,7 @@ class Playlist(Object):
 		self.__config = config
 		self.__data = []
 		self.__selected = []
-		self.__focused = []
+		self.__focused = 0
 		self.__connection.bind(self.__connection.CONNECTED,self.__update_cache)
 		self.__playback.bind(self.__playback.UPDATED_PLAYLIST,self.__update_cache)
 
@@ -328,9 +330,18 @@ class Playlist(Object):
 		self.__connection.execute('clear',True)
 		self.__playback.update()
 
+	def __set_select(self,songs):
+		self.__selected = [int(song[u'pos']) for song in songs]
+		self.call(self.SELECT)
+
+	def __set_focus(self,song):
+		self.__focused = int(song[u'pos'])
+		self.call(self.FOCUS)
+
 	current = property(lambda self:copy.copy(self.__data[self.current_index]))
 	current_index = property(lambda self:int(self.__playback.status.song))
-	
+	selected = property(lambda self:[self.__data[pos] for pos in self.__selected],__set_select)
+	focused = property(lambda self:self.__data[self.__focused],__set_focus)
 		
 
 
