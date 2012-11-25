@@ -13,6 +13,7 @@ class App(wx.App):
 		"""init this app"""
 		self.config_dir = environment.config_dir
 		self.client = client.Client(self.config_dir)
+		self.client.start()
 		if params.has_key('debug'):self.__debug = True
 		else:self.__debug = False
 		wx.App.__init__(self)
