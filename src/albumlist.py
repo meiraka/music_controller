@@ -24,6 +24,7 @@ class AlbumList(wx.ListCtrl):
 		self.SetImageList(self.image_list,wx.IMAGE_LIST_SMALL)
 		self.playlist.bind(self.playlist.UPDATE,self.update)
 		self.Bind(wx.EVT_LIST_ITEM_SELECTED,self.OnClick)
+		self.Bind(wx.EVT_LIST_ITEM_ACTIVATED,self.OnActivate)
 
 	def update(self,*args,**kwargs):
 		thread.start_new_thread(self.__update,())
@@ -38,6 +39,7 @@ class AlbumList(wx.ListCtrl):
 				albums.append(song)
 				self.index_song.append(song)
 		wx.CallAfter(self.SetItemCount,len(self.index_song))
+		self.focus()
 
 	def __add_image_list(self,song):
 		path = self.artwork_loader[song]
@@ -57,6 +59,32 @@ class AlbumList(wx.ListCtrl):
 				self.image_list.Add(bmp)
 				self.SetImageList(self.image_list,wx.IMAGE_LIST_SMALL)
 
+	def focus(self,*args,**kwargs):
+		wx.CallAfter(self.__focus,self.playlist.focused)
+
+	def __focus(self,focus_song):
+		if focus_song and focus_song.has_key(u'album') and not focus_song == self.__get_selected():
+			current_index = self.GetNextItem(-1,wx.LIST_NEXT_ALL,wx.LIST_STATE_SELECTED)
+			prev = ''
+			index = -1
+			for song in self.playlist:
+				if not prev == song[u'album']:
+					prev = song[u'album']
+					index = index + 1
+				if song == focus_song:
+					break
+			if not current_index == index:
+				self.Focus(index)
+				self.Select(index,True)
+
+	def __get_selected(self):
+		index = self.GetNextItem(-1,wx.LIST_NEXT_ALL,wx.LIST_STATE_SELECTED)
+		if not index == -1 and index < len(self.index_song):
+			return self.index_song[index]
+		else:
+			return None
+
+
 	def OnGetItemText(self,row,col):
 		return ''
 
@@ -72,5 +100,14 @@ class AlbumList(wx.ListCtrl):
 		index = self.GetNextItem(-1,wx.LIST_NEXT_ALL,wx.LIST_STATE_SELECTED)
 		if not index == -1 and index < len(self.index_song):
 			self.playlist.focused = self.index_song[index]
+
+	def OnActivate(self,event=None):
+		"""Activates a item.
+		"""
+		index = self.GetNextItem(-1,wx.LIST_NEXT_ALL,wx.LIST_STATE_SELECTED)
+		if not index == -1 and index < len(self.index_song):
+			self.index_song[index].play()
+
+
 
 		
