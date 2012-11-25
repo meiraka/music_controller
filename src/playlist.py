@@ -22,22 +22,18 @@ class Playlist(wx.ListBox):
 		wx.CallAfter(self.__update_playlist)
 
 	def __update_playlist(self):
-		self.Clear()
 		songs = self.__filter()
 		if songs and not self.songs == songs:
+			self.Clear()
 			self.songs = songs
 			self.InsertItems([self._generate_title(song) for song in songs],0)
 
 	def __filter(self):
-		album_song = None
-		try:
-			album_song = self.playlist.focused
-		except:
-			pass
+		album_song = self.playlist.focused
 		if album_song and album_song.has_key(u'album'):
 			return [song for song in self.playlist if song.has_key(u'album') and song[u'album'] == album_song[u'album']]
 		else:
-			return [song for song in self.playlist]
+			return []
 			
 
 	def _generate_title(self,song):
