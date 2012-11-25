@@ -272,7 +272,7 @@ class Playlist(Object):
 		self.__config = config
 		self.__data = []
 		self.__selected = []
-		self.__focused = 0
+		self.__focused = None
 		self.__connection.bind(self.__connection.CONNECTED,self.__update_cache)
 		self.__playback.bind(self.__playback.UPDATED_PLAYLIST,self.__update_cache)
 
@@ -304,7 +304,27 @@ class Playlist(Object):
 		"""
 		data = self.__connection.execute('playlistinfo')
 		self.__data = [Playlist.Song(song,self.__connection) for song in data]
+		self.focus_select_to_current()
 		self.call(self.UPDATE,self.__data)
+
+	def focus_select_to_current(self):
+		""" set focus and select value to current song.
+		"""
+		if self.__playback.status:
+			status = self.__playback.status
+			song = self.__data[int(status[u'song'])]
+			self.__set_select([song])
+			self.__set_focus(song)
+
+	def __set_select(self,songs):
+		self.__selected = [int(song[u'pos']) for song in songs]
+		self.call(self.SELECT)
+
+	def __set_focus(self,song):
+		self.__focused = int(song[u'pos'])
+		self.call(self.FOCUS)
+
+
 
 
 	def append(self,song):
@@ -330,18 +350,10 @@ class Playlist(Object):
 		self.__connection.execute('clear',True)
 		self.__playback.update()
 
-	def __set_select(self,songs):
-		self.__selected = [int(song[u'pos']) for song in songs]
-		self.call(self.SELECT)
-
-	def __set_focus(self,song):
-		self.__focused = int(song[u'pos'])
-		self.call(self.FOCUS)
-
 	current = property(lambda self:copy.copy(self.__data[self.current_index]))
 	current_index = property(lambda self:int(self.__playback.status.song))
-	selected = property(lambda self:[self.__data[pos] for pos in self.__selected],__set_select)
-	focused = property(lambda self:self.__data[self.__focused],__set_focus)
+	selected = property(lambda self:[self.__data[pos] for pos in self.__selected if len(self.__data) > pos],__set_select)
+	focused = property(lambda self:self.__data[self.__focused] if not self.__focused == None and len(self.__data) > self.__focused else None,__set_focus)
 		
 
 
