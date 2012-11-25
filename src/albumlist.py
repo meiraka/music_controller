@@ -52,7 +52,6 @@ class AlbumList(wx.ListCtrl):
 				image.Rescale(*resize,quality=wx.IMAGE_QUALITY_HIGH)
 				bmp = wx.BitmapFromImage(image)
 				index = self.image_list.GetImageCount() 
-				print index,path
 				self.image_list_index[path] = index
 				self.image_list_album_index[song[u'album']] = index
 				self.image_list.Add(bmp)
@@ -72,7 +71,5 @@ class AlbumList(wx.ListCtrl):
 		"""
 		index = self.GetNextItem(-1,wx.LIST_NEXT_ALL,wx.LIST_STATE_SELECTED)
 		if not index == -1 and index < len(self.index_song):
-			print self.index_song[index]
-			print self.image_list_album_index[self.index_song[index][u'album']]
 
 		
