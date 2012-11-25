@@ -66,6 +66,9 @@ class Client(Object):
 	def connect(self,profile=None):
 		self.__connection.connect(profile)
 
+	def start(self):
+		self.__playback.start()
+
 	config = property(lambda self:self.__config)
 	playback = property(lambda self:self.__playback)
 	library = property(lambda self:self.__library)
@@ -214,6 +217,7 @@ class Playback(Object,threading.Thread):
 			self.__status = status
 			self.call(self.UPDATED,self.__status)
 			if not self.__check_playlist == self.__status[u'playlist']:
+				self.__check_playlist = self.__status[u'playlist']
 				self.call(self.UPDATED_PLAYLIST)
 			if not self.__check_library == False and \
 				not self.__status.has_key('updating_db'):
