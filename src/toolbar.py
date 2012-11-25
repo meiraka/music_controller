@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import wx
+import environment
 
 class MacToolbar(object):
 	def __init__(self,parent,playback):
@@ -26,10 +27,46 @@ class MacToolbar(object):
 			if event_id == id:
 				getattr(self.playback,func_name)()
 
+class GTKToolbar(object):
+	def __init__(self,parent,playback):
+		self.__tool = parent.CreateToolBar()
+		self.playback = playback
+		self.play = wx.Button(self.__tool,-1,u'play')
+		self.previous = wx.Button(self.__tool,-1,u'previous')
+		self.next = wx.Button(self.__tool,-1,u'next')
+		self.state = ''
+		self.__tool.Bind(wx.EVT_BUTTON,self.OnButton)
+		self.__tool.AddControl(self.previous)
+		self.__tool.AddControl(self.play)
+		self.__tool.AddControl(self.next)
+		self.__tool.Realize()
+		self.playback.bind(self.playback.UPDATED,self.update_label)
+
+	def update_label(self,*args,**kwargs):
+		wx.CallAfter(self.__update_label,self.playback.status)
+
+	def __update_label(self,status):
+		if not self.state == status[u'state']:
+			self.state = status[u'state']
+			if self.state == u'play':
+				self.play.SetLabel(u'pause')
+			else:
+				self.play.SetLabel(u'play')
+
+	def OnButton(self,event):
+		obj = event.GetEventObject()
+		if obj == self.play:
+			if self.state == u'play':
+				self.playback.pause()
+			else:
+				self.playback.play()
+		elif obj == self.next:
+			self.playback.next()
+		elif obj == self.previous:
+			self.playback.previous()
 		
-		
 
-
-
-
-Toolbar = MacToolbar
+if environment.gui == 'osx':
+	Toolbar = MacToolbar
+else:
+	Toolbar = GTKToolbar
