@@ -18,6 +18,7 @@ class AlbumList(wx.ListCtrl):
 		self.InsertColumn(0,'')
 		self.SetColumnWidth(0,150)
 		self.image_list = wx.ImageList(*self.__image_size)
+		self.image_list.Add(wx.EmptyBitmap(*self.__image_size))
 		self.index_song = []
 		self.image_list_index = {}
 		self.image_list_album_index = {}
