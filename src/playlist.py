@@ -8,15 +8,39 @@ import artwork
 
 class Playlist(wx.VListBox):
 	def __init__(self,parent,playlist,debug=False):
-		wx.VListBox.__init__(self,parent,-1)
+		wx.VListBox.__init__(self,parent,-1,style=wx.LB_MULTIPLE)
 		self.playlist = playlist
 		self.__debug = debug
 		self.ui_songs = []
-		self.screen_font = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
+		self.__focused = None
+		self.__selected = []
+		self.font = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT )
+		self.font_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOXTEXT)
 		self.image_size = (120,120)
 		self.albums = {}
 		self.artwork = artwork.Artwork()
 		self.playlist.bind(self.playlist.UPDATE,self.update_playlist)
+		self.playlist.bind(self.playlist.FOCUS,self.focus)
+		self.Bind(wx.EVT_LEFT_DCLICK,self.OnActivate)
+
+	def OnActivate(self,event):
+		index,n = self.GetFirstSelected()
+		if len(self.ui_songs) > index:
+			type,index,song = self.ui_songs[index]
+			if song:
+				song.play()
+
+	def focus(self,*args,**kwargs):
+		wx.CallAfter(self.__focus,self.playlist.focused)
+
+	def __focus(self,song):
+		self.DeselectAll()
+		for index,(t,i,s) in enumerate(self.ui_songs):
+			if t == 'song' and s == song:
+				self.Select(index,True)
+				if not self.IsRowVisible(index):
+					self.ScrollRows(index)
+				break
 
 	def update_playlist(self,*args,**kwargs):
 		wx.CallAfter(self.__update_playlist)
@@ -47,6 +71,8 @@ class Playlist(wx.VListBox):
 			return '?'
 
 	def OnMeasureItem(self, index):
+		if len(self.ui_songs) <= index:
+			return 0
 		type,index,song = self.ui_songs[index]
 		if type == 'head':
 			return 20 * 2
@@ -55,9 +81,8 @@ class Playlist(wx.VListBox):
 
 	def OnDrawItem(self,dc,rect,index):
 		#dc = wx.BufferedDC(dc)
-		bg_color = wx.Colour(0,0,0,150)
-		dc.SetTextForeground(bg_color)
-		dc.SetFont(self.screen_font)
+		dc.SetTextForeground(self.font_color)
+		dc.SetFont(self.font)
 		type,index,song = self.ui_songs[index]
 		if type == 'nop':
 			self.OnDrawNothing(dc,rect,song,index)
@@ -102,10 +127,11 @@ class Playlist(wx.VListBox):
 			image = wx.Image(path)
 			w,h = image.GetSize()
 			if w > h:
-				new_size = (self.image_size[0],h/w*self.image_size[1])
+				new_size = (self.image_size[0],int(1.0*h/w*self.image_size[1]))
 			else:
-				new_size = (w/h*self.image_size[0],self.image_size[1])
-			image.Rescale(*new_size,quality=wx.IMAGE_QUALITY_HIGH)
+				new_size = (int(1.0*w/h*self.image_size[0]),self.image_size[1])
+			if all([i > 0 for i in new_size]):
+				image.Rescale(*new_size,quality=wx.IMAGE_QUALITY_HIGH)
 			wx.CallAfter(self.__load_image,song,image)
 	
 	def __load_image(self,song,image):
