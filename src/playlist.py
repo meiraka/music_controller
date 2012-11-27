@@ -109,24 +109,36 @@ class Playlist(wx.VListBox):
 		self.OnDrawAlbum(dc,rect,song,index)
 
 	def OnDrawHead(self,dc,rect,song,index):
-			text = song[u'album']
-			size = dc.GetTextExtent(text)
+			left_text = song[u'album']
+			right_text = song[u'genre'] if song.has_key(u'genre') else u''
+			size = dc.GetTextExtent(left_text+right_text)
 			w,h = rect.GetSize()
 			p = h/2 + (h/2 - size[1]) / 2
-			pos = rect.GetPosition()
-			pos[1] = pos[1] + p
-			dc.DrawText(text,*pos)
+			left_pos = rect.GetPosition()
+			right_pos = rect.GetPosition()
+			left_pos[1] = left_pos[1] + p
+			right_pos[1] = right_pos[1] + p
+			right_pos[0] = right_pos[0] - dc.GetTextExtent(right_text)[0] + dc.GetSize()[0]
+			dc.DrawText(left_text,*left_pos)
+			dc.DrawText(right_text,*right_pos)
 
 	def OnDrawSong(self,dc,rect,song,index):
-			pos = rect.GetPosition()
+			left_text = song[u'title']
+			time = int(song[u'time'])
+			right_text = u'%i:%i' % (time/60, time%60)
+			pad = (rect.GetSize()[1] - dc.GetTextExtent(left_text+right_text)[1]) / 2
+			margin = 10
+			left_pos = rect.GetPosition()
+			right_pos = rect.GetPosition()
 			if index < self.image_size[1] / 20:
 				self.OnDrawAlbum(dc,rect,song,index)
-				pos[0] = pos[0] + self.image_size[0]
-			text = song[u'title']
-			size = dc.GetTextExtent(text)
-			pad = (rect.GetSize()[1] - size[1]) / 2
-			pos = [i+pad for i in pos]
-			dc.DrawText(song[u'title'],*pos)
+				left_pos[0] = left_pos[0] + self.image_size[0]
+			left_pos[0] = left_pos[0] + margin
+			right_pos[0] = right_pos[0] - dc.GetTextExtent(right_text)[0] + rect.GetSize()[0] - margin
+			left_pos = [i+pad for i in left_pos]
+			right_pos = [i+pad for i in right_pos]
+			dc.DrawText(left_text,*left_pos)
+			dc.DrawText(right_text,*right_pos)
 
 	def OnDrawAlbum(self,dc,rect,song,index):
 		bmp = self.get_album(song)
