@@ -16,7 +16,12 @@ class Playlist(wx.VListBox):
 		self.__selected = []
 		self.font = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT )
 		self.font_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOXTEXT)
+		self.active_background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT )
+		self.background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX)
 		self.image_size = (120,120)
+		self.list_head_size = 2
+		self.list_height = 20
+		self.list_min_row = 6
 		self.albums = {}
 		self.artwork = artwork.Artwork()
 		self.playlist.bind(self.playlist.UPDATE,self.update_playlist)
@@ -38,9 +43,8 @@ class Playlist(wx.VListBox):
 		for index,(t,i,s) in enumerate(self.ui_songs):
 			if t == 'song' and s == song:
 				self.Select(index,True)
-				if not self.IsRowVisible(index):
-					self.ScrollRows(index)
-				break
+				if not self.IsVisible(index):
+					self.ScrollLines(index)
 
 	def update_playlist(self,*args,**kwargs):
 		wx.CallAfter(self.__update_playlist)
@@ -48,21 +52,21 @@ class Playlist(wx.VListBox):
 	def __update_playlist(self):
 		head = u''
 		song_count = 0
-		min_row = 6
 		self.ui_songs = []
 		old_song = None
 		for song in self.playlist:
 			new_head = self.head(song)
 			if not head == new_head:
 				head = new_head
-				if self.ui_songs and song_count < min_row:
-					self.ui_songs.extend([('nop',i+song_count,old_song) for i in xrange(min_row-song_count)])
+				if self.ui_songs and song_count < self.list_min_row:
+					self.ui_songs.extend([('nop',i+song_count,old_song) for i in xrange(self.list_min_row-song_count)])
 				song_count = 0
 				self.ui_songs.append(('head',0,song))
 			self.ui_songs.append(('song',song_count,song))
 			old_song = song
 			song_count = song_count + 1
 		self.SetItemCount(len(self.ui_songs))
+		self.focus()
 
 	def head(self,song):
 		if song.has_key(u'album'):
@@ -71,16 +75,26 @@ class Playlist(wx.VListBox):
 			return '?'
 
 	def OnMeasureItem(self, index):
-		if len(self.ui_songs) <= index:
-			return 0
-		type,index,song = self.ui_songs[index]
-		if type == 'head':
-			return 20 * 2
+		if len(self.ui_songs) > index and self.ui_songs[index][0] == 'head':
+			return self.list_height * self.list_head_size
 		else:
-			return 20
+			return self.list_height
+
+	def OnDrawBackground(self,dc,rect,index):
+		dc = wx.BufferedDC(dc)
+		if self.IsSelected(index):
+			color = self.active_background_color
+		else:
+			color = self.background_color
+		dc.SetBrush(wx.Brush(color))
+		dc.SetPen(wx.Pen(color))
+		dc.DrawRectangle(*list(rect.GetPosition())+ list(rect.GetSize()))
 
 	def OnDrawItem(self,dc,rect,index):
-		#dc = wx.BufferedDC(dc)
+		dc = wx.BufferedDC(dc)
+		#dc.SetBrush(wx.Brush(self.background_color))
+		#dc.SetPen(wx.Pen(self.background_color))
+		#dc.DrawRectangle(*list(rect.GetPosition())+ list(rect.GetSize()))
 		dc.SetTextForeground(self.font_color)
 		dc.SetFont(self.font)
 		type,index,song = self.ui_songs[index]
@@ -147,5 +161,6 @@ class Playlist(wx.VListBox):
 	def __load_image(self,song,image):
 		bmp = wx.BitmapFromImage(image)
 		self.albums[song[u'album']] = bmp
-		self.SetItemCount(len(self.ui_songs))
+		self.RefreshAll()
+		#self.SetItemCount(len(self.ui_songs))
 
