@@ -19,7 +19,12 @@ class App(wx.App):
 		wx.App.__init__(self)
 
 	def connect_default(self):
-		thread.start_new_thread(self.client.connect,())
+		thread.start_new_thread(self.__connect_default,())
+
+	def __connect_default(self):
+		for profile in self.client.config.profiles:
+			if self.client.connect(profile):
+				break
 
 	def MainLoop(self):
 		wx.App.MainLoop(self)
