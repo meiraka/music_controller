@@ -2,6 +2,6 @@
 
 try:
 	import src as musiccontroller
-	musiccontroller.run()
+	musiccontroller.run(debug=True)
 except:
 	import musiccontroller
