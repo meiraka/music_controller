@@ -81,7 +81,7 @@ class Playlist(wx.VListBox):
 			return self.list_height
 
 	def OnDrawBackground(self,dc,rect,index):
-		dc = wx.BufferedDC(dc)
+		#dc = wx.BufferedDC(dc)
 		if self.IsSelected(index):
 			color = self.active_background_color
 		else:
@@ -91,7 +91,7 @@ class Playlist(wx.VListBox):
 		dc.DrawRectangle(*list(rect.GetPosition())+ list(rect.GetSize()))
 
 	def OnDrawItem(self,dc,rect,index):
-		dc = wx.BufferedDC(dc)
+		#dc = wx.BufferedDC(dc)
 		#dc.SetBrush(wx.Brush(self.background_color))
 		#dc.SetPen(wx.Pen(self.background_color))
 		#dc.DrawRectangle(*list(rect.GetPosition())+ list(rect.GetSize()))
@@ -125,7 +125,7 @@ class Playlist(wx.VListBox):
 	def OnDrawSong(self,dc,rect,song,index):
 			left_text = song[u'title']
 			time = int(song[u'time'])
-			right_text = u'%i:%i' % (time/60, time%60)
+			right_text = u'%i:%2i' % (time/60, time%60)
 			pad = (rect.GetSize()[1] - dc.GetTextExtent(left_text+right_text)[1]) / 2
 			margin = 10
 			left_pos = rect.GetPosition()
@@ -174,5 +174,4 @@ class Playlist(wx.VListBox):
 		bmp = wx.BitmapFromImage(image)
 		self.albums[song[u'album']] = bmp
 		self.RefreshAll()
-		#self.SetItemCount(len(self.ui_songs))
 
