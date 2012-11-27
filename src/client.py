@@ -64,7 +64,7 @@ class Client(Object):
 		self.__playlist   = Playlist(self.__connection,self.__playback,self.__config)
 
 	def connect(self,profile=None):
-		self.__connection.connect(profile)
+		return self.__connection.connect(profile)
 
 	def start(self):
 		self.__playback.start()
@@ -283,10 +283,7 @@ class Playlist(Object):
 		self.__current = None
 		self.__connection.bind(self.__connection.CONNECTED,self.__update_cache)
 		self.__playback.bind(self.__playback.UPDATE_PLAYLIST,self.__update_cache)
-		self.__playback.bind(self.__playback.UPDATE,self.__focus_current)
-
-	def __focus_current(self,*args,**kwargs):
-		self.focus_select_to_current()
+		self.__playback.bind(self.__playback.UPDATE,self.__focus_playling)
 
 	def __iter__(self):
 		return list.__iter__(self.__data)
@@ -316,11 +313,11 @@ class Playlist(Object):
 		"""
 		data = self.__connection.execute('playlistinfo')
 		self.__data = [Playlist.Song(song,self.__connection) for song in data]
-		self.focus_select_to_current()
+		self.focus_playling()
 		self.call(self.UPDATE,self.__data)
 
-	def focus_select_to_current(self):
-		""" set focus and select value to current song.
+	def focus_playling(self):
+		""" set focus and select value to current playing song.
 		"""
 		if self.__playback.status and self.__playback.status.has_key(u'song'):
 			status = self.__playback.status
@@ -329,6 +326,9 @@ class Playlist(Object):
 				self.__current = song
 				self.__set_select([song])
 				self.__set_focus(song)
+
+	def __focus_playling(self,*args,**kwargs):
+		self.focus_playling()
 
 	def __set_select(self,songs):
 		self.__selected = [int(song[u'pos']) for song in songs]
