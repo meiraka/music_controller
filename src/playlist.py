@@ -113,20 +113,23 @@ class Playlist(wx.VListBox):
 			right_text = song[u'genre'] if song.has_key(u'genre') else u''
 			size = dc.GetTextExtent(left_text+right_text)
 			w,h = rect.GetSize()
+			margin = 10
 			p = h/2 + (h/2 - size[1]) / 2
 			left_pos = rect.GetPosition()
 			right_pos = rect.GetPosition()
 			left_pos[1] = left_pos[1] + p
 			right_pos[1] = right_pos[1] + p
 			right_pos[0] = right_pos[0] - dc.GetTextExtent(right_text)[0] + dc.GetSize()[0]
+			left_pos[0] = left_pos[0] + margin
+			right_pos[0] = right_pos[0] - margin
 			dc.DrawText(left_text,*left_pos)
 			dc.DrawText(right_text,*right_pos)
 
 	def OnDrawSong(self,dc,rect,song,index):
 			left_text = song[u'title']
 			time = int(song[u'time'])
-			right_text = u'%i:%2i' % (time/60, time%60)
-			pad = (rect.GetSize()[1] - dc.GetTextExtent(left_text+right_text)[1]) / 2
+			right_text = u'%i:%s' % (time/60, str(time%60).zfill(2))
+			pad = (rect.GetSize()[1] - dc.GetTextExtent('A-glFf')[1]) / 2
 			margin = 10
 			left_pos = rect.GetPosition()
 			right_pos = rect.GetPosition()
