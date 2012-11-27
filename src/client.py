@@ -150,6 +150,13 @@ class Connection(Object):
 					self.__connection.command_list_end()
 			except mpd.MPDError,err:
 				print traceback.format_exc()
+			except socket.timeout,err:
+				pass
+			except socket.error:
+				print 'socket error'
+				print traceback.format_exc()
+			except AttributeError,err:
+				pass
 			except Exception,err:
 				print traceback.format_exc()
 			finally:
@@ -213,7 +220,7 @@ class Playback(Object,threading.Thread):
 
 	def update(self):
 		status = self.connection.execute('status')
-		if not self.__status == status:
+		if status and not self.__status == status:
 			self.__status = status
 			self.call(self.UPDATED,self.__status)
 			if not self.__check_playlist == self.__status[u'playlist']:
@@ -310,7 +317,7 @@ class Playlist(Object):
 	def focus_select_to_current(self):
 		""" set focus and select value to current song.
 		"""
-		if self.__playback.status:
+		if self.__playback.status and self.__playback.status.has_key(u'song'):
 			status = self.__playback.status
 			song = self.__data[int(status[u'song'])]
 			self.__set_select([song])
