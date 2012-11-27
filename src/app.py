@@ -22,9 +22,19 @@ class App(wx.App):
 		thread.start_new_thread(self.__connect_default,())
 
 	def __connect_default(self):
+		if self.__debug: print 'connect to default host..'
+		if self.client.connect():
+			if self.__debug: print 'connected.'
+			return
+		else:
+			if self.__debug: print 'fail.'
 		for profile in self.client.config.profiles:
+			if self.__debug: print 'connect to %s host..' % str(profile)
 			if self.client.connect(profile):
+				if self.__debug: print 'connected. (^-^)'
 				break
+			else:
+				if self.__debug: print 'fail! (>_<)'
 
 	def MainLoop(self):
 		wx.App.MainLoop(self)
