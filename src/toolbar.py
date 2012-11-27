@@ -66,7 +66,7 @@ class GTKToolbar(object):
 			self.playback.previous()
 		
 
-if environment.gui == 'osx':
+if environment.gui == 'mac':
 	Toolbar = MacToolbar
 else:
 	Toolbar = GTKToolbar
