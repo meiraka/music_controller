@@ -40,7 +40,7 @@ class GTKToolbar(object):
 		self.__tool.AddControl(self.play)
 		self.__tool.AddControl(self.next)
 		self.__tool.Realize()
-		self.playback.bind(self.playback.UPDATED,self.update_label)
+		self.playback.bind(self.playback.UPDATE,self.update_label)
 
 	def update_label(self,*args,**kwargs):
 		wx.CallAfter(self.__update_label,self.playback.status)

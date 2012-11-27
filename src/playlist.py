@@ -95,13 +95,23 @@ class Playlist(wx.VListBox):
 		self.OnDrawAlbum(dc,rect,song,index)
 
 	def OnDrawHead(self,dc,rect,song,index):
-			dc.DrawText(song[u'album'],*rect.GetPosition())
+			text = song[u'album']
+			size = dc.GetTextExtent(text)
+			w,h = rect.GetSize()
+			p = h/2 + (h/2 - size[1]) / 2
+			pos = rect.GetPosition()
+			pos[1] = pos[1] + p
+			dc.DrawText(text,*pos)
 
 	def OnDrawSong(self,dc,rect,song,index):
 			pos = rect.GetPosition()
 			if index < self.image_size[1] / 20:
 				self.OnDrawAlbum(dc,rect,song,index)
 				pos[0] = pos[0] + self.image_size[0]
+			text = song[u'title']
+			size = dc.GetTextExtent(text)
+			pad = (rect.GetSize()[1] - size[1]) / 2
+			pos = [i+pad for i in pos]
 			dc.DrawText(song[u'title'],*pos)
 
 	def OnDrawAlbum(self,dc,rect,song,index):

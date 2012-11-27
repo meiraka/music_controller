@@ -189,13 +189,13 @@ class Playback(Object,threading.Thread):
 	Controlls playback interface.
 
 	Event signals:
-		UPDATED -- when status has been changed.
-		UPDATED_DATABASE -- when database updating job was finished.
-		UPDATED_PLAYLIST -- when playlist has been changed.
+		UPDATE -- when status has been changed.
+		UPDATE_DATABASE -- when database updating job was finished.
+		UPDATE_PLAYLIST -- when playlist has been changed.
 	'''
-	UPDATED = 'updated'
-	UPDATED_DATABASE = 'updated_database'
-	UPDATED_PLAYLIST = 'updated_playlist'
+	UPDATE = 'updated'
+	UPDATE_DATABASE = 'updated_database'
+	UPDATE_PLAYLIST = 'updated_playlist'
 	def __init__(self,connection,config):
 		Object.__init__(self)
 		threading.Thread.__init__(self)
@@ -222,13 +222,13 @@ class Playback(Object,threading.Thread):
 		status = self.connection.execute('status')
 		if status and not self.__status == status:
 			self.__status = status
-			self.call(self.UPDATED,self.__status)
+			self.call(self.UPDATE,self.__status)
 			if not self.__check_playlist == self.__status[u'playlist']:
 				self.__check_playlist = self.__status[u'playlist']
-				self.call(self.UPDATED_PLAYLIST)
+				self.call(self.UPDATE_PLAYLIST)
 			if not self.__check_library == False and \
 				not self.__status.has_key('updating_db'):
-				self.call(self.UPDATED_DATABASE)
+				self.call(self.UPDATE_DATABASE)
 			elif self.__status.has_key('updating_db'):
 				self.__check_library = self.__status['updating_db']
 
@@ -280,8 +280,13 @@ class Playlist(Object):
 		self.__data = []
 		self.__selected = []
 		self.__focused = None
+		self.__current = None
 		self.__connection.bind(self.__connection.CONNECTED,self.__update_cache)
-		self.__playback.bind(self.__playback.UPDATED_PLAYLIST,self.__update_cache)
+		self.__playback.bind(self.__playback.UPDATE_PLAYLIST,self.__update_cache)
+		self.__playback.bind(self.__playback.UPDATE,self.__focus_current)
+
+	def __focus_current(self,*args,**kwargs):
+		self.focus_select_to_current()
 
 	def __iter__(self):
 		return list.__iter__(self.__data)
@@ -320,8 +325,10 @@ class Playlist(Object):
 		if self.__playback.status and self.__playback.status.has_key(u'song'):
 			status = self.__playback.status
 			song = self.__data[int(status[u'song'])]
-			self.__set_select([song])
-			self.__set_focus(song)
+			if not song == self.__current:
+				self.__current = song
+				self.__set_select([song])
+				self.__set_focus(song)
 
 	def __set_select(self,songs):
 		self.__selected = [int(song[u'pos']) for song in songs]
@@ -374,7 +381,7 @@ class Library(Object):
 		self.__config = config
 		self.__data = []
 		self.__connection.bind(self.__connection.CONNECTED,self.__update_cache)
-		self.__playback.bind(self.__playback.UPDATED_DATABASE,self.__update_cache)
+		self.__playback.bind(self.__playback.UPDATE_DATABASE,self.__update_cache)
 
 	def __iter__(self):
 		return list.__iter__(self.__data)
