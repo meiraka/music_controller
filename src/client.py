@@ -81,7 +81,8 @@ class Connection(Object):
 	To connect to mpd, call the Connection.connect().
 	'''
 
-	CONNECTED = 'connected'
+	CONNECT = 'connect'
+	CLOSE = 'close'
 
 	def __init__(self,config):
 		Object.__init__(self)
@@ -90,6 +91,7 @@ class Connection(Object):
 		self.__connection = None
 		self.__lock = thread.allocate_lock()
 		self.__status = ''
+		self.connected = False
 
 	def connect(self,profile=None):
 		'''connect to mpd daemon.
@@ -109,7 +111,8 @@ class Connection(Object):
 			connection.connect(profile[1].encode('utf8'),int(profile[2]))
 			self.__connection = connection
 			self.current = copy.copy(profile)
-			self.call(self.CONNECTED)
+			self.connected = True
+			self.call(self.CONNECT)
 		except mpd.MPDError,err:
 			self.__status = err
 			return False
@@ -131,6 +134,8 @@ class Connection(Object):
 		structure of mpd returns.
 		''' 
 		value = None
+		if not self.connected:
+			return value
 		if self.__lock.acquire(not(skip)):
 			try:
 				if type(func_name) == str or type(func_name) == unicode:
@@ -153,8 +158,8 @@ class Connection(Object):
 			except socket.timeout,err:
 				pass
 			except socket.error:
-				print 'socket error'
-				print traceback.format_exc()
+				self.connected = False
+				self.call(self.CLOSE)
 			except AttributeError,err:
 				pass
 			except Exception,err:
@@ -281,7 +286,7 @@ class Playlist(Object):
 		self.__selected = []
 		self.__focused = None
 		self.__current = None
-		self.__connection.bind(self.__connection.CONNECTED,self.__update_cache)
+		self.__connection.bind(self.__connection.CONNECT,self.__update_cache)
 		self.__playback.bind(self.__playback.UPDATE_PLAYLIST,self.__update_cache)
 		self.__playback.bind(self.__playback.UPDATE,self.__focus_playling)
 
@@ -380,7 +385,7 @@ class Library(Object):
 		self.__playback = playback
 		self.__config = config
 		self.__data = []
-		self.__connection.bind(self.__connection.CONNECTED,self.__update_cache)
+		self.__connection.bind(self.__connection.CONNECT,self.__update_cache)
 		self.__playback.bind(self.__playback.UPDATE_DATABASE,self.__update_cache)
 
 	def __iter__(self):
