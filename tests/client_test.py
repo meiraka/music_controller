@@ -1,7 +1,7 @@
 import unittest
-import client
 import time
 import random
+import client
 
 class TestClientConfig(unittest.TestCase):
 	def setUp(self):
@@ -95,5 +95,5 @@ class TestClientPlaylist(unittest.TestCase):
 		self.assertNotIn(song1[u'file'],self.mpd.playlist)
 		self.assertNotIn(song2[u'file'],self.mpd.playlist)
 
-
-unittest.main()
+if __name__ == '__main__':
+	unittest.main()
