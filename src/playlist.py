@@ -7,9 +7,10 @@ import wx
 import artwork
 
 class Playlist(wx.VListBox):
-	def __init__(self,parent,playlist,debug=False):
+	def __init__(self,parent,playlist,playback,debug=False):
 		wx.VListBox.__init__(self,parent,-1,style=wx.LB_MULTIPLE)
 		self.playlist = playlist
+		self.playback = playback
 		self.__debug = debug
 		self.ui_songs = []
 		self.__focused = None
@@ -23,10 +24,24 @@ class Playlist(wx.VListBox):
 		self.list_height = 20
 		self.list_min_row = 6
 		self.albums = {}
+		self.pos_line = {}
 		self.artwork = artwork.Artwork()
 		self.playlist.bind(self.playlist.UPDATE,self.update_playlist)
 		self.playlist.bind(self.playlist.FOCUS,self.focus)
+		self.playback.bind(self.playback.UPDATE,self.refresh)
 		self.Bind(wx.EVT_LEFT_DCLICK,self.OnActivate)
+
+	def refresh(self,*args):
+		wx.CallAfter(self.__refresh)
+
+	def __refresh(self):
+		status = self.playback.status
+		if status and status.has_key(u'song'):
+			song_id = status[u'song']
+		else:
+			return
+		if self.pos_line.has_key(song_id):
+			self.RefreshLine(self.pos_line[song_id])
 
 	def OnActivate(self,event):
 		index,n = self.GetFirstSelected()
@@ -62,6 +77,7 @@ class Playlist(wx.VListBox):
 					self.ui_songs.extend([('nop',i+song_count,old_song) for i in xrange(self.list_min_row-song_count)])
 				song_count = 0
 				self.ui_songs.append(('head',0,song))
+			self.pos_line[song[u'pos']] = len(self.ui_songs)
 			self.ui_songs.append(('song',song_count,song))
 			old_song = song
 			song_count = song_count + 1
@@ -101,7 +117,10 @@ class Playlist(wx.VListBox):
 		if type == 'nop':
 			self.OnDrawNothing(dc,rect,song,index)
 		elif type == 'song':
-			self.OnDrawSong(dc,rect,song,index)
+			if song[u'pos'] == self.playback.status[u'song']:
+				self.OnDrawCurrentSong(dc,rect,song,index)
+			else:
+				self.OnDrawSong(dc,rect,song,index)
 		else:
 			self.OnDrawHead(dc,rect,song,index)
 
@@ -142,6 +161,30 @@ class Playlist(wx.VListBox):
 			right_pos = [i+pad for i in right_pos]
 			dc.DrawText(left_text,*left_pos)
 			dc.DrawText(right_text,*right_pos)
+
+	def OnDrawCurrentSong(self,dc,rect,song,index):
+			left_text = u'>>>' + song[u'title']
+			time = int(song[u'time'])
+			status = self.playback.status
+			if status and status.has_key(u'time'):
+				right_text = '/'.join([ u'%i:%s' % (int(i)/60,str(int(i)%60).zfill(2)) for i in status[u'time'].split(u':')])
+			else:
+				right_text = u'%i:%s' % (time/60, str(time%60).zfill(2))
+			pad = (rect.GetSize()[1] - dc.GetTextExtent('A-glFf')[1]) / 2
+			margin = 10
+			left_pos = rect.GetPosition()
+			right_pos = rect.GetPosition()
+			if index < self.image_size[1] / 20:
+				self.OnDrawAlbum(dc,rect,song,index)
+				left_pos[0] = left_pos[0] + self.image_size[0]
+			left_pos[0] = left_pos[0] + margin
+			right_pos[0] = right_pos[0] - dc.GetTextExtent(right_text)[0] + rect.GetSize()[0] - margin
+			left_pos = [i+pad for i in left_pos]
+			right_pos = [i+pad for i in right_pos]
+			dc.DrawText(left_text,*left_pos)
+			dc.DrawText(right_text,*right_pos)
+
+
 
 	def OnDrawAlbum(self,dc,rect,song,index):
 		bmp = self.get_album(song)
