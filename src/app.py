@@ -44,8 +44,10 @@ class App(wx.App):
 		"""
 
 		self.connect_default()
+		if self.__debug: print 'init frame.'
 		self.frame = frame.Frame(None,self.client,self.__debug)
 		self.frame.Show()
+		if self.__debug: print 'frame viewing now.'
 		return True
 
 	def exit(self):
