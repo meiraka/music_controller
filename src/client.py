@@ -6,6 +6,7 @@ import os
 import codecs
 import copy
 import json
+import re
 import time
 import thread
 import threading
@@ -40,8 +41,13 @@ class Data(dict):
 	__getattr__ = dict.__getitem__
 
 class Song(Data):
-	pass
-
+	splitter = re.compile(u'\\%\\%')
+	__param = re.compile(u'\\%([^\\%]+\\%)')
+	def format(self,format_string):
+		v = self.splitter.split(format_string)
+		f = [u''.join([ self[ii[:-1]] if ii.endswith(u'%') and len(ii) > 0 and self.has_key(ii[:-1]) else ii for ii in self.__param.split(i)]) for i in v]
+		return u''.join(f)
+		
 class Error(Exception):
 	pass
 
@@ -197,10 +203,12 @@ class Playback(Object,threading.Thread):
 		UPDATE -- when status has been changed.
 		UPDATE_DATABASE -- when database updating job was finished.
 		UPDATE_PLAYLIST -- when playlist has been changed.
+		UPDATE_PLAYING -- when current playing song was changed.
 	'''
 	UPDATE = 'updated'
 	UPDATE_DATABASE = 'updated_database'
 	UPDATE_PLAYLIST = 'updated_playlist'
+	UPDATE_PLAYING = 'update_playing'
 	def __init__(self,connection,config):
 		Object.__init__(self)
 		threading.Thread.__init__(self)
@@ -210,6 +218,7 @@ class Playback(Object,threading.Thread):
 		self.__status = {}
 		self.__check_playlist = False
 		self.__check_library = False
+		self.__playing = None
 		self.__running = False
 
 	def run(self):
@@ -236,6 +245,9 @@ class Playback(Object,threading.Thread):
 				self.call(self.UPDATE_DATABASE)
 			elif self.__status.has_key('updating_db'):
 				self.__check_library = self.__status['updating_db']
+			if not self.__playing == self.__status[u'song']:
+				self.__playing = self.__status[u'song']
+				self.call(self.UPDATE_PLAYING)
 
 	def play(self,song=None):
 		if song:
