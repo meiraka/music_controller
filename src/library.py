@@ -42,7 +42,7 @@ class LibraryBase(wx.VListBox):
 		self.SetItemCount(len(self.items[-1]))
 		new_row = self.items[-1].index(selected)
 		self.SetSelection(new_row)
-		self.ScrollLines(top)
+		self.ScrollToLine(top)
 		self.RefreshAll()
 
 	def __open(self,row):
@@ -62,7 +62,7 @@ class LibraryBase(wx.VListBox):
 			self.SetItemCount(len(self.items[-1]))
 			new_row = self.items[y+1].index(selected)
 			self.SetSelection(new_row)
-			self.ScrollLines(top)
+			self.ScrollToLine(top)
 			self.RefreshAll()
 		else:
 			self.__close(row)
