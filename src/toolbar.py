@@ -4,6 +4,7 @@ import environment
 
 class MacToolbar(object):
 	def __init__(self,parent,playback):
+		self.parent = parent
 		self.__tool = parent.CreateToolBar(wx.TB_TEXT)
 		self.playback = playback
 		#size = (19,19)
@@ -13,7 +14,9 @@ class MacToolbar(object):
 			previous=wx.ArtProvider.GetBitmap(wx.ART_GOTO_FIRST,size=size),
 			play=wx.ArtProvider.GetBitmap(wx.ART_GO_FORWARD,size=size),
 			pause=wx.ArtProvider.GetBitmap(wx.ART_GO_FORWARD,size=size),
-			next=wx.ArtProvider.GetBitmap(wx.ART_GOTO_LAST,size=size)
+			next=wx.ArtProvider.GetBitmap(wx.ART_GOTO_LAST,size=size),
+			playlist=wx.ArtProvider.GetBitmap(wx.ART_GOTO_LAST,size=size),
+			library=wx.ArtProvider.GetBitmap(wx.ART_GOTO_LAST,size=size)
 			)
 		self.icons = dict([(k, (v, wx.NewId() ) ) for k,v in icons.iteritems()])
 		for k,(icon,id) in self.icons.iteritems():
@@ -25,7 +28,12 @@ class MacToolbar(object):
 		event_id = event.GetId()
 		for func_name,(icon,id) in self.icons.iteritems():
 			if event_id == id:
-				getattr(self.playback,func_name)()
+				if hasattr(self.playback,func_name):
+					getattr(self.playback,func_name)()
+				elif func_name == 'playlist':
+					self.parent.show_playlist()
+				elif func_name == 'library':
+					self.parent.show_library()
 
 class GTKToolbar(object):
 	def __init__(self,parent,playback):
