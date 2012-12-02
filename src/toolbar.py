@@ -38,15 +38,20 @@ class MacToolbar(object):
 class GTKToolbar(object):
 	def __init__(self,parent,playback):
 		self.__tool = parent.CreateToolBar()
+		self.parent = parent
 		self.playback = playback
 		self.play = wx.Button(self.__tool,-1,u'play')
 		self.previous = wx.Button(self.__tool,-1,u'previous')
 		self.next = wx.Button(self.__tool,-1,u'next')
+		self.playlist = wx.Button(self.__tool,-1,u'playlist')
+		self.library = wx.Button(self.__tool,-1,u'library')
 		self.state = ''
 		self.__tool.Bind(wx.EVT_BUTTON,self.OnButton)
 		self.__tool.AddControl(self.previous)
 		self.__tool.AddControl(self.play)
 		self.__tool.AddControl(self.next)
+		self.__tool.AddControl(self.playlist)
+		self.__tool.AddControl(self.library)
 		self.__tool.Realize()
 		self.playback.bind(self.playback.UPDATE,self.update_label)
 
@@ -72,6 +77,10 @@ class GTKToolbar(object):
 			self.playback.next()
 		elif obj == self.previous:
 			self.playback.previous()
+		elif obj == self.playlist:
+			self.parent.show_playlist()
+		elif obj == self.library:
+			self.parent.show_library()
 		
 
 if environment.gui == 'mac':
