@@ -3,8 +3,8 @@
 import wx
 
 default_settings = [
-(u'%Album%',u'%number% %title%'),
-(u'%genre%',u'%album%',u'%number% %title%')
+(u'album',u'%album%',u'%number% %title%'),
+(u'genre',u'%genre%',u'%album%',u'%number% %title%')
 
 
 
@@ -20,46 +20,76 @@ class LibraryBase(wx.VListBox):
 		self.default_font = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT )
 		self.default_font_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOXTEXT)
 		self.__reset()
-		self.Bind(wx.EVT_LEFT_DCLICK,self.OnActivate)
+		self.Bind(wx.EVT_LEFT_DCLICK,self.OnClick)
 
 	def __reset(self):
-		self.state = (0,-1)
-		self.items = [[(formats[0].replace(u'%',u''),-1) for formats in self.settings]]
-		self.songs = [list(self.library)]
-		self.SetItemCount(len(self.items[0]))
+		self.state = (0,0)
+		x,y = self.state
+		self.items = [[(formats[x],y) for formats in self.settings]]
+		songs = list(self.library)
+		self.songs = [dict([(item,songs) for item,y in self.items[x]])]
+		self.SetItemCount(len(self.items[y]))
+		self.RefreshAll()
 
-	def __open_first(self,row):
-		self.songs = [list(self.library)]
-		songs = {}
-		def cache(song,song_format):
-			string = song.format(song_format)
-			if not songs.has_key(string):
-				songs[string] = []
-			songs[string].append(song)
-			return string
-		song_format = self.settings[row][0]
-		items = [cache(song,song_format) for song in self.songs[0]]
+	def __close(self,row):
+		x,y = self.state
+		key,key_y = self.items[y][row]
+		del self.songs[key_y+1:]
+		del self.items[key_y+1:]
+		self.state = (x,key_y)
+		self.SetItemCount(len(self.items[-1]))
+		self.RefreshAll()
+
+	def __open(self,row):
+		if self.state[1] == 0:
+			self.__reset()
+			self.state = (row,0)
+		x,y = self.state
+		key,key_y = self.items[y][row]
+		if key_y == y:
+			songs = self.songs[y][key]
+			new_items,new_songs = self.__extract(songs,y+1)
+			self.items.append(self.items[y][:row+1]+new_items+self.items[y][row+1:])
+			self.songs.append(new_songs)
+			self.state = (x,y+1)
+			self.SetItemCount(len(self.items[-1]))
+			self.RefreshAll()
+		else:
+			self.__close(row)
+
+	def __extract(self,songs,index):
+		song_dict = {}
+		song_format = self.settings[self.state[0]][index]
+		def append(song,song_format):
+			key = song.format(song_format)
+			if not song_dict.has_key(key):
+				song_dict[key] = []
+			song_dict[key].append(song)
+			return key
+		items = [(append(song,song_format),index) for song in songs]
 		items = sorted(set(items),key=items.index)
-		items = [(item,0) for item in items]
-		self.state = (row,0)
-		self.songs.append(songs)
-		self.items.append(self.items[0][:row+1]+items+self.items[row+1:])
-		self.SetItemCount(len(self.items[1]))
-
+		return items,song_dict
+		
+		
 	def OnMeasureItem(self,index):
 		return 20
 
 	def OnDrawItem(self,dc,rect,index):
+		x,y = self.state
 		dc.SetTextForeground(self.default_font_color)
 		dc.SetFont(self.default_font)
-		print self.items[self.state[1]+1][index]
-		dc.DrawText(self.items[self.state[1]+1][index][0],*rect.GetPosition())
+		pos = rect.GetPosition()
+		pos = (pos[0]+self.items[y][index][1]*10,pos[1])
+		try:
+			dc.DrawText(self.items[y][index][0],*pos)
+		except:
+			pass
 
-	def OnActivate(self,event):
+	def OnClick(self,event):
 		index = self.GetSelection()
-		if self.state[1] == -1:
-			self.__open_first(index)	
-			
+		self.__open(index)
+
+
 class Library(LibraryBase):
 	pass
 			
