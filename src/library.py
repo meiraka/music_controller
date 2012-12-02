@@ -34,10 +34,15 @@ class LibraryBase(wx.VListBox):
 	def __close(self,row):
 		x,y = self.state
 		key,key_y = self.items[y][row]
+		selected = self.items[y][row]
+		top = self.GetVisibleBegin()
 		del self.songs[key_y+1:]
 		del self.items[key_y+1:]
 		self.state = (x,key_y)
 		self.SetItemCount(len(self.items[-1]))
+		new_row = self.items[-1].index(selected)
+		self.SetSelection(new_row)
+		self.ScrollLines(top)
 		self.RefreshAll()
 
 	def __open(self,row):
@@ -47,12 +52,17 @@ class LibraryBase(wx.VListBox):
 		x,y = self.state
 		key,key_y = self.items[y][row]
 		if key_y == y:
+			top = self.GetVisibleBegin()
 			songs = self.songs[y][key]
 			new_items,new_songs = self.__extract(songs,y+1)
+			selected = self.items[y][row]
 			self.items.append(self.items[y][:row+1]+new_items+self.items[y][row+1:])
 			self.songs.append(new_songs)
 			self.state = (x,y+1)
 			self.SetItemCount(len(self.items[-1]))
+			new_row = self.items[y+1].index(selected)
+			self.SetSelection(new_row)
+			self.ScrollLines(top)
 			self.RefreshAll()
 		else:
 			self.__close(row)
