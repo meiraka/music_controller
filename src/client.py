@@ -338,6 +338,10 @@ class Playlist(Object):
 		"""
 		if self.__playback.status and self.__playback.status.has_key(u'song'):
 			status = self.__playback.status
+			if not status or not status.has_key(u'song'):
+				return False
+			if not len(self.__data) > int(status[u'song']):
+				return False
 			song = self.__data[int(status[u'song'])]
 			if not song == self.__current:
 				self.__current = song
