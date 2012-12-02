@@ -13,7 +13,6 @@ class App(wx.App):
 		"""init this app"""
 		self.config_dir = environment.config_dir
 		self.client = client.Client(self.config_dir)
-		self.client.start()
 		if params.has_key('debug'):self.__debug = True
 		else:self.__debug = False
 		wx.App.__init__(self)
@@ -48,6 +47,7 @@ class App(wx.App):
 		if self.__debug: print 'show frame.'
 		self.frame.Show()
 		if self.__debug: print 'frame viewing now.'
+		self.client.start()
 		self.connect_default()
 		return True
 
