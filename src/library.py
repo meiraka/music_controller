@@ -117,7 +117,7 @@ class LibraryBase(wx.VListBox):
 		row = index
 		x,y = self.state
 		key,key_y = self.items[y][row]
-		self.__master = self.songs[y][key]
+		self.__master = self.songs[key_y][key]
 		wx.CallAfter(self.__reset)
 
 	def not_item(self,index):
