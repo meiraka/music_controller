@@ -136,6 +136,8 @@ class LibraryBase(wx.VListBox):
 		songs = [song for title,song in song_indexed]
 		self.playlist.clear()
 		self.playlist.extend(songs)
+		if len(self.playlist):
+			self.playlist[0].play()
 
 
 class Menu(wx.Menu):
