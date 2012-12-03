@@ -179,6 +179,7 @@ class Playlist(PlaylistBase):
 
 
 	def draw_head(self,dc,rect,index,song):
+		if self.set_height(dc): return
 		left_text = song[u'album']
 		right_text = song[u'genre'] if song.has_key(u'genre') else u''
 		size = dc.GetTextExtent(left_text+right_text)
@@ -196,6 +197,7 @@ class Playlist(PlaylistBase):
 		dc.DrawText(right_text,*right_pos)
 
 	def draw_song(self,dc,rect,index,song,group_index):
+		if self.set_height(dc): return
 		left_text = song[u'title']
 		time = int(song[u'time'])
 		right_text = u'%i:%s' % (time/60, str(time%60).zfill(2))
@@ -213,6 +215,7 @@ class Playlist(PlaylistBase):
 		dc.DrawText(right_text,*right_pos)
 
 	def draw_current_song(self,dc,rect,index,song,group_index):
+		if self.set_height(dc): return
 		left_text = u'>>>' + song[u'title']
 		time = int(song[u'time'])
 		status = self.playback.status
@@ -234,8 +237,10 @@ class Playlist(PlaylistBase):
 		dc.DrawText(right_text,*right_pos)
 
 	def draw_nothing(self,dc,rect,index,song,group_index):
+		if self.set_height(dc): return
 		pass
 	def draw_songs(self,dc,rect,song):
+		if self.set_height(dc): return
 		bmp = self.get_album(song)
 		if bmp:
 			image_pos = rect.GetPosition()
