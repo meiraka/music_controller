@@ -3,13 +3,12 @@
 import wx
 
 default_settings = [
-(u'album',u'%album%',u'%number% %title%'),
-(u'genre',u'%genre%',u'%album%',u'%number% %title%')
-
-
-
+(u'album',u'%album%',u'%track% %title%'),
+(u'genre',u'%genre%',u'%album%',u'%track% %title%')
 
 ]
+
+default_sorter = '%albumartist% %album% %track% %title%'
 
 class LibraryBase(wx.VListBox):
 	def __init__(self,parent,library,playlist,debug=False):
@@ -17,17 +16,27 @@ class LibraryBase(wx.VListBox):
 		self.library = library
 		self.playlist = playlist
 		self.settings = default_settings
+		self.sorter = default_sorter
+		self.__master = []
 		self.default_font = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT )
 		self.default_font_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOXTEXT)
 		self.__reset()
-		self.Bind(wx.EVT_LEFT_DCLICK,self.OnClick)
+		self.Bind(wx.EVT_LEFT_UP,self.OnClick)
+		#self.Bind(wx.EVT_LEFT_DCLICK,self.OnActivate)
+		self.Bind(wx.EVT_RIGHT_UP,self.OnRightClick)
+	def clear(self):
+		self.items = []
+		self.songs = []
+		self.__master = list(self.library)
+		wx.CallAfter(self.__reset)
 
 	def __reset(self):
 		self.state = (0,0)
 		x,y = self.state
 		self.items = [[(formats[x],y) for formats in self.settings]]
-		songs = list(self.library)
-		self.songs = [dict([(item,songs) for item,y in self.items[x]])]
+		if not self.__master:
+			self.__master = list(self.library)
+		self.songs = [dict([(item,self.__master) for item,y in self.items[x]])]
 		self.SetItemCount(len(self.items[y]))
 		self.RefreshAll()
 
@@ -79,7 +88,7 @@ class LibraryBase(wx.VListBox):
 		items = [(append(song,song_format),index) for song in songs]
 		items = sorted(set(items),key=items.index)
 		return items,song_dict
-		
+
 		
 	def OnMeasureItem(self,index):
 		return 20
@@ -98,6 +107,60 @@ class LibraryBase(wx.VListBox):
 	def OnClick(self,event):
 		index = self.GetSelection()
 		self.__open(index)
+
+	def OnRightClick(self,event):
+		index = self.HitTest(event.GetPosition())
+		self.SetSelection(index)
+		self.PopupMenu(Menu(self,index))
+
+	def and_item(self,index):
+		row = index
+		x,y = self.state
+		key,key_y = self.items[y][row]
+		self.__master = self.songs[y][key]
+		wx.CallAfter(self.__reset)
+
+	def not_item(self,index):
+		row = index
+		x,y = self.state
+		key,key_y = self.items[y][row]
+		self.__master = []
+		for k,m in self.songs[y].iteritems():
+			if not k == key:
+				self.__master = self.__master + m
+		wx.CallAfter(self.__reset)
+
+	def replace_master(self):
+		song_indexed = [(song.format(self.sorter),song) for song in self.__master]
+		song_indexed.sort()
+		songs = [song for title,song in song_indexed]
+		self.playlist.clear()
+		self.playlist.extend(songs)
+		self.playlist[0].play()
+
+
+class Menu(wx.Menu):
+	def __init__(self,parent,index):
+		wx.Menu.__init__(self)
+		self.parent = parent
+		self.index=  index
+		items = [u'and',u'not',u'clear',u'replace']
+		self.__items = dict([(item,wx.NewId())for item in items])
+		for item in items:
+			self.Append(self.__items[item],item,item)
+			self.Bind(wx.EVT_MENU,getattr(self,item+'_item'),id=self.__items[item])
+	
+	def and_item(self,event):
+		self.parent.and_item(self.index)
+				
+	def not_item(self,event):
+		self.parent.not_item(self.index)
+
+	def clear_item(self,event):
+		self.parent.clear()
+
+	def replace_item(self,event):
+		self.parent.replace_master()	
 
 
 class Library(LibraryBase):
