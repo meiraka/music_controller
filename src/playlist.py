@@ -147,7 +147,7 @@ class Playlist(PlaylistBase):
 		self.background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX)
 		self.image_size = (120,120)
 		self.list_head_size = 2
-		self.list_height = 20
+		self.list_height = 1
 		self.list_min_row = 6
 		self.artwork = artwork.Artwork()
 
@@ -158,7 +158,9 @@ class Playlist(PlaylistBase):
 			return '?'
 
 	def draw_background(self,dc,rect,index):
+		if self.set_height(dc): return
 		#dc = wx.BufferedDC(dc)
+		self.set_height(dc)
 		if self.IsSelected(index):
 			color = self.active_background_color
 		else:
@@ -167,64 +169,72 @@ class Playlist(PlaylistBase):
 		dc.SetPen(wx.Pen(color))
 		dc.DrawRectangle(*list(rect.GetPosition())+ list(rect.GetSize()))
 
+	def set_height(self,dc):
+		if self.list_height == 1:
+			text_height = dc.GetTextExtent('A-glFf')[1]
+			self.list_height = int(text_height * 3.0 /2)
+			self.refresh()
+			return True
+		return False
+
+
 	def draw_head(self,dc,rect,index,song):
-			left_text = song[u'album']
-			right_text = song[u'genre'] if song.has_key(u'genre') else u''
-			size = dc.GetTextExtent(left_text+right_text)
-			w,h = rect.GetSize()
-			margin = 10
-			p = h/2 + (h/2 - size[1]) / 2
-			left_pos = rect.GetPosition()
-			right_pos = rect.GetPosition()
-			left_pos[1] = left_pos[1] + p
-			right_pos[1] = right_pos[1] + p
-			right_pos[0] = right_pos[0] - dc.GetTextExtent(right_text)[0] + dc.GetSize()[0]
-			left_pos[0] = left_pos[0] + margin
-			right_pos[0] = right_pos[0] - margin
-			dc.DrawText(left_text,*left_pos)
-			dc.DrawText(right_text,*right_pos)
+		left_text = song[u'album']
+		right_text = song[u'genre'] if song.has_key(u'genre') else u''
+		size = dc.GetTextExtent(left_text+right_text)
+		w,h = rect.GetSize()
+		margin = 10
+		p = h/2 + (h/2 - size[1]) / 2
+		left_pos = rect.GetPosition()
+		right_pos = rect.GetPosition()
+		left_pos[1] = left_pos[1] + p
+		right_pos[1] = right_pos[1] + p
+		right_pos[0] = right_pos[0] - dc.GetTextExtent(right_text)[0] + dc.GetSize()[0]
+		left_pos[0] = left_pos[0] + margin
+		right_pos[0] = right_pos[0] - margin
+		dc.DrawText(left_text,*left_pos)
+		dc.DrawText(right_text,*right_pos)
 
 	def draw_song(self,dc,rect,index,song,group_index):
-			left_text = song[u'title']
-			time = int(song[u'time'])
-			right_text = u'%i:%s' % (time/60, str(time%60).zfill(2))
-			pad = (rect.GetSize()[1] - dc.GetTextExtent('A-glFf')[1]) / 2
-			margin = 10
-			left_pos = rect.GetPosition()
-			right_pos = rect.GetPosition()
-			if group_index < self.image_size[1] / 20:
-				left_pos[0] = left_pos[0] + self.image_size[0]
-			left_pos[0] = left_pos[0] + margin
-			right_pos[0] = right_pos[0] - dc.GetTextExtent(right_text)[0] + rect.GetSize()[0] - margin
-			left_pos = [i+pad for i in left_pos]
-			right_pos = [i+pad for i in right_pos]
-			dc.DrawText(left_text,*left_pos)
-			dc.DrawText(right_text,*right_pos)
+		left_text = song[u'title']
+		time = int(song[u'time'])
+		right_text = u'%i:%s' % (time/60, str(time%60).zfill(2))
+		pad = (rect.GetSize()[1] - dc.GetTextExtent('A-glFf')[1]) / 2
+		margin = 10
+		left_pos = rect.GetPosition()
+		right_pos = rect.GetPosition()
+		if group_index < self.image_size[1] / 20:
+			left_pos[0] = left_pos[0] + self.image_size[0]
+		left_pos[0] = left_pos[0] + margin
+		right_pos[0] = right_pos[0] - dc.GetTextExtent(right_text)[0] + rect.GetSize()[0] - margin
+		left_pos = [i+pad for i in left_pos]
+		right_pos = [i+pad for i in right_pos]
+		dc.DrawText(left_text,*left_pos)
+		dc.DrawText(right_text,*right_pos)
 
 	def draw_current_song(self,dc,rect,index,song,group_index):
-			left_text = u'>>>' + song[u'title']
-			time = int(song[u'time'])
-			status = self.playback.status
-			if status and status.has_key(u'time'):
-				right_text = '/'.join([ u'%i:%s' % (int(i)/60,str(int(i)%60).zfill(2)) for i in status[u'time'].split(u':')])
-			else:
-				right_text = u'%i:%s' % (time/60, str(time%60).zfill(2))
-			pad = (rect.GetSize()[1] - dc.GetTextExtent('A-glFf')[1]) / 2
-			margin = 10
-			left_pos = rect.GetPosition()
-			right_pos = rect.GetPosition()
-			if group_index < self.image_size[1] / 20:
-				left_pos[0] = left_pos[0] + self.image_size[0]
-			left_pos[0] = left_pos[0] + margin
-			right_pos[0] = right_pos[0] - dc.GetTextExtent(right_text)[0] + rect.GetSize()[0] - margin
-			left_pos = [i+pad for i in left_pos]
-			right_pos = [i+pad for i in right_pos]
-			dc.DrawText(left_text,*left_pos)
-			dc.DrawText(right_text,*right_pos)
+		left_text = u'>>>' + song[u'title']
+		time = int(song[u'time'])
+		status = self.playback.status
+		if status and status.has_key(u'time'):
+			right_text = '/'.join([ u'%i:%s' % (int(i)/60,str(int(i)%60).zfill(2)) for i in status[u'time'].split(u':')])
+		else:
+			right_text = u'%i:%s' % (time/60, str(time%60).zfill(2))
+		pad = (rect.GetSize()[1] - dc.GetTextExtent('A-glFf')[1]) / 2
+		margin = 10
+		left_pos = rect.GetPosition()
+		right_pos = rect.GetPosition()
+		if group_index < self.image_size[1] / 20:
+			left_pos[0] = left_pos[0] + self.image_size[0]
+		left_pos[0] = left_pos[0] + margin
+		right_pos[0] = right_pos[0] - dc.GetTextExtent(right_text)[0] + rect.GetSize()[0] - margin
+		left_pos = [i+pad for i in left_pos]
+		right_pos = [i+pad for i in right_pos]
+		dc.DrawText(left_text,*left_pos)
+		dc.DrawText(right_text,*right_pos)
 
 	def draw_nothing(self,dc,rect,index,song,group_index):
 		pass
-
 	def draw_songs(self,dc,rect,song):
 		bmp = self.get_album(song)
 		if bmp:
