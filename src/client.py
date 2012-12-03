@@ -245,7 +245,7 @@ class Playback(Object,threading.Thread):
 				self.call(self.UPDATE_DATABASE)
 			elif self.__status.has_key('updating_db'):
 				self.__check_library = self.__status['updating_db']
-			if not self.__playing == self.__status[u'song']:
+			if self.__status.has_key(u'song') and not self.__playing == self.__status[u'song']:
 				self.__playing = self.__status[u'song']
 				self.call(self.UPDATE_PLAYING)
 

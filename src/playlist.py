@@ -105,7 +105,7 @@ class PlaylistBase(wx.VListBox):
 			self.draw_nothing(dc,rect,index,song,group_index)
 		elif type == 'song':
 			self.draw_songs(dc,songs_rect,song)
-			if song[u'pos'] == self.playback.status[u'song']:
+			if self.playback.status.has_key(u'song') and song[u'pos'] == self.playback.status[u'song']:
 				self.draw_current_song(dc,rect,index,song,group_index)
 			else:
 				self.draw_song(dc,rect,index,song,group_index)
