@@ -34,6 +34,7 @@ class App(wx.App):
 				break
 			else:
 				if self.__debug: print 'fail! (>_<)'
+		self.client.start()
 
 	def MainLoop(self):
 		wx.App.MainLoop(self)
@@ -47,7 +48,6 @@ class App(wx.App):
 		if self.__debug: print 'show frame.'
 		self.frame.Show()
 		if self.__debug: print 'frame viewing now.'
-		self.client.start()
 		self.connect_default()
 		return True
 
