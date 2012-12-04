@@ -32,7 +32,7 @@ class Artwork(object):
 		pass
 
 	def __getitem__(self,song):
-		if not song:
+		if not(song and song.has_key(u'album')):
 			return None
 		for file in self.__files:
 			if file.count(song[u'album']):
