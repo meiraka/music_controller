@@ -17,7 +17,6 @@ class PlaylistBase(wx.VListBox):
 		self.__selected = []
 		self.albums = {}
 		self.pos_line = {}
-		self.artwork = artwork.Artwork()
 		self.playlist.bind(self.playlist.UPDATE,self.update_playlist)
 		self.playlist.bind(self.playlist.FOCUS,self.focus)
 		self.playback.bind(self.playback.UPDATE,self.refresh)
@@ -111,32 +110,6 @@ class PlaylistBase(wx.VListBox):
 				self.draw_song(dc,rect,index,song,group_index)
 		else:
 			self.draw_head(dc,rect,index,song)
-	def get_album(self,song):
-		if not song.has_key(u'album'):
-			return None
-		if not self.albums.has_key(song[u'album']):
-			self.albums[song[u'album']] = None
-			thread.start_new_thread(self.load_image,(song,))
-		else:
-			return self.albums[song[u'album']]
-
-	def load_image(self,song):
-		path = self.artwork[song]
-		if path:
-			image = wx.Image(path)
-			w,h = image.GetSize()
-			if w > h:
-				new_size = (self.image_size[0],int(1.0*h/w*self.image_size[1]))
-			else:
-				new_size = (int(1.0*w/h*self.image_size[0]),self.image_size[1])
-			if all([i > 0 for i in new_size]):
-				image.Rescale(*new_size,quality=wx.IMAGE_QUALITY_HIGH)
-			wx.CallAfter(self.__load_image,song,image)
-	
-	def __load_image(self,song,image):
-		bmp = wx.BitmapFromImage(image)
-		self.albums[song[u'album']] = bmp
-		self.RefreshAll()
 
 class Playlist(PlaylistBase):
 	def __init__(self,parent,playlist,playback,debug=False):
@@ -145,11 +118,11 @@ class Playlist(PlaylistBase):
 		self.font_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOXTEXT)
 		self.active_background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT )
 		self.background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX)
-		self.image_size = (120,120)
 		self.list_head_size = 2
 		self.list_height = 1
 		self.list_min_row = 6
 		self.artwork = artwork.Artwork()
+		self.artwork.attach(self.RefreshAll)
 
 	def head(self,song):
 		if song.has_key(u'album'):
@@ -173,6 +146,7 @@ class Playlist(PlaylistBase):
 		if self.list_height == 1:
 			text_height = dc.GetTextExtent('A-glFf')[1]
 			self.list_height = int(text_height * 3.0 /2)
+			self.artwork.size = (self.list_height*6,self.list_height*6)
 			self.refresh()
 			return True
 		return False
@@ -205,8 +179,8 @@ class Playlist(PlaylistBase):
 		margin = 10
 		left_pos = rect.GetPosition()
 		right_pos = rect.GetPosition()
-		if group_index < self.image_size[1] / 20:
-			left_pos[0] = left_pos[0] + self.image_size[0]
+		if group_index < 6:
+			left_pos[0] = left_pos[0] + self.artwork.size[0]
 		left_pos[0] = left_pos[0] + margin
 		right_pos[0] = right_pos[0] - dc.GetTextExtent(right_text)[0] + rect.GetSize()[0] - margin
 		left_pos = [i+pad for i in left_pos]
@@ -227,8 +201,8 @@ class Playlist(PlaylistBase):
 		margin = 10
 		left_pos = rect.GetPosition()
 		right_pos = rect.GetPosition()
-		if group_index < self.image_size[1] / 20:
-			left_pos[0] = left_pos[0] + self.image_size[0]
+		if group_index < 6:
+			left_pos[0] = left_pos[0] + self.artwork.size[0]
 		left_pos[0] = left_pos[0] + margin
 		right_pos[0] = right_pos[0] - dc.GetTextExtent(right_text)[0] + rect.GetSize()[0] - margin
 		left_pos = [i+pad for i in left_pos]
@@ -239,9 +213,10 @@ class Playlist(PlaylistBase):
 	def draw_nothing(self,dc,rect,index,song,group_index):
 		if self.set_height(dc): return
 		pass
+
 	def draw_songs(self,dc,rect,song):
 		if self.set_height(dc): return
-		bmp = self.get_album(song)
+		bmp = self.artwork[song]
 		if bmp:
 			image_pos = rect.GetPosition()
 			dc.DrawBitmap(bmp,*image_pos)
