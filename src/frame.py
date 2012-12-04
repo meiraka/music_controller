@@ -32,6 +32,8 @@ class Frame(wx.Frame):
 		#self.sizer.Add(self.albumlist,0,flag=wx.EXPAND)
 		self.library.Hide()
 		self.SetSizer(self.sizer)
+		self.Layout()
+		self.Show()
 		if debug: print 'sized.'
 		self.client.playback.bind(self.client.playback.UPDATE_PLAYING,self.change_title)
 		if debug: print 'binded.'
