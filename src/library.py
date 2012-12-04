@@ -2,10 +2,19 @@
 
 import wx
 
+CRITERIA_STYLE_DEFAULT = u'default'
+CRITERIA_STYLE_ALBUM = u'album'
+CRITERIA_STYLE_SONG = u'song'
 default_settings = [
-(u'album',u'%album%',u'%track% %title%'),
-(u'genre',u'%genre%',u'%album%',u'%track% %title%')
-
+	[(u'album',CRITERIA_STYLE_DEFAULT),
+		(u'%album%',CRITERIA_STYLE_ALBUM),
+		(u'%track% %title%',CRITERIA_STYLE_SONG)
+	],
+	[	(u'genre',CRITERIA_STYLE_DEFAULT),
+		(u'%genre%',CRITERIA_STYLE_DEFAULT),
+		(u'%album%',CRITERIA_STYLE_ALBUM),
+		(u'%track% %title%',CRITERIA_STYLE_ALBUM)
+	]
 ]
 
 default_sorter = '%albumartist% %album% %track% %title%'
@@ -15,7 +24,8 @@ class LibraryBase(wx.VListBox):
 		wx.VListBox.__init__(self,parent,-1)
 		self.library = library
 		self.playlist = playlist
-		self.settings = default_settings
+		self.settings = [[format for format,style in i] for i in default_settings]
+		self.styles = [[style for format,style in i] for i in default_settings]
 		self.sorter = default_sorter
 		self.__master = []
 		self.default_font = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT )
@@ -95,14 +105,34 @@ class LibraryBase(wx.VListBox):
 
 	def OnDrawItem(self,dc,rect,index):
 		x,y = self.state
+		key,key_y = self.items[y][index]
+		style = self.styles[x][key_y]
+		if len( self.songs[key_y][key]):
+			song = self.songs[key_y][key][0]
+		else:
+			song = None
+		if style == CRITERIA_STYLE_DEFAULT:
+			self.draw_default(dc,rect,key,song,index,key_y)
+		elif style == CRITERIA_STYLE_ALBUM:
+			self.draw_album(dc,rect,key,song,index,key_y)
+		elif style == CRITERIA_STYLE_SONG:
+			self.draw_song(dc,rect,key,song,index,key_y)
+			
+
+	def draw_default(self,dc,rect,label,song,index,depth):
 		dc.SetTextForeground(self.default_font_color)
 		dc.SetFont(self.default_font)
 		pos = rect.GetPosition()
-		pos = (pos[0]+self.items[y][index][1]*10,pos[1])
+		pos = (pos[0]+depth*10,pos[1])
 		try:
-			dc.DrawText(self.items[y][index][0],*pos)
+			dc.DrawText(label,*pos)
 		except:
 			pass
+	def draw_album(self,dc,rect,label,song,index,depth):
+		self.draw_default(dc,rect,label,song,index,depth)
+	def draw_song(self,dc,rect,label,song,index,depth):
+		self.draw_default(dc,rect,label,song,index,depth)
+
 
 	def OnClick(self,event):
 		index = self.GetSelection()
