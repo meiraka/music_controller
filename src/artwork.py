@@ -32,6 +32,8 @@ class Artwork(object):
 		pass
 
 	def __getitem__(self,song):
+		if not song:
+			return None
 		for file in self.__files:
 			if file.count(song[u'album']):
 				path = self.__check_dir + u'/' + file
