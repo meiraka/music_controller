@@ -45,8 +45,8 @@ class Song(Data):
 	__param = re.compile(u'\\%([^\\%]+\\%)')
 	def format(self,format_string):
 		v = self.splitter.split(format_string)
-		f = [u''.join([ self[ii[:-1]] if ii.endswith(u'%') and len(ii) > 0 and self.has_key(ii[:-1]) else ii for ii in self.__param.split(i)]) for i in v]
-		return u''.join(f)
+		f = [u''.join([ self[ii[:-1]] if ii.endswith(u'%') and len(ii) > 0 and self.has_key(ii[:-1]) else u'[no %s]' % ii[:-1] if ii.endswith(u'%') else ii  for ii in self.__param.split(i)]) for i in v]
+		return u'%%'.join(f)
 		
 class Error(Exception):
 	pass
