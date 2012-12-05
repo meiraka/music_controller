@@ -133,10 +133,10 @@ class LibraryBase(wx.VListBox):
 		key,key_y = self.items[y][index]
 		style = self.styles[x][key_y]
 		if len( self.songs[key_y][key]):
-			song = self.songs[key_y][key][0]
+			songs = self.songs[key_y][key]
 		else:
-			song = None
-		self.draw_background(dc,rect,key,song,index,key_y,style)
+			songs = []
+		self.draw_background(dc,rect,key,songs,index,key_y,style)
 	
 	def OnDrawItem(self,dc,rect,index):
 		dc.SetTextForeground(self.default_font_color)
@@ -145,31 +145,31 @@ class LibraryBase(wx.VListBox):
 		key,key_y = self.items[y][index]
 		style = self.styles[x][key_y]
 		if len( self.songs[key_y][key]):
-			song = self.songs[key_y][key][0]
+			songs = self.songs[key_y][key]
 		else:
-			song = None
+			songs = []
 		if style == CRITERIA_STYLE_DEFAULT:
-			self.draw_default(dc,rect,key,song,index,key_y)
+			self.draw_default(dc,rect,key,songs,index,key_y)
 		elif style == CRITERIA_STYLE_ALBUM:
-			self.draw_album(dc,rect,key,song,index,key_y)
+			self.draw_album(dc,rect,key,songs,index,key_y)
 		elif style == CRITERIA_STYLE_SONG:
-			self.draw_song(dc,rect,key,song,index,key_y)
+			self.draw_song(dc,rect,key,songs,index,key_y)
 		else:
-			self.draw_default(dc,rect,key,song,index,key_y)
+			self.draw_default(dc,rect,key,songs,index,key_y)
 			
 
-	def draw_default(self,dc,rect,label,song,index,depth):
+	def draw_default(self,dc,rect,label,songs,index,depth):
 		pos = rect.GetPosition()
 		pos = (pos[0]+depth*10,pos[1])
 		try:
 			dc.DrawText(label,*pos)
 		except:
 			pass
-	def draw_album(self,dc,rect,label,song,index,depth):
-		self.draw_default(dc,rect,label,song,index,depth)
-	def draw_song(self,dc,rect,label,song,index,depth):
-		self.draw_default(dc,rect,label,song,index,depth)
-	def draw_background(self,dc,rect,label,song,index,depth,style):
+	def draw_album(self,dc,rect,label,songs,index,depth):
+		self.draw_default(dc,rect,label,songs,index,depth)
+	def draw_song(self,dc,rect,label,songs,index,depth):
+		self.draw_default(dc,rect,label,songs,index,depth)
+	def draw_background(self,dc,rect,label,songs,index,depth,style):
 		pass
 
 	def OnClick(self,event):
@@ -235,25 +235,75 @@ class Menu(wx.Menu):
 class Library(LibraryBase):
 	def __init__(self,parent,library,playlist,debug=False):
 		text_height = environment.ui.text_height
+		self.active_background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT )
+		self.background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX)
+	
 		LibraryBase.__init__(self,parent,library,playlist,
 			text_height*2,text_height*6,text_height*2,debug)
 		self.text_height = text_height
 		self.artwork = artwork.Artwork()
 		self.artwork.attach(self.RefreshAll)
 	
-	def draw_default(self,dc,rect,label,song,index,depth):
-		pos = rect.GetPosition()
-		pos = (pos[0]+depth*10+self.text_height/2,pos[1]+self.text_height/2)
+	def draw_default(self,dc,rect,label,songs,index,depth):
+		diff = depth*self.text_height*2
+		left_pos = rect.GetPosition()
+		left_pos = (left_pos[0]+diff+self.text_height/2,left_pos[1]+self.text_height/2)
+		right_label = u'%i songs' % len(songs)
+		diff_right = rect.GetSize()[0] - dc.GetTextExtent(right_label)[0]
+		right_pos = rect.GetPosition()
+		right_pos = (right_pos[0]+diff_right-self.text_height/2,right_pos[1]+self.text_height/2)
 		try:
-			dc.DrawText(label,*pos)
+			dc.DrawText(label,*left_pos)
+			dc.DrawText(right_label,*right_pos)
 		except:
 			pass
 
-	def draw_album(self,dc,rect,label,song,index,depth):
+	def draw_album(self,dc,rect,label,songs,index,depth):
+		if len(songs) == 0:
+			return
+		left,top = rect.GetPosition()
+		left = left + depth*self.text_height*2 
+		top = top + self.text_height/2
+		song = songs[0]
 		bmp = self.artwork[song]
 		if bmp:
-			dc.DrawBitmap(bmp,*rect.GetPosition())
+			dc.DrawBitmap(bmp,left,top)
+		left = left + depth*self.text_height/2 + self.artwork.size[0]
+		left_labels = []
+		left_labels.append(song.format(u'%album%'))
+		left_labels.append(song[u'albumartist'] if song.has_key(u'albumartist') else song.format(u'%artist%'))
+		for index,left_label in enumerate(left_labels):
+			dc.DrawText(left_label,left,top+index*self.text_height*2)
 
-		
-	def draw_background(self,dc,rect,label,song,index,depth,style):
-		pass
+	def draw_song(self,dc,rect,label,songs,index,depth):
+		if len(songs) == 0:
+			return
+		song = songs[0]
+		diff = depth*self.text_height*2
+		left_pos = rect.GetPosition()
+		left_pos = (left_pos[0]+diff+self.text_height/2,left_pos[1]+self.text_height/2)
+		left_label = song.format('%track% %title%')
+		right_label = song.format('%artist% %length%')
+		diff_right = rect.GetSize()[0] - dc.GetTextExtent(right_label)[0]
+		right_pos = rect.GetPosition()
+		right_pos = (right_pos[0]+diff_right-self.text_height/2,right_pos[1]+self.text_height/2)
+		try:
+			dc.DrawText(left_label,*left_pos)
+			dc.DrawText(right_label,*right_pos)
+		except:
+			pass
+
+
+	def draw_background(self,dc,rect,label,songs,index,depth,style):
+		if self.IsSelected(index):
+			color = self.active_background_color
+		else:
+			color = self.background_color
+		dc.SetBrush(wx.Brush(color))
+		dc.SetPen(wx.Pen(color))
+		diff = depth*self.text_height*2
+		pos = rect.GetPosition()
+		pos = [pos[0]+diff,pos[1]]
+		dc.DrawRectangle(*pos + list(rect.GetSize()))
+
+
