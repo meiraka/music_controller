@@ -43,6 +43,9 @@ class Data(dict):
 class Song(Data):
 	splitter = re.compile(u'\\%\\%')
 	__param = re.compile(u'\\%([^\\%]+\\%)')
+	def __init__(self,data):
+		data[u'length'] = u'%i:%s' % (int(data[u'time'])/60,str(int(data[u'time'])%60).zfill(2))
+		Data.__init__(self,data)
 	def format(self,format_string):
 		v = self.splitter.split(format_string)
 		f = [u''.join([ self[ii[:-1]] if ii.endswith(u'%') and len(ii) > 0 and self.has_key(ii[:-1]) else u'[no %s]' % ii[:-1] if ii.endswith(u'%') else ii  for ii in self.__param.split(i)]) for i in v]
