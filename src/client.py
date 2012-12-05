@@ -45,6 +45,10 @@ class Song(Data):
 	__param = re.compile(u'\\%([^\\%]+\\%)')
 	def __init__(self,data):
 		data[u'length'] = u'%i:%s' % (int(data[u'time'])/60,str(int(data[u'time'])%60).zfill(2))
+		if data.has_key(u'track'):
+			data[u'track_index'] = data[u'track'].zfill(2)
+		if not data.has_key(u'albumartist') and data.has_key(u'artist'):
+			data[u'albumartist'] = data[u'artist']
 		Data.__init__(self,data)
 	def format(self,format_string):
 		v = self.splitter.split(format_string)
