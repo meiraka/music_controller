@@ -126,6 +126,7 @@ class Playlist(PlaylistBase):
 		self.active_background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT )
 		self.background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX)
 		self.artwork = artwork.Artwork()
+		self.artwork.size = (text_height*11,text_height*11)
 		self.artwork.attach(self.RefreshAll)
 
 	def head(self,song):
@@ -205,5 +206,6 @@ class Playlist(PlaylistBase):
 		bmp = self.artwork[song]
 		if bmp:
 			image_pos = rect.GetPosition()
+			image_pos = [i+environment.ui.text_height/2 for i in image_pos]
 			dc.DrawBitmap(bmp,*image_pos)
 

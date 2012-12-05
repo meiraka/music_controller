@@ -242,6 +242,7 @@ class Library(LibraryBase):
 			text_height*2,text_height*6,text_height*2,debug)
 		self.text_height = text_height
 		self.artwork = artwork.Artwork()
+		self.artwork.size = (text_height*5,text_height*5)
 		self.artwork.attach(self.RefreshAll)
 	
 	def draw_default(self,dc,rect,label,songs,index,depth):
@@ -262,13 +263,13 @@ class Library(LibraryBase):
 		if len(songs) == 0:
 			return
 		left,top = rect.GetPosition()
-		left = left + depth*self.text_height*2 
+		left = left + depth*self.text_height*2 + self.text_height/2
 		top = top + self.text_height/2
 		song = songs[0]
 		bmp = self.artwork[song]
 		if bmp:
 			dc.DrawBitmap(bmp,left,top)
-		left = left + depth*self.text_height/2 + self.artwork.size[0]
+		left = left + self.text_height/2 + self.artwork.size[0]
 		left_labels = []
 		left_labels.append(song.format(u'%album%'))
 		left_labels.append(song[u'albumartist'] if song.has_key(u'albumartist') else song.format(u'%artist%'))
