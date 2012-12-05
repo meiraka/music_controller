@@ -24,7 +24,7 @@ default_settings = [
 	],
 ]
 
-default_sorter = '%albumartist% %album% %track% %title%'
+default_sorter = '%albumartist% %album% %track_index% %title%'
 
 class LibraryBase(wx.VListBox):
 	def __init__(self,parent,library,playlist,
@@ -113,6 +113,7 @@ class LibraryBase(wx.VListBox):
 			return key
 		items = [(append(song,song_format),index) for song in songs]
 		items = sorted(set(items),key=items.index)
+		items.sort()
 		return items,song_dict
 
 	def OnMeasureItem(self,index):
