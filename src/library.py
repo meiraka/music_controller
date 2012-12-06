@@ -5,24 +5,25 @@ import artwork
 import thread
 import environment
 
+CRITERIA_STYLE_ROOT = u'root'
 CRITERIA_STYLE_DEFAULT = u'default'
 CRITERIA_STYLE_ALBUM = u'album'
 CRITERIA_STYLE_SONG = u'song'
 default_settings = [
-	[(u'album',CRITERIA_STYLE_DEFAULT),
+	[(u'album',CRITERIA_STYLE_ROOT),
 		(u'%album%',CRITERIA_STYLE_ALBUM),
 		(u'%track% %title%',CRITERIA_STYLE_SONG)
 	],
-	[(u'genre',CRITERIA_STYLE_DEFAULT),
+	[(u'genre',CRITERIA_STYLE_ROOT),
 		(u'%genre%',CRITERIA_STYLE_DEFAULT),
 		(u'%album%',CRITERIA_STYLE_ALBUM),
 		(u'%track% %title%',CRITERIA_STYLE_SONG)
 	],
-	[(u'albumartist',CRITERIA_STYLE_DEFAULT),
+	[(u'albumartist',CRITERIA_STYLE_ROOT),
 		(u'%albumartist%',CRITERIA_STYLE_DEFAULT),
 		(u'%album%',CRITERIA_STYLE_ALBUM)
 	],
-	[(u'artist',CRITERIA_STYLE_DEFAULT),
+	[(u'artist',CRITERIA_STYLE_ROOT),
 		(u'%artist%',CRITERIA_STYLE_DEFAULT),
 		(u'%album%',CRITERIA_STYLE_ALBUM),
 		(u'%track% %title%',CRITERIA_STYLE_SONG)
@@ -33,8 +34,8 @@ default_sorter = '%albumartist% %album% %track_index% %title%'
 
 class LibraryBase(wx.VListBox):
 	def __init__(self,parent,library,playlist,
-			criteria_default_height,criteria_album_height,
-			criteria_song_height,debug=False):
+			criteria_default_height,criteria_root_height,
+			criteria_song_height,criteria_album_height,debug=False):
 		wx.VListBox.__init__(self,parent,-1)
 		self.library = library
 		self.playlist = playlist
@@ -45,8 +46,9 @@ class LibraryBase(wx.VListBox):
 		self.default_font = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT )
 		self.default_font_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOXTEXT)
 		self.__criteria_default_height = criteria_default_height
-		self.__criteria_album_height = criteria_album_height
+		self.__criteria_root_height = criteria_root_height
 		self.__criteria_song_height = criteria_song_height
+		self.__criteria_album_height = criteria_album_height
 		self.Bind(wx.EVT_LEFT_UP,self.OnClick)
 		self.library.bind(self.library.UPDATE,self.reset)
 		#self.Bind(wx.EVT_LEFT_DCLICK,self.OnActivate)
@@ -136,10 +138,12 @@ class LibraryBase(wx.VListBox):
 		style = self.styles[x][key_y]
 		if style == CRITERIA_STYLE_DEFAULT:
 			return self.__criteria_default_height
-		elif style == CRITERIA_STYLE_ALBUM:
-			return self.__criteria_album_height
 		elif style == CRITERIA_STYLE_SONG:
 			return self.__criteria_song_height
+		elif style == CRITERIA_STYLE_ALBUM:
+			return self.__criteria_album_height
+		elif style == CRITERIA_STYLE_ROOT:
+			return self.__criteria_root_height
 
 	def OnDrawBackground(self,dc,rect,index):
 		x,y = self.state
@@ -149,7 +153,8 @@ class LibraryBase(wx.VListBox):
 			songs = self.songs[key_y][key]
 		else:
 			songs = []
-		self.draw_background(dc,rect,key,songs,index,key_y,style)
+		items = [item for item,depth in self.items[y] if depth == key_y]
+		self.draw_background(dc,rect,key,songs,items,index,key_y,style)
 	
 	def OnDrawItem(self,dc,rect,index):
 		dc.SetTextForeground(self.default_font_color)
@@ -161,28 +166,33 @@ class LibraryBase(wx.VListBox):
 			songs = self.songs[key_y][key]
 		else:
 			songs = []
+		items = [item for item,depth in self.items[y] if depth == key_y]
 		if style == CRITERIA_STYLE_DEFAULT:
-			self.draw_default(dc,rect,key,songs,index,key_y)
-		elif style == CRITERIA_STYLE_ALBUM:
-			self.draw_album(dc,rect,key,songs,index,key_y)
+			self.draw_default(dc,rect,key,songs,items,index,key_y)
 		elif style == CRITERIA_STYLE_SONG:
-			self.draw_song(dc,rect,key,songs,index,key_y)
+			self.draw_song(dc,rect,key,songs,items,index,key_y)
+		elif style == CRITERIA_STYLE_ALBUM:
+			self.draw_album(dc,rect,key,songs,items,index,key_y)
+		elif style == CRITERIA_STYLE_ROOT:
+			self.draw_root(dc,rect,key,songs,items,index,key_y)
 		else:
 			self.draw_default(dc,rect,key,songs,index,key_y)
 			
 
-	def draw_default(self,dc,rect,label,songs,index,depth):
+	def draw_default(self,dc,rect,label,songs,items,index,depth):
 		pos = rect.GetPosition()
 		pos = (pos[0]+depth*10,pos[1])
 		try:
 			dc.DrawText(label,*pos)
 		except:
 			pass
-	def draw_album(self,dc,rect,label,songs,index,depth):
-		self.draw_default(dc,rect,label,songs,index,depth)
-	def draw_song(self,dc,rect,label,songs,index,depth):
-		self.draw_default(dc,rect,label,songs,index,depth)
-	def draw_background(self,dc,rect,label,songs,index,depth,style):
+	def draw_album(self,dc,rect,label,songs,items,index,depth):
+		self.draw_default(dc,rect,label,songs,items,index,depth)
+	def draw_song(self,dc,rect,label,songs,items,index,depth):
+		self.draw_default(dc,rect,label,songs,items,index,depth)
+	def draw_root(self,dc,rect,label,songs,items,index,depth):
+		self.draw_default(dc,rect,label,songs,items,index,depth)
+	def draw_background(self,dc,rect,label,songs,items,index,depth,style):
 		pass
 
 	def OnClick(self,event):
@@ -261,55 +271,57 @@ class Library(LibraryBase):
 		self.background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX)
 	
 		LibraryBase.__init__(self,parent,library,playlist,
-			text_height*2,text_height*6,text_height*2,debug)
+			text_height*3/2,text_height*3/2,text_height*3/2,text_height*4,debug)
 		self.text_height = text_height
+		self.diff = text_height/4
 		self.artwork = artwork.Artwork()
-		self.artwork.size = (text_height*5,text_height*5)
+		self.artwork.size = (text_height*7/2,text_height*7/2)
 		self.artwork.attach(self.RefreshAll)
 	
-	def draw_default(self,dc,rect,label,songs,index,depth):
+	def draw_default(self,dc,rect,label,songs,items,index,depth):
 		diff = depth*self.text_height*2
 		left_pos = rect.GetPosition()
-		left_pos = (left_pos[0]+diff+self.text_height/2,left_pos[1]+self.text_height/2)
+		left_pos = [i+self.diff for i in left_pos]
+		left_pos = (left_pos[0]+diff,left_pos[1])
 		right_label = u'%i songs' % len(songs)
 		diff_right = rect.GetSize()[0] - dc.GetTextExtent(right_label)[0]
 		right_pos = rect.GetPosition()
-		right_pos = (right_pos[0]+diff_right-self.text_height/2,right_pos[1]+self.text_height/2)
+		right_pos = (right_pos[0]+diff_right-self.diff,right_pos[1]+self.diff)
 		try:
 			dc.DrawText(label,*left_pos)
 			dc.DrawText(right_label,*right_pos)
 		except:
 			pass
 
-	def draw_album(self,dc,rect,label,songs,index,depth):
+	def draw_album(self,dc,rect,label,songs,items,index,depth):
 		if len(songs) == 0:
 			return
 		left,top = rect.GetPosition()
-		left = left + depth*self.text_height*2 + self.text_height/2
-		top = top + self.text_height/2
+		left = left + depth*self.text_height*2 + self.diff
+		top = top + self.diff
 		song = songs[0]
 		bmp = self.artwork[song]
 		if bmp:
 			dc.DrawBitmap(bmp,left,top)
-		left = left + self.text_height/2 + self.artwork.size[0]
+		left = left + self.diff + self.artwork.size[0]
 		left_labels = []
 		left_labels.append(song.format(u'%album%'))
 		left_labels.append(song[u'albumartist'] if song.has_key(u'albumartist') else song.format(u'%artist%'))
 		for index,left_label in enumerate(left_labels):
-			dc.DrawText(left_label,left,top+index*self.text_height*2)
+			dc.DrawText(left_label,left,top+index*self.text_height*3/2)
 
-	def draw_song(self,dc,rect,label,songs,index,depth):
+	def draw_song(self,dc,rect,label,songs,items,index,depth):
 		if len(songs) == 0:
 			return
 		song = songs[0]
 		diff = depth*self.text_height*2
 		left_pos = rect.GetPosition()
-		left_pos = (left_pos[0]+diff+self.text_height/2,left_pos[1]+self.text_height/2)
+		left_pos = (left_pos[0]+diff+self.diff,left_pos[1]+self.diff)
 		left_label = song.format('%track% %title%')
 		right_label = song.format('%artist% %length%')
 		diff_right = rect.GetSize()[0] - dc.GetTextExtent(right_label)[0]
 		right_pos = rect.GetPosition()
-		right_pos = (right_pos[0]+diff_right-self.text_height/2,right_pos[1]+self.text_height/2)
+		right_pos = (right_pos[0]+diff_right-self.diff,right_pos[1]+self.diff)
 		try:
 			dc.DrawText(left_label,*left_pos)
 			dc.DrawText(right_label,*right_pos)
@@ -317,7 +329,7 @@ class Library(LibraryBase):
 			pass
 
 
-	def draw_background(self,dc,rect,label,songs,index,depth,style):
+	def draw_background(self,dc,rect,label,songs,items,index,depth,style):
 		if self.IsSelected(index):
 			color = self.active_background_color
 		else:
