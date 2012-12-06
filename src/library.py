@@ -55,6 +55,7 @@ class LibraryBase(wx.VListBox):
 	def clear(self):
 		self.items = []
 		self.songs = []
+		self.selected = []
 		self.__master = list(self.library)
 		wx.CallAfter(self.__reset)
 
@@ -65,6 +66,7 @@ class LibraryBase(wx.VListBox):
 		self.state = (0,0)
 		x,y = self.state
 		self.items = [[(formats[x],y) for formats in self.settings]]
+		self.selected = []
 		if not self.__master:
 			self.__master = list(self.library)
 		self.songs = [dict([(item,self.__master) for item,y in self.items[y]])]
@@ -76,14 +78,17 @@ class LibraryBase(wx.VListBox):
 		key,key_y = self.items[y][row]
 		selected = self.items[y][row]
 		top = self.GetVisibleBegin()
+		last = self.selected[key_y]
 		del self.songs[key_y+1:]
 		del self.items[key_y+1:]
+		del self.selected[key_y:]
 		self.state = (x,key_y)
 		self.SetItemCount(len(self.items[-1]))
 		new_row = self.items[-1].index(selected)
 		self.SetSelection(new_row)
 		self.ScrollToLine(top)
 		self.RefreshAll()
+		return last
 
 	def __open(self,row):
 		if self.state[1] == 0:
@@ -94,6 +99,7 @@ class LibraryBase(wx.VListBox):
 		top = self.GetVisibleBegin()
 		songs = self.songs[y][key]
 		new_items,new_songs = self.__extract(songs,y+1)
+		self.selected.append(key)
 		selected = self.items[y][row]
 		self.items.append(self.items[y][:row+1]+new_items+self.items[y][row+1:])
 		self.songs.append(new_songs)
@@ -186,23 +192,10 @@ class LibraryBase(wx.VListBox):
 		if key_y == y:
 			self.__open(index)
 		else:
-			reopen = False
-			reopen_back = False
-			if len(self.items[y]) > index+1:
-				key_next,key_y_next = self.items[y][index+1]
-				if key_y == key_y_next:
-					reopen = (key,key_y)
-			elif len(self.items[y]) == index+1:
-				reopen_back = self.items[y][index]
-			self.__close(index)
-			x,y = self.state
-			if reopen_back and not self.items[y].index(reopen_back) == 0:
-				index = self.items[y].index(reopen_back)
-				if self.items[y][index-1][1] == reopen_back[1]:
-					reopen = reopen_back
-			if reopen:
+			last = self.__close(index)
+			if not last == key:
 				x,y = self.state
-				index = self.items[y].index(reopen)
+				index = self.items[y].index((key,key_y))
 				self.__open(index)
 
 	def OnRightClick(self,event):
