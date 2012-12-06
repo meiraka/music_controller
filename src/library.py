@@ -86,21 +86,22 @@ class LibraryBase(wx.VListBox):
 			self.state = (row,0)
 		x,y = self.state
 		key,key_y = self.items[y][row]
-		if key_y == y:
-			top = self.GetVisibleBegin()
-			songs = self.songs[y][key]
-			new_items,new_songs = self.__extract(songs,y+1)
-			selected = self.items[y][row]
-			self.items.append(self.items[y][:row+1]+new_items+self.items[y][row+1:])
-			self.songs.append(new_songs)
-			self.state = (x,y+1)
-			self.SetItemCount(len(self.items[-1]))
-			new_row = self.items[y+1].index(selected)
-			self.SetSelection(new_row)
-			self.ScrollToLine(top)
-			self.RefreshAll()
-		else:
-			self.__close(row)
+		top = self.GetVisibleBegin()
+		songs = self.songs[y][key]
+		new_items,new_songs = self.__extract(songs,y+1)
+		selected = self.items[y][row]
+		self.items.append(self.items[y][:row+1]+new_items+self.items[y][row+1:])
+		self.songs.append(new_songs)
+		self.state = (x,y+1)
+		self.SetItemCount(len(self.items[-1]))
+		new_row = self.items[y+1].index(selected)
+		current_row = self.GetVisibleBegin()
+		self.SetSelection(new_row)
+		self.ScrollToLine(top)
+		if new_row < self.GetVisibleBegin() or self.GetVisibleEnd() < new_row:
+			self.ScrollToLine(new_row)
+			
+		self.RefreshAll()
 
 	def __extract(self,songs,index):
 		song_dict = {}
@@ -118,7 +119,7 @@ class LibraryBase(wx.VListBox):
 
 	def OnMeasureItem(self,index):
 		x,y = self.state
-		if len(self.items[y]) < index:
+		if len(self.items[y]) <= index:
 			return 0
 		key,key_y = self.items[y][index]
 		style = self.styles[x][key_y]
@@ -175,7 +176,29 @@ class LibraryBase(wx.VListBox):
 
 	def OnClick(self,event):
 		index = self.GetSelection()
-		self.__open(index)
+		x,y = self.state
+		key,key_y = self.items[y][index]
+		if key_y == y:
+			self.__open(index)
+		else:
+			reopen = False
+			reopen_back = False
+			if len(self.items[y]) > index+1:
+				key_next,key_y_next = self.items[y][index+1]
+				if key_y == key_y_next:
+					reopen = (key,key_y)
+			elif len(self.items[y]) == index+1:
+				reopen_back = self.items[y][index]
+			self.__close(index)
+			x,y = self.state
+			if reopen_back and not self.items[y].index(reopen_back) == 0:
+				index = self.items[y].index(reopen_back)
+				if self.items[y][index-1][1] == reopen_back[1]:
+					reopen = reopen_back
+			if reopen:
+				x,y = self.state
+				index = self.items[y].index(reopen)
+				self.__open(index)
 
 	def OnRightClick(self,event):
 		index = self.HitTest(event.GetPosition())
