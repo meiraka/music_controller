@@ -16,12 +16,17 @@ default_settings = [
 	[(u'genre',CRITERIA_STYLE_DEFAULT),
 		(u'%genre%',CRITERIA_STYLE_DEFAULT),
 		(u'%album%',CRITERIA_STYLE_ALBUM),
-		(u'%track% %title%',CRITERIA_STYLE_ALBUM)
+		(u'%track% %title%',CRITERIA_STYLE_SONG)
 	],
 	[(u'albumartist',CRITERIA_STYLE_DEFAULT),
 		(u'%albumartist%',CRITERIA_STYLE_DEFAULT),
 		(u'%album%',CRITERIA_STYLE_ALBUM)
 	],
+	[(u'artist',CRITERIA_STYLE_DEFAULT),
+		(u'%artist%',CRITERIA_STYLE_DEFAULT),
+		(u'%album%',CRITERIA_STYLE_ALBUM),
+		(u'%track% %title%',CRITERIA_STYLE_SONG)
+	]
 ]
 
 default_sorter = '%albumartist% %album% %track_index% %title%'
