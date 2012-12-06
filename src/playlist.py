@@ -120,13 +120,13 @@ class Playlist(PlaylistBase):
 	def __init__(self,parent,playlist,playback,debug=False):
 		text_height = environment.ui.text_height
 		PlaylistBase.__init__(self,parent,playlist,playback,
-			text_height*2,2,6,debug)
+			text_height*3/2,2,6,debug)
 		self.font = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT )
 		self.font_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOXTEXT)
 		self.active_background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT )
 		self.background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX)
 		self.artwork = artwork.Artwork()
-		self.artwork.size = (text_height*11,text_height*11)
+		self.artwork.size = (text_height*8,text_height*8)
 		self.artwork.attach(self.RefreshAll)
 
 	def head(self,song):
