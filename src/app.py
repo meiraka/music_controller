@@ -24,16 +24,15 @@ class App(wx.App):
 		if self.__debug: print 'connect to default host..'
 		if self.client.connect():
 			if self.__debug: print 'connected.'
-			return
 		else:
 			if self.__debug: print 'fail.'
-		for profile in self.client.config.profiles:
-			if self.__debug: print 'connect to %s host..' % str(profile)
-			if self.client.connect(profile):
-				if self.__debug: print 'connected. (^-^)'
-				break
-			else:
-				if self.__debug: print 'fail! (>_<)'
+			for profile in self.client.config.profiles:
+				if self.__debug: print 'connect to %s host..' % str(profile)
+				if self.client.connect(profile):
+					if self.__debug: print 'connected. (^-^)'
+					break
+				else:
+					if self.__debug: print 'fail! (>_<)'
 		self.client.start()
 
 	def MainLoop(self):
