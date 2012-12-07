@@ -86,6 +86,7 @@ class Client(Object):
 	playback = property(lambda self:self.__playback)
 	library = property(lambda self:self.__library)
 	playlist = property(lambda self:self.__playlist)
+	connection = property(lambda self:self.__connection)
 	
 
 class Connection(Object):
@@ -96,6 +97,7 @@ class Connection(Object):
 
 	CONNECT = 'connect'
 	CLOSE = 'close'
+	CLOSE_UNEXPECT = 'close_unexpect'
 
 	def __init__(self,config):
 		Object.__init__(self)
@@ -123,7 +125,7 @@ class Connection(Object):
 			mpd.socket.setdefaulttimeout(2)
 			connection.connect(profile[1].encode('utf8'),int(profile[2]))
 			self.__connection = connection
-			self.current = copy.copy(profile)
+			self.__current = copy.copy(profile)
 			self.connected = True
 			self.call(self.CONNECT)
 		except mpd.MPDError,err:
@@ -134,6 +136,14 @@ class Connection(Object):
 			return False
 		#if connection was established
 		return True
+
+	def close(self):
+		self.connected = False
+		try:
+			self.__connection.disconnect()
+		except:
+			pass
+		self.call(self.CLOSE)
 
 	def execute(self,func_name,skip=False,*args,**kwargs):
 		'''execute mpd commands.
@@ -172,7 +182,7 @@ class Connection(Object):
 				pass
 			except socket.error:
 				self.connected = False
-				self.call(self.CLOSE)
+				self.call(self.CLOSE_UNEXPECT)
 			except AttributeError,err:
 				pass
 			except Exception,err:

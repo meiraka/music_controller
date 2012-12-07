@@ -4,6 +4,7 @@ import client
 import frame
 import environment
 import thread
+import time
 
 class App(wx.App):
 	"""
@@ -13,8 +14,11 @@ class App(wx.App):
 		"""init this app"""
 		self.config_dir = environment.config_dir
 		self.client = client.Client(self.config_dir)
+		self.client.connection.bind(
+			self.client.connection.CLOSE_UNEXPECT,self.reconnect)
 		if params.has_key('debug'):self.__debug = True
 		else:self.__debug = False
+		self.__connected = None
 		wx.App.__init__(self)
 
 	def connect_default(self):
@@ -29,11 +33,25 @@ class App(wx.App):
 			for profile in self.client.config.profiles:
 				if self.__debug: print 'connect to %s host..' % str(profile)
 				if self.client.connect(profile):
+					self.__connected = profile
 					if self.__debug: print 'connected. (^-^)'
 					break
 				else:
 					if self.__debug: print 'fail! (>_<)'
 		self.client.start()
+
+	def reconnect(self):
+		thread.start_new_thread(self.__reconnect,())
+
+	def __reconnect(self):
+		if self.__debug: print 'reconnecting...',
+		time.sleep(3)
+		if self.client.connect():
+			if self.__debug: print ' done.'
+			pass
+		else:
+			if self.__debug: print ' fail.'
+			pass
 
 	def MainLoop(self):
 		wx.App.MainLoop(self)
