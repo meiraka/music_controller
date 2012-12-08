@@ -5,6 +5,7 @@ import frame
 import environment
 import thread
 import time
+import preferences
 
 class App(wx.App):
 	"""
@@ -38,6 +39,8 @@ class App(wx.App):
 					break
 				else:
 					if self.__debug: print 'fail! (>_<)'
+			else:
+				wx.CallAfter(self.__preferences)
 		self.client.start()
 
 	def reconnect(self):
@@ -51,7 +54,11 @@ class App(wx.App):
 			pass
 		else:
 			if self.__debug: print ' fail.'
-			pass
+			wx.CallAfter(self.__preferences)
+
+	def __preferences(self):
+		self.__preferences_frame = preferences.Frame(self.frame,self.client,self.__debug)
+		self.__preferences_frame.Show()
 
 	def MainLoop(self):
 		wx.App.MainLoop(self)
