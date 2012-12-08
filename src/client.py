@@ -212,6 +212,8 @@ class Connection(Object):
 		else:
 			return item
 	
+	current = property(lambda self:self.__current)
+	
 class Playback(Object,threading.Thread):
 	'''
 	Controlls playback interface.
