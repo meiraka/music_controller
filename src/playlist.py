@@ -22,6 +22,8 @@ class PlaylistBase(wx.VListBox):
 		self.__list_head_size = list_head_size
 		self.__list_height = list_height
 		self.__list_min_row = list_min_low
+		self.font = environment.ui.font
+		self.font_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOXTEXT)
 		self.playlist.bind(self.playlist.UPDATE,self.update_playlist)
 		self.playlist.bind(self.playlist.FOCUS,self.focus)
 		self.playback.bind(self.playback.UPDATE,self.refresh)
@@ -121,8 +123,6 @@ class Playlist(PlaylistBase):
 		text_height = environment.ui.text_height
 		PlaylistBase.__init__(self,parent,playlist,playback,
 			text_height*3/2,2,6,debug)
-		self.font = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT )
-		self.font_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOXTEXT)
 		self.active_background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT )
 		self.background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX)
 		self.artwork = artwork.Artwork()

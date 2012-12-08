@@ -43,7 +43,7 @@ class LibraryBase(wx.VListBox):
 		self.styles = [[style for format,style in i] for i in default_settings]
 		self.sorter = default_sorter
 		self.__master = []
-		self.default_font = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT )
+		self.default_font = environment.ui.font
 		self.default_font_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOXTEXT)
 		self.__criteria_default_height = criteria_default_height
 		self.__criteria_root_height = criteria_root_height

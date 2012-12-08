@@ -35,7 +35,9 @@ class __UI(object):
 			self.__cached[u'text_height'] = text_height
 			return self.__cached[u'text_height']
 
-	font = property(__get_font)
+	def __set(self,key,value):
+		self.__cached[key] = value
+	font = property(__get_font,lambda self,value: self.__set(u'font',value))
 	text_height = property(__get_text_height)
 
 ui = __UI()

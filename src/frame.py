@@ -14,8 +14,17 @@ class Frame(wx.Frame):
 		wx.Frame.__init__(self,parent,-1)
 		self.SetSize((640,480))
 		if debug: print 'init frame'
-
 		self.toolbar = toolbar.Toolbar(self,self.client.playback)
+		box = wx.ListBox(self,-1)
+		font1 = box.GetFont()
+		box.SetWindowVariant(wx.WINDOW_VARIANT_SMALL)
+		font2 = box.GetFont()
+		mat = font1.GetPointSize()+font2.GetPointSize()
+		font1.SetPointSize(mat/2)
+		font = font1
+		playlist.environment.ui.font = font
+		library.environment.ui.font = font
+		box.Hide()
 		if debug: print 'init playlist'
 		self.playlist = playlist.Playlist(self,self.client.playlist,self.client.playback,debug)
 		if debug: print 'init library'
