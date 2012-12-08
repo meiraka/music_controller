@@ -30,7 +30,7 @@ default_settings = [
 	]
 ]
 
-default_sorter = '%albumartist% %album% %track_index% %title%'
+default_sorter = '%albumartist% %disc% %date% %album% %track_index% %title%'
 
 class LibraryBase(wx.VListBox):
 	def __init__(self,parent,library,playlist,
