@@ -37,6 +37,7 @@ class LibraryBase(wx.VListBox):
 			criteria_default_height,criteria_root_height,
 			criteria_song_height,criteria_album_height,debug=False):
 		wx.VListBox.__init__(self,parent,-1)
+		self.parent = parent
 		self.library = library
 		self.playlist = playlist
 		self.settings = [[format for format,style in i] for i in default_settings]
@@ -233,10 +234,8 @@ class LibraryBase(wx.VListBox):
 		song_indexed = [(song.format(self.sorter),song) for song in self.__master]
 		song_indexed.sort()
 		songs = [song for title,song in song_indexed]
-		self.playlist.clear()
-		self.playlist.extend(songs)
-		if len(self.playlist):
-			self.playlist[0].play()
+		self.playlist.replace(songs)
+		self.parent.show_playlist()
 
 
 class Menu(wx.Menu):
