@@ -106,17 +106,20 @@ class PlaylistBase(wx.VListBox):
 		songs_pos = rect.GetPosition()
 		songs_pos[1] = songs_pos[1] - self.OnMeasureItem(index) * group_index
 		songs_rect = wx.Rect(*(list(songs_pos)+list(rect.GetSize())))
-		if type == 'nop':
-			self.draw_songs(dc,songs_rect,song)
-			self.draw_nothing(dc,rect,index,song,group_index)
-		elif type == 'song':
-			self.draw_songs(dc,songs_rect,song)
-			if self.playback.status.has_key(u'song') and song[u'pos'] == self.playback.status[u'song']:
-				self.draw_current_song(dc,rect,index,song,group_index)
+		try:
+			if type == 'nop':
+				self.draw_songs(dc,songs_rect,song)
+				self.draw_nothing(dc,rect,index,song,group_index)
+			elif type == 'song':
+				self.draw_songs(dc,songs_rect,song)
+				if self.playback.status.has_key(u'song') and song[u'pos'] == self.playback.status[u'song']:
+					self.draw_current_song(dc,rect,index,song,group_index)
+				else:
+					self.draw_song(dc,rect,index,song,group_index)
 			else:
-				self.draw_song(dc,rect,index,song,group_index)
-		else:
-			self.draw_head(dc,rect,index,song)
+				self.draw_head(dc,rect,index,song)
+		except:
+			pass
 
 class Playlist(PlaylistBase):
 	def __init__(self,parent,playlist,playback,debug=False):
