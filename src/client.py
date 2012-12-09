@@ -160,6 +160,10 @@ class Connection(Object):
 		if not self.connected:
 			return value
 		if self.__lock.acquire(not(skip)):
+			re_execute = False
+			if kwargs.has_key(u're_execute'):
+				del kwargs[u're_execute']
+				re_execute = True
 			try:
 				if type(func_name) == str or type(func_name) == unicode:
 					func_name = str(func_name)
@@ -169,7 +173,7 @@ class Connection(Object):
 					try:
 						for index,func_name_part in enumerate(func_name):
 							func = self.__decode(getattr(self.__connection,func_name_part))
-							func_args = [args_part[index] for args_part in args]
+							func_args = [args_part[index] for args_part in args if not args_part[index] == 'mpdclient_noitem']
 							func_kwargs = dict([(key,values[index]) for key,values in kwargs.iteritems()])
 							func(*func_args,**func_kwargs)
 					except Exception:
@@ -177,7 +181,9 @@ class Connection(Object):
 						pass
 					self.__connection.command_list_end()
 			except mpd.MPDError,err:
-				print traceback.format_exc()
+				print 'err at',func_name,args,kwargs
+				print 'mpderr',traceback.format_exc()
+					
 			except socket.timeout,err:
 				pass
 			except socket.error:
@@ -249,7 +255,7 @@ class Playback(Object,threading.Thread):
 				self.update()
 				time.sleep(1)
 			except:
-				print traceback.format_exc()
+				print 'daemom err:', traceback.format_exc()
 
 	def update(self):
 		status = self.connection.execute('status')
@@ -268,23 +274,23 @@ class Playback(Object,threading.Thread):
 				self.__playing = self.__status[u'song']
 				self.call(self.UPDATE_PLAYING)
 
-	def play(self,song=None):
+	def play(self,song=None,block=False):
 		if song:
-			self.connection.execute('play',True,song[u'pos'])
+			self.connection.execute('play',not(block),song[u'pos'])
 		else:
-			self.connection.execute('play',skip=True)
+			self.connection.execute('play',not(block))
 
-	def stop(self):
-		self.connection.execute('stop',skip=True)
+	def stop(self,block=False):
+		self.connection.execute('stop',not(block))
 
-	def pause(self):
-		self.connection.execute('pause',skip=True)
+	def pause(self,block=False):
+		self.connection.execute('pause',not(block))
 
-	def next(self):
-		self.connection.execute('next',skip=True)
+	def next(self,block=False):
+		self.connection.execute('next',not(block))
 	
-	def previous(self):
-		self.connection.execute('previous',skip=True)
+	def previous(self,block=False):
+		self.connection.execute('previous',not(block))
 
 	def __get_status(self):
 		if self.__running:
@@ -378,15 +384,12 @@ class Playlist(Object):
 		self.__focused = int(song[u'pos'])
 		self.call(self.FOCUS)
 
-
-
-
 	def append(self,song):
 		"""apennd song to end of playlist.
 		"""
 		add = 'add'
 		filepath = song[u'file'].encode('utf8')
-		self.__connection.execute(add,True,filepath)
+		self.__connection.execute(add,False,filepath)
 		self.__playback.update()
 
 	def extend(self,songs):
@@ -395,14 +398,24 @@ class Playlist(Object):
 		add = 'add'
 		add = [add for song in songs if song.has_key(u'file')]
 		filepath = [song[u'file'].encode('utf8') for song in songs if song.has_key(u'file')]
-		self.__connection.execute(add,True,filepath)
+		self.__connection.execute(add,False,filepath)
 		self.__playback.update()
 
 	def clear(self):
 		"""Clear current playlist.
 		"""
-		self.__connection.execute('clear',True)
+		self.__connection.execute('clear',False)
 		self.__playback.update()
+
+	def replace(self,songs):
+		add = 'add'
+		no_arg = 'mpdclient_noitem'
+		add = ['clear']+[add for song in songs if song.has_key(u'file')]+['play']
+		filepath = [no_arg]+ [song[u'file'].encode('utf8') for song in songs if song.has_key(u'file')] + [no_arg]
+		self.__connection.execute(add,False,filepath)
+		self.__playback.update()
+
+	
 
 	current = property(lambda self:copy.copy(self.__data[self.current_index]))
 	current_index = property(lambda self:int(self.__playback.status.song))
