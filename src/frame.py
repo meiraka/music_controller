@@ -4,6 +4,7 @@ import toolbar
 import playlist
 import library
 import info
+import menubar
 
 
 class Frame(wx.Frame):
@@ -13,6 +14,8 @@ class Frame(wx.Frame):
 		self.client = client
 		wx.Frame.__init__(self,parent,-1)
 		self.SetSize((640,480))
+		self.menubar = menubar.MenuBar(self,client)
+		self.SetMenuBar(self.menubar)
 		if debug: print 'init frame'
 		self.toolbar = toolbar.Toolbar(self,self.client.playback)
 
