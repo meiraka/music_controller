@@ -27,6 +27,7 @@ class MenuBar(wx.MenuBar):
 			for id,label in items:
 				self.__ids[id] = head+u'_'+label
 				menu.Append(id,label)
+		self.parent.Bind(wx.EVT_MENU,self.OnMenu)
 
 	def OnMenu(self,event):
 		label = self.__ids[event.GetId()]
