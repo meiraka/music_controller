@@ -14,7 +14,7 @@ class MenuBar(wx.MenuBar):
 			]
 
 		self.__functions = {
-				u'Edit_Preferences':lambda: preferences.Frame(self.parent,self.client).Show()
+				u'Edit_Preferences':self.parent.show_preferences
 
 				}
 		self.__keys = {
@@ -53,7 +53,6 @@ class MenuBar(wx.MenuBar):
 					flags = wx.ACCEL_NORNAL
 				if keycode:
 					table.append((flags,keycode,id))
-					print key
 		self.parent.SetAcceleratorTable(wx.AcceleratorTable(table))
 				
 

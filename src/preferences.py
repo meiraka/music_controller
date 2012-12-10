@@ -55,6 +55,7 @@ class Connection(wx.Panel):
 		self.add.Bind(wx.EVT_BUTTON,self.OnNew)
 		self.delete.Bind(wx.EVT_BUTTON,self.OnDel)
 		self.Bind(wx.EVT_TEXT,self.OnText)
+		self.Bind(wx.EVT_CLOSE,self.OnClose)
 	
 
 	def update(self):
@@ -136,6 +137,7 @@ class Connection(wx.Panel):
 		index = self.box.GetSelection()
 		self.__del(index)
 	
-
+	def OnClose(self,event):
+		self.Hide()
 		
 

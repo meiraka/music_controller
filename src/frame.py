@@ -5,7 +5,7 @@ import playlist
 import library
 import info
 import menubar
-
+import preferences
 
 class Frame(wx.Frame):
 	def __init__(self,parent,client,debug=False):
@@ -37,6 +37,7 @@ class Frame(wx.Frame):
 		self.SetSizer(self.sizer)
 		self.Layout()
 		self.Show()
+		self.preferences = None
 		if debug: print 'sized.'
 		self.client.playback.bind(self.client.playback.UPDATE_PLAYING,self.change_title)
 		if debug: print 'binded.'
@@ -61,3 +62,8 @@ class Frame(wx.Frame):
 			if len(self.client.playlist) > song_id:
 				song = self.client.playlist[song_id]
 				self.SetTitle(song.format('%title% - %artist%'))
+
+	def show_preferences(self):
+		if not self.preferences:
+			self.preferences = preferences.Frame(None,self.client)
+		self.preferences.Show()
