@@ -19,8 +19,10 @@ class MacToolbar(object):
 			library=wx.ArtProvider.GetBitmap(wx.ART_GOTO_LAST,size=size)
 			)
 		self.icons = dict([(k, (v, wx.NewId() ) ) for k,v in icons.iteritems()])
+		self.__tool.AddStretchableSpace()
 		for k,(icon,id) in self.icons.iteritems():
 			self.__tool.AddLabelTool(id,k,icon)
+		self.__tool.AddStretchableSpace()
 		self.__tool.Realize()
 		self.__tool.Bind(wx.EVT_TOOL,self.OnTool)
 
