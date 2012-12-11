@@ -23,15 +23,15 @@ class Frame(wx.Frame):
 		self.playlist = playlist.Playlist(self,self.client.playlist,self.client.playback,debug)
 		if debug: print 'init library'
 		self.library = library.Library(self,self.client.library,self.client.playlist,debug)
-		#self.info = info.Info(self,self.client,debug)
+		self.info = info.Info(self,self.client,debug)
 		if debug: print 'sizing'
 
 		self.sizer = wx.BoxSizer()
-		s = wx.BoxSizer(wx.VERTICAL)
-		#s.Add(self.info,0,wx.EXPAND)
+		s = wx.BoxSizer()
 		s.Add(self.playlist,1,flag=wx.EXPAND)
 		s.Add(self.library,1,flag=wx.EXPAND)
 		self.sizer.Add(s,1,flag=wx.EXPAND)
+		self.sizer.Add(self.info,0,wx.EXPAND)
 		#self.sizer.Add(self.albumlist,0,flag=wx.EXPAND)
 		self.library.Hide()
 		self.SetSizer(self.sizer)
