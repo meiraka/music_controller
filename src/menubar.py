@@ -3,8 +3,9 @@ import wx
 import preferences
 
 class MenuBar(wx.MenuBar):
-	def __init__(self,parent,client):
+	def __init__(self,parent,client,accele=True):
 		wx.MenuBar.__init__(self)
+		self.accele = accele
 		self.parent = parent
 		self.client = client
 		self.menu_list = [
@@ -31,6 +32,7 @@ class MenuBar(wx.MenuBar):
 				menu.Append(id,label)
 		self.parent.Bind(wx.EVT_MENU,self.OnMenu)
 		self.set_accelerator_table(self.__keys)
+		self.set_menu_accelerator(self.__keys,self.accele)
 
 	def set_accelerator_table(self,keys):
 		key_tables = dict(Ctrl=wx.ACCEL_CTRL)
@@ -55,10 +57,25 @@ class MenuBar(wx.MenuBar):
 					table.append((flags,keycode,id))
 		self.parent.SetAcceleratorTable(wx.AcceleratorTable(table))
 				
+	def set_menu_accelerator(self,keys,accele):
+		for index,(head,items) in enumerate(self.menu_list):
+			menu = self.GetMenu(index)
+			self.SetLabelTop(index,self.menu_label(head,accele))
+			for id,label in items:
+				key = keys[head+u'_'+label]
+				menu.SetLabel(id,self.menu_label(label,accele)+u'\t'+key)
 
+	def menu_label(self,label,accele):
+		if accele:
+			i18n = label
+			if i18n[0] == label[0]:
+				print u'&%s' % label[0] + i18n[1:]
+				return u'&%s' % label[0] + i18n[1:]
+			else:
+				return i18n + u'(&%s)' % label[0]
+		else:
+			return label
 
-	def set_menu_accelerator(self,keys):
-		pass
 	def OnMenu(self,event):
 		label = self.__ids[event.GetId()]
 		func = self.__functions[label]
