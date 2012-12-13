@@ -55,7 +55,9 @@ class Artwork(ArtworkFinder):
 			w,h = mirror.GetSize()
 			for x in xrange(w):
 				for y in xrange(h):
-					mirror.SetAlpha(x,y,200 - y*3 if y*3 < 200 else 0)
+					if y:
+						p = int(y*1.0/h * 200)
+						mirror.SetAlpha(x,y,200-p if 200-p>0 else 0)
 			wx.CallAfter(self.__cache_image,path,mirror)
 
 		def __cache_image(self,path,image):
@@ -91,16 +93,19 @@ class Artwork(ArtworkFinder):
 		path = self.get_image_path(song)
 		if not path:
 			return self.__get_empty_image()
-		if self.__images.has_key((path,self.size)):
+		if self.__images.has_key((path,self.size)) and self.__images[(path,self.size)]:
 			return self.__images[(path,self.size)]
+		elif self.__images.has_key((path,self.size)):
+			return self.__get_empty_image()
 		else:
 			thread.start_new_thread(self.__load_image,(path,song))
 			return self.__get_empty_image()
 
 	def __load_image(self,path,song):
-		image = wx.Image(path)
-		w,h = image.GetSize()
+		self.__images[(path,self.size)] = None
 		if self.resize:
+			image = wx.Image(path)
+			w,h = image.GetSize()
 			if w > h:
 				new_size = (self.size[0],int(1.0*h/w*self.size[1]))
 			else:
