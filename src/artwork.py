@@ -34,6 +34,7 @@ class Artwork(ArtworkFinder):
 			self.__images = {}
 			self.__empty_image = None
 			self.size = (120,120)
+			self.length = 0.3
 		def __getitem__(self,song):
 			path = self.get_image_path(song)
 			if not path:
@@ -45,9 +46,10 @@ class Artwork(ArtworkFinder):
 
 		def load(self,path,image):
 			mirror = image.Mirror()
-			mirror = mirror.Resize((mirror.GetWidth(),mirror.GetHeight()/3),(0,-mirror.GetHeight()*2/3))
+			h = int(mirror.GetHeight()*self.length)
 			mirror = mirror.Rotate90()
 			mirror = mirror.Rotate90()
+			mirror = mirror.Size((mirror.GetWidth(),h),(0,0))
 			if not mirror.HasAlpha():
 				mirror.InitAlpha()
 			w,h = mirror.GetSize()
