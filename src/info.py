@@ -15,25 +15,34 @@ class Info(wx.Panel):
 		self.__lock = False
 		self.__image = None
 		self.artwork = wx.StaticBitmap(self,-1)
+		self.artwork_mirror = wx.StaticBitmap(self,-1)
 		self.title = wx.StaticText(self,-1)
 		self.artist = wx.StaticText(self,-1)
-		self.album = wx.StaticText(self,-1)
+		self.album = wx.StaticText(self,-1,style=wx.ALIGN_LEFT)
+		self.genre = wx.StaticText(self,-1,style=wx.ALIGN_LEFT)
 		self.artwork_loader = artwork.Artwork()
 		h = environment.ui.text_height
 		self.artwork_loader.size = (h*12,h*12)
 		self.SetMinSize((h*16,h*16))
 		self.artwork_loader.attach(self.update)
 		sizer = wx.GridBagSizer()
-		params = dict(flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER|wx.ALL,border=3)
+		params = dict(flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTRE|wx.ALL,border=3)
+		params_image = dict(flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTRE)
+		params_r = dict(flag=wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.ALIGN_LEFT|wx.ALL,border=3)
+		params_l = dict(flag=wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.ALIGN_RIGHT|wx.ALL,border=3)
 
-		sizer.Add(self.artwork,(0,0),(1,2),**params)
+		sizer.Add(self.artwork,(0,0),(1,2),**params_image)
+		sizer.Add(self.artwork_mirror,(1,0),(1,2),**params_image)
 		sizer.Add(self.title,(2,0),(1,2),**params)
 		sizer.Add(self.artist,(3,0),(1,2),**params)
-		sizer.Add(self.album,(5,0),(1,2),**params)
-		sizer.AddGrowableCol(0)
-		sizer.AddGrowableCol(1)
+		sizer.Add(wx.StaticText(self,-1,u'album:',style=wx.ALIGN_RIGHT),(5,0),**params_l)
+		sizer.Add(self.album,(5,1),**params_r)
+		sizer.Add(wx.StaticText(self,-1,u'genre:',style=wx.ALIGN_RIGHT),(6,0),**params_l)
+		sizer.Add(self.genre,(6,1),**params_r)
+		#sizer.AddGrowableCol(0)
+		#sizer.AddGrowableCol(1)
 		outer = wx.BoxSizer(wx.VERTICAL)
-		outer.Add(sizer,1,wx.ALL,border=h*2-3)
+		outer.Add(sizer,0,wx.ALL,border=h*2-3)
 		self.SetSizer(outer)
 		self.client.playback.bind(self.client.playback.UPDATE,self.update)
 
@@ -57,5 +66,6 @@ class Info(wx.Panel):
 		if not self.__image == image and image:
 			self.__image = image
 			self.artwork.SetBitmap(self.__image)
+			self.artwork_mirror.SetBitmap(self.artwork_loader.mirror[song])
 			self.Layout()
 		

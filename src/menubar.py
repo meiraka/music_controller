@@ -69,7 +69,6 @@ class MenuBar(wx.MenuBar):
 		if accele:
 			i18n = label
 			if i18n[0] == label[0]:
-				print u'&%s' % label[0] + i18n[1:]
 				return u'&%s' % label[0] + i18n[1:]
 			else:
 				return i18n + u'(&%s)' % label[0]
