@@ -74,11 +74,12 @@ class Connection(wx.Panel):
 		self.box.Set(labels)
 		if not self.host.GetValue():
 			self.selected = self.connection.current
-			self.selected_index = labels.index(self.selected[0])
+			if self.selected:
+				self.selected_index = labels.index(self.selected[0])
 		if len(labels) <= self.selected_index:
 			self.selected_index = len(labels) - 1
 			self.selected = profiles[self.selected_index]
-		if not len(labels) == 0:
+		if not len(labels) == 0 and not self.selected_index == -1:
 			self.box.SetSelection(self.selected_index)
 			self.__set_text()
 		self.profiles = profiles
