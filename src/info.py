@@ -63,9 +63,15 @@ class Info(wx.Panel):
 			self.album.SetLabel(song[u'album'])
 			self.Layout()
 		image = self.artwork_loader[song]
-		if not self.__image == image and image:
+		if not self.__image == image:
 			self.__image = image
-			self.artwork.SetBitmap(self.__image)
-			self.artwork_mirror.SetBitmap(self.artwork_loader.mirror[song])
+			if self.__image:
+				self.artwork.SetBitmap(self.__image)
+				self.artwork_mirror.SetBitmap(self.artwork_loader.mirror[song])
+				self.artwork.Show()
+				self.artwork_mirror.Show()
+			else:
+				self.artwork.Hide()
+				self.artwork_mirror.Hide()
 			self.Layout()
 		

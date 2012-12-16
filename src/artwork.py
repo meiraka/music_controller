@@ -99,7 +99,7 @@ class Artwork(ArtworkFinder):
 			return self.__get_empty_image()
 		else:
 			thread.start_new_thread(self.__load_image,(path,song))
-			return self.__get_empty_image()
+			return None
 
 	def __load_image(self,path,song):
 		self.__images[(path,self.size)] = None
