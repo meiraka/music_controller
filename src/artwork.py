@@ -68,7 +68,18 @@ class Artwork(ArtworkFinder):
 
 		def __empty(self):
 			if not self.__empty_image:
-				self.__empty_image = wx.EmptyBitmap(*self.size)
+				image = wx.EmptyImage(*self.size)
+				h = int(image.GetHeight()*self.length)
+				image = image.Size((image.GetWidth(),h),(0,0))
+				w,h = image.GetSize()
+				if not image.HasAlpha():
+					image.InitAlpha()
+				for x in xrange(w):
+					for y in xrange(h):
+						if y:
+							p = int(y*1.0/h * 200)
+							image.SetAlpha(x,y,200-p if 200-p>0 else 0)
+				self.__empty_image = wx.BitmapFromImage(image)
 			return self.__empty_image
 			
 	def __init__(self):
