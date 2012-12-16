@@ -23,14 +23,21 @@ class MenuBar(wx.MenuBar):
 				(wx.NewId(),u'Next',self.NORMAL),
 				(wx.NewId(),u'splitter',self.SPLITTER),
 				(wx.NewId(),u'Shuffle',self.TOGGLE),
-				(wx.NewId(),u'Repeate',self.TOGGLE),
-				(wx.NewId(),u'Repeate one',self.TOGGLE),
+				(wx.NewId(),u'Repeat',self.TOGGLE),
+				(wx.NewId(),u'Single',self.TOGGLE),
 				])
 			]
 
 		self.__functions = {
-				u'Edit_Preferences':self.parent.show_preferences
-
+				u'Edit_Preferences':self.parent.show_preferences,
+				u'Playback_Play':self.client.playback.play,
+				u'Playback_Pause':self.client.playback.pause,
+				u'Playback_Stop':self.client.playback.stop,
+				u'Playback_Previous':self.client.playback.previous,
+				u'Playback_Next':self.client.playback.next,
+				u'Playback_Shuffle':self.set_shuffle,
+				u'Playback_Repeat':self.set_repeat,
+				u'Playback_Single':self.set_single
 				}
 		self.__keys = {
 				u'Edit_Preferences':'Ctrl+,'
@@ -45,9 +52,16 @@ class MenuBar(wx.MenuBar):
 				if menu_type == self.NORMAL:
 					self.__ids[id] = head+u'_'+label
 					menu.Append(id,label)
+				elif menu_type == self.SPLITTER:
+					menu.AppendSeparator()
+				elif menu_type == self.TOGGLE:
+					self.__ids[id] = head+u'_'+label
+					menu.AppendCheckItem(id,label)
+					
 		self.parent.Bind(wx.EVT_MENU,self.OnMenu)
 		self.set_accelerator_table(self.__keys)
 		self.set_menu_accelerator(self.__keys,self.accele)
+		self.client.playback.bind(self.client.playback.UPDATE,self.OnUpdate)
 
 	def set_accelerator_table(self,keys):
 		key_tables = dict(Ctrl=wx.ACCEL_CTRL)
@@ -99,8 +113,58 @@ class MenuBar(wx.MenuBar):
 		else:
 			return label
 
+	def set_shuffle(self):
+		for index,(head,items) in enumerate(self.menu_list):
+			for id,label,menu_type in items:
+				if label == u'Shuffle':
+					menu = self.GetMenu(index)
+					self.client.playback.random(menu.IsChecked(id))
+					break
+			
+	def set_repeat(self):
+		for index,(head,items) in enumerate(self.menu_list):
+			for id,label,menu_type in items:
+				if label == u'Repeat':
+					menu = self.GetMenu(index)
+					self.client.playback.repeat(menu.IsChecked(id))
+					break
+	def set_single(self):
+		for index,(head,items) in enumerate(self.menu_list):
+			for id,label,menu_type in items:
+				if label == u'Single':
+					menu = self.GetMenu(index)
+					self.client.playback.single(menu.IsChecked(id))
+					break
+	
 	def OnMenu(self,event):
 		label = self.__ids[event.GetId()]
 		func = self.__functions[label]
 		func()
 
+	def OnUpdate(self,*args,**kwargs):
+		status = self.client.playback.status
+		if not status:
+			return
+		for index,(head,items) in enumerate(self.menu_list):
+			for id,label,menu_type in items:
+				menu = self.GetMenu(index)
+				if label == u'Shuffle':
+					key = u'random'
+					current = menu.IsChecked(id)
+					new = True if key in status and status[key] == u'1' else False
+					if not current == new:
+						menu.Check(id,new)
+				if label == u'Repeat':
+					key = u'repeat'
+					current = menu.IsChecked(id)
+					new = True if key in status and status[key] == u'1' else False
+					if not current == new:
+						menu.Check(id,new)
+							
+				if label == u'Single':
+					key = u'single'
+					current = menu.IsChecked(id)
+					new = True if key in status and status[key] == u'1' else False
+					if not current == new:
+						menu.Check(id,new)
+			

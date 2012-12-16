@@ -292,6 +292,18 @@ class Playback(Object,threading.Thread):
 	def previous(self,block=False):
 		self.connection.execute('previous',not(block))
 
+	def random(self,activate,block=False):
+		arg = '1' if activate else '0'
+		self.connection.execute('random',not(block),arg)
+
+	def repeat(self,activate,block=False):
+		arg = '1' if activate else '0'
+		self.connection.execute('repeat',not(block),arg)
+
+	def single(self,activate,block=False):
+		arg = '1' if activate else '0'
+		self.connection.execute('single',not(block),arg)
+
 	def __get_status(self):
 		if self.__running:
 			return self.__status
