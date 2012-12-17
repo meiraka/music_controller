@@ -337,7 +337,7 @@ class Playlist(Object):
 		self.__current = None
 		self.__connection.bind(self.__connection.CONNECT,self.__update_cache)
 		self.__playback.bind(self.__playback.UPDATE_PLAYLIST,self.__update_cache)
-		self.__playback.bind(self.__playback.UPDATE,self.__focus_playling)
+		self.__playback.bind(self.__playback.UPDATE,self.__focus_playing)
 
 	def __iter__(self):
 		return list.__iter__(self.__data)
@@ -367,10 +367,11 @@ class Playlist(Object):
 		"""
 		data = self.__connection.execute('playlistinfo')
 		self.__data = [Playlist.Song(song,self.__connection) for song in data]
-		self.focus_playling()
+		if self.__config.playlist_focus:
+			self.focus_playing()
 		self.call(self.UPDATE,self.__data)
 
-	def focus_playling(self):
+	def focus_playing(self):
 		""" set focus and select value to current playing song.
 		"""
 		if self.__playback.status and self.__playback.status.has_key(u'song'):
@@ -385,8 +386,8 @@ class Playlist(Object):
 				self.__set_select([song])
 				self.__set_focus(song)
 
-	def __focus_playling(self,*args,**kwargs):
-		self.focus_playling()
+	def __focus_playing(self,*args,**kwargs):
+		self.focus_playing()
 
 	def __set_select(self,songs):
 		self.__selected = [int(song[u'pos']) for song in songs]
@@ -565,3 +566,28 @@ class Config(Object):
 
 	default_profile = property(__get_default_profile)
 
+	def __get_booL(key,default):
+		def _get(self):
+			if not key in self.__config:
+				self.__config[key] = True if default else False
+			self.__config[key]
+		def _set(self,value):
+			self.__config[key] = True if value else False
+			self.save()
+
+		return (_get,_set)
+
+	def __get_unicode(key,default):
+		def _get(self):
+			if not key in self.__config:
+				self.__config[key] = unicode(default)
+			self.__config[key]
+		def _set(self,value):
+			self.__config[key] = value
+			self.save()
+
+		return (_get,_set)
+
+
+	playlist_focus = property(*__get_booL(u'playlist_focus',True))
+	

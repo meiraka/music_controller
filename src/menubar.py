@@ -44,7 +44,8 @@ class MenuBar(wx.MenuBar):
 				u'Playback_Repeat':self.set_repeat,
 				u'Playback_Single':self.set_single,
 				u'View_Playlist':self.parent.show_playlist,
-				u'View_Library':self.parent.show_library
+				u'View_Library':self.parent.show_library,
+				u'View_Focus current':self.focus_song,
 				}
 		self.__keys = {
 				u'Edit_Preferences':'Ctrl+,',
@@ -165,13 +166,23 @@ class MenuBar(wx.MenuBar):
 					menu = self.GetMenu(index)
 					self.client.playback.single(menu.IsChecked(id))
 					break
-	
+	def focus_song(self):
+		self.parent.playlist.focus()
+
 	def OnMenu(self,event):
 		label = self.__ids[event.GetId()]
 		func = self.__functions[label]
 		func()
 
 	def OnUpdate(self,*args,**kwargs):
+		self.update_by_status()
+		self.update_by_config()
+
+	def update_by_config(self):
+		focus = self.client.config.playlist_focus
+		
+
+	def update_by_status(self):
 		status = self.client.playback.status
 		if not status:
 			return
