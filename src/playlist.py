@@ -52,13 +52,16 @@ class PlaylistBase(wx.VListBox):
 		wx.CallAfter(self.__focus,self.playlist.focused)
 
 	def __focus(self,song):
+		index,n = self.GetFirstSelected()
+		if index > -1 and not self.IsVisible(index):
+			self.Select(0,True)
 		self.DeselectAll()
 		for index,(t,i,s) in enumerate(self.ui_songs):
 			if t == 'song' and s == song:
 				self.Select(index,True)
 				if not self.IsVisible(index):
 					self.ScrollLines(index)
-
+				break
 	def update_playlist(self,*args,**kwargs):
 		wx.CallAfter(self.__update_playlist)
 
