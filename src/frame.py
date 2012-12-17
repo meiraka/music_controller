@@ -6,6 +6,7 @@ import library
 import info
 import menubar
 import preferences
+import environment
 
 class Frame(wx.Frame):
 	def __init__(self,parent,client,debug=False):
@@ -14,7 +15,7 @@ class Frame(wx.Frame):
 		self.client = client
 		wx.Frame.__init__(self,parent,-1)
 		self.SetSize((640,480))
-		self.menubar = menubar.MenuBar(self,client)
+		self.menubar = menubar.MenuBar(self,client,accele=False if environment.gui == 'mac' else True)
 		self.SetMenuBar(self.menubar)
 		if debug: print 'init frame'
 		self.toolbar = toolbar.Toolbar(self,self.client.playback)

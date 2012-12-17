@@ -48,6 +48,12 @@ class MenuBar(wx.MenuBar):
 				}
 		self.__keys = {
 				u'Edit_Preferences':'Ctrl+,',
+				u'Playback_Play':'Space',
+				u'Playback_Next':'Ctrl+Right',
+				u'Playback_Previous':'Ctrl+Left',
+				u'Playback_Shuffle':'Ctrl+b',
+				u'Playback_Repeat':'Ctrl+n',
+				u'Playback_Single':'Ctrl+m',
 				u'View_Playlist':'Ctrl+1',
 				u'View_Library':'Ctrl+2',
 				}
@@ -71,12 +77,16 @@ class MenuBar(wx.MenuBar):
 					menu.AppendRadioItem(id,label)
 					
 		self.parent.Bind(wx.EVT_MENU,self.OnMenu)
-		self.set_accelerator_table(self.__keys)
+		if self.accele:
+			self.set_accelerator_table(self.__keys)
 		self.set_menu_accelerator(self.__keys,self.accele)
 		self.client.playback.bind(self.client.playback.UPDATE,self.OnUpdate)
 
 	def set_accelerator_table(self,keys):
-		key_tables = dict(Ctrl=wx.ACCEL_CTRL)
+		flag_tables = dict(Ctrl=wx.ACCEL_CTRL)
+		key_tables = dict(Space=wx.WXK_SPACE,
+					Right=wx.WXK_RIGHT,
+					Left=wx.WXK_LEFT)
 		table = []
 		def get_key(key,head,id,label):
 			if not keys.has_key(head+u'_'+label):
@@ -86,15 +96,17 @@ class MenuBar(wx.MenuBar):
 			flags = None
 			keycode = None
 			for i in splitted:
-				if key_tables.has_key(i):
+				if flag_tables.has_key(i):
 					if flags == None:
-						flags = key_tables[i]
+						flags = flag_tables[i]
 					else:
-						flags = flags | key_tables[i]
+						flags = flags | flag_tables[i]
+				elif i in key_tables:
+					keycode = key_tables[i]
 				else:
 					keycode = ord(i)
 			if not flags:
-				flags = wx.ACCEL_NORNAL
+				flags = wx.ACCEL_NORMAL
 			return (flags,keycode)
 
 		for head,items in self.menu_list:
