@@ -5,6 +5,7 @@ import preferences
 class MenuBar(wx.MenuBar):
 	NORMAL = 'normal'
 	TOGGLE = 'toggle'
+	SELECT = 'select'
 	SPLITTER = 'splitter'
 	def __init__(self,parent,client,accele=True):
 		wx.MenuBar.__init__(self)
@@ -17,7 +18,6 @@ class MenuBar(wx.MenuBar):
 				]),
 			('Playback',[
 				(wx.NewId(),u'Play',self.NORMAL),
-				(wx.NewId(),u'Pause',self.NORMAL),
 				(wx.NewId(),u'Stop',self.NORMAL),
 				(wx.NewId(),u'Previous',self.NORMAL),
 				(wx.NewId(),u'Next',self.NORMAL),
@@ -25,22 +25,31 @@ class MenuBar(wx.MenuBar):
 				(wx.NewId(),u'Shuffle',self.TOGGLE),
 				(wx.NewId(),u'Repeat',self.TOGGLE),
 				(wx.NewId(),u'Single',self.TOGGLE),
+				]),
+			('View',[
+				(wx.NewId(),u'Playlist',self.SELECT),
+				(wx.NewId(),u'Library',self.SELECT),
+				(wx.NewId(),u'splitter',self.SPLITTER),
+				(wx.NewId(),u'Focus current',self.NORMAL)
 				])
 			]
 
 		self.__functions = {
 				u'Edit_Preferences':self.parent.show_preferences,
-				u'Playback_Play':self.client.playback.play,
-				u'Playback_Pause':self.client.playback.pause,
+				u'Playback_Play':self.set_play,
 				u'Playback_Stop':self.client.playback.stop,
 				u'Playback_Previous':self.client.playback.previous,
 				u'Playback_Next':self.client.playback.next,
 				u'Playback_Shuffle':self.set_shuffle,
 				u'Playback_Repeat':self.set_repeat,
-				u'Playback_Single':self.set_single
+				u'Playback_Single':self.set_single,
+				u'View_Playlist':self.parent.show_playlist,
+				u'View_Library':self.parent.show_library
 				}
 		self.__keys = {
-				u'Edit_Preferences':'Ctrl+,'
+				u'Edit_Preferences':'Ctrl+,',
+				u'View_Playlist':'Ctrl+1',
+				u'View_Library':'Ctrl+2',
 				}
 
 		self.__ids = {}
@@ -57,6 +66,9 @@ class MenuBar(wx.MenuBar):
 				elif menu_type == self.TOGGLE:
 					self.__ids[id] = head+u'_'+label
 					menu.AppendCheckItem(id,label)
+				elif menu_type == self.SELECT:
+					self.__ids[id] = head+u'_'+label
+					menu.AppendRadioItem(id,label)
 					
 		self.parent.Bind(wx.EVT_MENU,self.OnMenu)
 		self.set_accelerator_table(self.__keys)
@@ -112,6 +124,12 @@ class MenuBar(wx.MenuBar):
 				return i18n + u'(&%s)' % label[0]
 		else:
 			return label
+
+	def set_play(self):
+		playback = self.client.playback
+		status = playback.status
+		if status and u'state' in status:
+			playback.pause() if status[u'state'] == u'play' else playback.play()
 
 	def set_shuffle(self):
 		for index,(head,items) in enumerate(self.menu_list):
