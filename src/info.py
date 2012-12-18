@@ -16,34 +16,35 @@ class Info(wx.Panel):
 		self.__image = None
 		self.artwork = wx.StaticBitmap(self,-1)
 		self.artwork_mirror = wx.StaticBitmap(self,-1)
-		self.title = wx.StaticText(self,-1)
-		self.artist = wx.StaticText(self,-1)
-		self.album = wx.StaticText(self,-1,style=wx.ALIGN_LEFT)
-		self.genre = wx.StaticText(self,-1,style=wx.ALIGN_LEFT)
+		self.single_text = dict(
+			title =   wx.StaticText(self,-1)
+			,artist = wx.StaticText(self,-1)
+			)
+		self.double_text = dict(
+			album =  wx.StaticText(self,-1,style=wx.ALIGN_LEFT)
+			,genre = wx.StaticText(self,-1,style=wx.ALIGN_LEFT)
+			)
 		self.artwork_loader = artwork.Artwork()
 		h = environment.ui.text_height
 		self.artwork_loader.size = (h*12,h*12)
 		self.SetMinSize((h*16,h*16))
 		self.artwork_loader.attach(self.update)
-		sizer = wx.GridBagSizer()
-		params = dict(flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTRE|wx.ALL,border=3)
-		params_image = dict(flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTRE)
-		params_r = dict(flag=wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.ALIGN_LEFT|wx.ALL,border=3)
-		params_l = dict(flag=wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.ALIGN_RIGHT|wx.ALL,border=3)
 
-		sizer.Add(self.artwork,(0,0),(1,2),**params_image)
-		sizer.Add(self.artwork_mirror,(1,0),(1,2),**params_image)
-		sizer.Add(self.title,(2,0),(1,2),**params)
-		sizer.Add(self.artist,(3,0),(1,2),**params)
-		sizer.Add(wx.StaticText(self,-1,u'album:',style=wx.ALIGN_RIGHT),(5,0),**params_l)
-		sizer.Add(self.album,(5,1),**params_r)
-		sizer.Add(wx.StaticText(self,-1,u'genre:',style=wx.ALIGN_RIGHT),(6,0),**params_l)
-		sizer.Add(self.genre,(6,1),**params_r)
-		#sizer.AddGrowableCol(0)
-		#sizer.AddGrowableCol(1)
-		outer = wx.BoxSizer(wx.VERTICAL)
-		outer.Add(sizer,0,wx.ALL,border=h*2-3)
-		self.SetSizer(outer)
+		imgsizer = wx.BoxSizer(wx.VERTICAL)
+		imgsizer.Add(self.artwork,0)
+		imgsizer.Add(self.artwork_mirror,0)
+		singlesizer = wx.BoxSizer(wx.VERTICAL)
+		for label in self.single_text.values():
+			singlesizer.Add(label,0,wx.ALIGN_CENTRE|wx.ALL,border=3)
+		doublesizer = wx.GridBagSizer()
+		for index,(key,label) in enumerate(self.double_text.iteritems()):
+			doublesizer.Add(wx.StaticText(self,-1,key+':'),(index,0),flag=wx.ALIGN_RIGHT|wx.ALL,border=3)
+			doublesizer.Add(label,(index,1),flag=wx.ALIGN_LEFT|wx.ALL,border=3)
+		sizer = wx.BoxSizer(wx.VERTICAL)
+		sizer.Add(imgsizer,0,wx.ALIGN_CENTRE|wx.TOP,border=h*2)
+		sizer.Add(singlesizer,0,wx.ALIGN_CENTRE)
+		sizer.Add(doublesizer,0,wx.ALIGN_CENTRE|wx.BOTTOM,border=h*2)
+		self.SetSizer(sizer)
 		self.client.playback.bind(self.client.playback.UPDATE,self.update)
 
 	def update(self,*args,**kwargs):
@@ -58,9 +59,10 @@ class Info(wx.Panel):
 		song = self.client.playlist[int(status[u'song'])]
 		if not self.__currentsong == status[u'song']:
 			self.__currentsong = status[u'song']
-			self.title.SetLabel(song[u'title'])
-			self.artist.SetLabel(song[u'artist'])
-			self.album.SetLabel(song[u'album'])
+			self.single_text['title'].SetLabel(song[u'title'])
+			self.single_text['artist'].SetLabel(song[u'artist'])
+			for key,label in self.double_text.iteritems():
+				label.SetLabel(song.format(u'%'+key+u'%'))
 			self.Layout()
 		image = self.artwork_loader[song]
 		if not self.__image == image:
