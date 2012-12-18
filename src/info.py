@@ -17,12 +17,12 @@ class Info(wx.Panel):
 		self.artwork = wx.StaticBitmap(self,-1)
 		self.artwork_mirror = wx.StaticBitmap(self,-1)
 		self.single_text = dict(
-			title =   wx.StaticText(self,-1)
+			title   = wx.StaticText(self,-1)
 			,artist = wx.StaticText(self,-1)
 			)
 		self.double_text = dict(
-			album =  wx.StaticText(self,-1,style=wx.ALIGN_LEFT)
-			,genre = wx.StaticText(self,-1,style=wx.ALIGN_LEFT)
+			album  = wx.StaticText(self,-1)
+			,genre = wx.StaticText(self,-1)
 			)
 		self.artwork_loader = artwork.Artwork()
 		h = environment.ui.text_height
@@ -59,10 +59,12 @@ class Info(wx.Panel):
 		song = self.client.playlist[int(status[u'song'])]
 		if not self.__currentsong == status[u'song']:
 			self.__currentsong = status[u'song']
-			self.single_text['title'].SetLabel(song[u'title'])
-			self.single_text['artist'].SetLabel(song[u'artist'])
+			for key,label in self.single_text.iteritems():
+				label.SetLabel(song.format(u'%'+key+u'%'))
+				label.Wrap(environment.ui.text_height*16)
 			for key,label in self.double_text.iteritems():
 				label.SetLabel(song.format(u'%'+key+u'%'))
+				label.Wrap(environment.ui.text_height*8)
 			self.Layout()
 		image = self.artwork_loader[song]
 		if not self.__image == image:
