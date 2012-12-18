@@ -37,6 +37,8 @@ class Frame(wx.Frame):
 		self.library.Hide()
 		self.SetSizer(self.sizer)
 		self.Layout()
+		h = environment.ui.text_height
+		self.SetSize((h*40,h*30))
 		self.Show()
 		self.preferences = None
 		if debug: print 'sized.'
