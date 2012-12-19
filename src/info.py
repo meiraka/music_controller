@@ -14,20 +14,20 @@ class Info(wx.Panel):
 		self.__currentsong = 0
 		self.__lock = False
 		self.__image = None
+		h = environment.ui.text_height
 		self.artwork = wx.StaticBitmap(self,-1)
 		self.artwork_mirror = wx.StaticBitmap(self,-1)
 		self.single_text = dict(
 			title   = wx.StaticText(self,-1)
 			,artist = wx.StaticText(self,-1)
 			)
-		self.slider = wx.Slider(self,-1)
+		self.slider = wx.Slider(self,-1,50,0,100,size=(h*12,-1))
 		self.slider.Bind(wx.EVT_SCROLL_THUMBTRACK,self.OnSlider)
 		self.double_text = dict(
 			album  = wx.StaticText(self,-1)
 			,genre = wx.StaticText(self,-1)
 			)
 		self.artwork_loader = artwork.Artwork()
-		h = environment.ui.text_height
 		self.artwork_loader.size = (h*12,h*12)
 		self.SetMinSize((h*16,h*16))
 		self.artwork_loader.attach(self.update)
