@@ -20,6 +20,8 @@ class Info(wx.Panel):
 			title   = wx.StaticText(self,-1)
 			,artist = wx.StaticText(self,-1)
 			)
+		self.slider = wx.Slider(self,-1)
+		self.slider.Bind(wx.EVT_SCROLL_THUMBTRACK,self.OnSlider)
 		self.double_text = dict(
 			album  = wx.StaticText(self,-1)
 			,genre = wx.StaticText(self,-1)
@@ -43,6 +45,7 @@ class Info(wx.Panel):
 		sizer = wx.BoxSizer(wx.VERTICAL)
 		sizer.Add(imgsizer,0,wx.ALIGN_CENTRE|wx.TOP,border=h*2)
 		sizer.Add(singlesizer,0,wx.ALIGN_CENTRE)
+		sizer.Add(self.slider,0,wx.ALIGN_CENTRE)
 		sizer.Add(doublesizer,0,wx.ALIGN_CENTRE|wx.BOTTOM,border=h*2)
 		self.SetSizer(sizer)
 		self.client.playback.bind(self.client.playback.UPDATE,self.update)
@@ -66,6 +69,11 @@ class Info(wx.Panel):
 				label.SetLabel(song.format(u'%'+key+u'%'))
 				label.Wrap(environment.ui.text_height*8)
 			self.Layout()
+		if u'time' in status:
+			current,max = [int(i) for i in status[u'time'].split(u':')]
+			if not self.slider.GetMax() == max:
+				self.slider.SetMax(max)
+			self.slider.SetValue(current)
 		image = self.artwork_loader[song]
 		if not self.__image == image:
 			self.__image = image
@@ -78,4 +86,7 @@ class Info(wx.Panel):
 				self.artwork.Hide()
 				self.artwork_mirror.Hide()
 			self.Layout()
-		
+
+	def OnSlider(self,event):
+		pos = self.slider.GetValue()
+		self.client.playback.seek(pos)

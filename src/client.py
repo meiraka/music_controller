@@ -304,6 +304,11 @@ class Playback(Object,threading.Thread):
 		arg = '1' if activate else '0'
 		self.connection.execute('single',not(block),arg)
 
+	def seek(self,second):
+		if u'song' in self.status:
+			song = self.status[u'song']
+			self.connection.execute('seek',True,song,second)
+
 	def __get_status(self):
 		if self.__running:
 			return self.__status
