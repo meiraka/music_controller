@@ -16,6 +16,8 @@ class App(wx.App):
 		self.client = client.Client(self.config_dir)
 		self.client.connection.bind(
 			self.client.connection.CLOSE_UNEXPECT,self.reconnect)
+		self.client.connection.bind(
+			self.client.connection.CONNECT,self.connected)
 		if params.has_key('debug'):self.__debug = True
 		else:self.__debug = False
 		self.__connected = None
@@ -39,7 +41,7 @@ class App(wx.App):
 				else:
 					if self.__debug: print 'fail! (>_<)'
 			else:
-				wx.CallAfter(self.frame.show_preferences)
+				wx.CallAfter(self.frame.show_connection)
 		self.client.start()
 
 	def reconnect(self):
@@ -53,7 +55,10 @@ class App(wx.App):
 			pass
 		else:
 			if self.__debug: print ' fail.'
-			wx.CallAfter(self.frame.show_preferences)
+			wx.CallAfter(self.frame.show_connection)
+
+	def connected(self):
+		wx.CallAfter(self.frame.show_playlist)
 
 	def MainLoop(self):
 		wx.App.MainLoop(self)
