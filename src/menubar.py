@@ -13,6 +13,9 @@ class MenuBar(wx.MenuBar):
 		self.parent = parent
 		self.client = client
 		self.menu_list = [
+			('File',[
+				(wx.NewId(),u'Rescan library',self.NORMAL)
+				]),
 			('Edit',[
 				(wx.ID_PREFERENCES,u'Preferences',self.NORMAL)
 				]),
@@ -35,6 +38,7 @@ class MenuBar(wx.MenuBar):
 			]
 
 		self.__functions = {
+				u'File_Rescan library':self.client.library.update,
 				u'Edit_Preferences':self.parent.show_preferences,
 				u'Playback_Play':self.set_play,
 				u'Playback_Stop':self.client.playback.stop,
