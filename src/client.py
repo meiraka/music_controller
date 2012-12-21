@@ -44,7 +44,7 @@ class Song(Data):
 	splitter = re.compile(u'\\%\\%')
 	__param = re.compile(u'\\%([^\\%]+\\%)')
 	def __init__(self,data):
-		if u'length' in data:
+		if u'time' in data:
 			data[u'length'] = u'%i:%s' % (int(data[u'time'])/60,str(int(data[u'time'])%60).zfill(2))
 		if data.has_key(u'track'):
 			data[u'track_index'] = data[u'track'].zfill(2)
