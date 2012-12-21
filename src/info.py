@@ -6,6 +6,7 @@ import wx
 
 import artwork
 import environment
+from client import Song
 
 class Info(wx.Panel):
 	def __init__(self,parent,client,debug=False):
@@ -48,6 +49,7 @@ class Info(wx.Panel):
 		sizer.Add(self.slider,0,wx.ALIGN_CENTRE)
 		sizer.Add(doublesizer,0,wx.ALIGN_CENTRE|wx.BOTTOM,border=h*2)
 		self.SetSizer(sizer)
+		self.__update({},Song({}))
 		self.client.playback.bind(self.client.playback.UPDATE,self.update)
 
 	def update(self,*args,**kwargs):
@@ -56,12 +58,14 @@ class Info(wx.Panel):
 	def resize_image(self,*args,**kwargs):
 		self.__resize_image()
 
-	def __update(self,status):
-		if not status or not status.has_key(u'song'):
+	def __update(self,status,song=None):
+		if song is None and (not status or not status.has_key(u'song')):
 			return
-		song = self.client.playlist[int(status[u'song'])]
-		if not self.__currentsong == status[u'song']:
-			self.__currentsong = status[u'song']
+		if song is None:
+			song = self.client.playlist[int(status[u'song'])]
+			if not self.__currentsong == status[u'song']:
+				self.__currentsong = status[u'song']
+		if self.__currentsong is not None:
 			for key,label in self.single_text.iteritems():
 				label.SetLabel(song.format(u'%'+key+u'%'))
 				label.Wrap(environment.ui.text_height*16)
