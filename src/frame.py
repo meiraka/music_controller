@@ -26,6 +26,7 @@ class Frame(wx.Frame):
 		self.library = library.Library(self,self.client.library,self.client.playlist,debug)
 		self.info = info.Info(self,self.client,debug)
 		self.connection = preferences.Connection(self,self.client.connection,self.client.config)
+		self.dammy = wx.Panel(self,-1)
 		if debug: print 'sizing'
 
 		self.sizer = wx.BoxSizer()
@@ -33,23 +34,31 @@ class Frame(wx.Frame):
 		s.Add(self.playlist,1,flag=wx.EXPAND)
 		s.Add(self.library,1,flag=wx.EXPAND)
 		s.Add(self.connection,1,flag=wx.EXPAND)
+		s.Add(self.dammy,1,flag=wx.EXPAND)
 		self.sizer.Add(s,1,flag=wx.EXPAND)
 		self.sizer.Add(self.info,0,wx.EXPAND)
 		#self.sizer.Add(self.albumlist,0,flag=wx.EXPAND)
+		self.playlist.Hide()
 		self.library.Hide()
 		self.connection.Hide()
 		self.SetSizer(self.sizer)
 		self.Layout()
+		self.info.Hide()
 		h = environment.ui.text_height
 		self.SetSize((h*48,h*36))
 		self.preferences = None
 		self.change_title()
+		if self.client.connection.current:
+			self.show_playlist()
+		self.SetTitle(u'MusicController connecting...')
 		self.Show()
 		if debug: print 'sized.'
 		self.client.playback.bind(self.client.playback.UPDATE_PLAYING,self.change_title)
 		if debug: print 'binded.'
 
 	def show_connection(self):
+		self.SetTitle(u'MusicController')
+		self.dammy.Hide()
 		self.playlist.Hide()
 		self.library.Hide()
 		self.info.Hide()
@@ -57,6 +66,7 @@ class Frame(wx.Frame):
 		self.Layout()
 
 	def show_library(self):
+		self.dammy.Hide()
 		self.connection.Hide()
 		self.playlist.Hide()
 		self.info.Show()
@@ -64,6 +74,7 @@ class Frame(wx.Frame):
 		self.Layout()
 	
 	def show_playlist(self):
+		self.dammy.Hide()
 		self.connection.Hide()
 		self.library.Hide()
 		self.info.Show()
