@@ -42,8 +42,9 @@ class Frame(wx.Frame):
 		self.Layout()
 		h = environment.ui.text_height
 		self.SetSize((h*48,h*36))
-		self.Show()
 		self.preferences = None
+		self.change_title()
+		self.Show()
 		if debug: print 'sized.'
 		self.client.playback.bind(self.client.playback.UPDATE_PLAYING,self.change_title)
 		if debug: print 'binded.'
@@ -74,11 +75,13 @@ class Frame(wx.Frame):
 
 	def __change_title(self):
 		status = self.client.playback.status
+		title = 'MusicController'
 		if status and status.has_key(u'song'):
 			song_id = int(status[u'song'])
 			if len(self.client.playlist) > song_id:
 				song = self.client.playlist[song_id]
-				self.SetTitle(song.format('%title% - %artist%'))
+				title = title + ' - ' + song.format('%title% - %artist%')
+		self.SetTitle(title)
 
 	def show_preferences(self):
 		if not self.preferences:
