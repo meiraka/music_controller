@@ -44,7 +44,8 @@ class Song(Data):
 	splitter = re.compile(u'\\%\\%')
 	__param = re.compile(u'\\%([^\\%]+\\%)')
 	def __init__(self,data):
-		data[u'length'] = u'%i:%s' % (int(data[u'time'])/60,str(int(data[u'time'])%60).zfill(2))
+		if u'length' in data:
+			data[u'length'] = u'%i:%s' % (int(data[u'time'])/60,str(int(data[u'time'])%60).zfill(2))
 		if data.has_key(u'track'):
 			data[u'track_index'] = data[u'track'].zfill(2)
 		if not data.has_key(u'albumartist') and data.has_key(u'artist'):
@@ -246,6 +247,9 @@ class Playback(Object,threading.Thread):
 		self.__playing = None
 		self.__running = False
 
+	def check_library(self):
+		self.__check_library = True
+
 	def run(self):
 		""" crawling mpd to check update.
 		"""
@@ -265,14 +269,15 @@ class Playback(Object,threading.Thread):
 			if not self.__check_playlist == self.__status[u'playlist']:
 				self.__check_playlist = self.__status[u'playlist']
 				self.call(self.UPDATE_PLAYLIST)
-			if not self.__check_library == False and \
-				not self.__status.has_key('updating_db'):
-				self.call(self.UPDATE_DATABASE)
-			elif self.__status.has_key('updating_db'):
-				self.__check_library = self.__status['updating_db']
 			if self.__status.has_key(u'song') and not self.__playing == self.__status[u'song']:
 				self.__playing = self.__status[u'song']
 				self.call(self.UPDATE_PLAYING)
+		if not self.__check_library == False and \
+			not self.__status.has_key('updating_db'):
+			self.__check_library = False
+			self.call(self.UPDATE_DATABASE)
+		elif self.__status.has_key('updating_db'):
+			self.__check_library = self.__status['updating_db']
 
 	def play(self,song=None,block=False):
 		if song:
@@ -467,6 +472,7 @@ class Library(Object):
 		return len(self.__data)
 
 	def update(self):
+		self.__playback.check_library()
 		self.__connection.execute('update')
 
 	def __update_cache(self):
