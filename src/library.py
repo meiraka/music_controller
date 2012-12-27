@@ -51,7 +51,7 @@ class LibraryBase(wx.VListBox):
 		self.__criteria_song_height = criteria_song_height
 		self.__criteria_album_height = criteria_album_height
 		self.Bind(wx.EVT_LEFT_UP,self.OnClick)
-		self.library.bind(self.library.UPDATE,self.reset)
+		self.library.bind(self.library.UPDATE,self.clear)
 		#self.Bind(wx.EVT_LEFT_DCLICK,self.OnActivate)
 		self.Bind(wx.EVT_RIGHT_UP,self.OnRightClick)
 
@@ -62,7 +62,7 @@ class LibraryBase(wx.VListBox):
 		self.__master = list(self.library)
 		wx.CallAfter(self.__reset)
 
-	def reset(self,*args,**kwargs):
+	def reset(self):
 		wx.CallAfter(self.__reset)
 
 	def __reset(self):

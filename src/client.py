@@ -475,6 +475,10 @@ class Library(Object):
 		return len(self.__data)
 
 	def update(self):
+		""" Update library database in background.
+
+		to catch updated event, bind Library.UPDATE.
+		"""
 		self.__playback.check_library()
 		self.__connection.execute('update')
 
@@ -484,7 +488,7 @@ class Library(Object):
 		self.__data = self.__connection.execute('listallinfo')
 		# remove invalid songs.
 		self.__data = [Song(data) for data in self.__data if data.has_key(u'file')]
-		self.call(self.UPDATE,self.__data)
+		self.call(self.UPDATE)
 
 
 class Songs(list):
