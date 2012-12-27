@@ -1,4 +1,5 @@
 
+import sys
 import wx
 import preferences
 
@@ -14,7 +15,9 @@ class MenuBar(wx.MenuBar):
 		self.client = client
 		self.menu_list = [
 			('File',[
-				(wx.NewId(),u'Rescan library',self.NORMAL)
+				(wx.NewId(),u'Rescan library',self.NORMAL),
+				(wx.NewId(),u'',self.SPLITTER),
+				(wx.ID_EXIT,u'Quit',self.NORMAL)
 				]),
 			('Edit',[
 				(wx.ID_PREFERENCES,u'Preferences',self.NORMAL)
@@ -39,6 +42,7 @@ class MenuBar(wx.MenuBar):
 
 		self.__functions = {
 				u'File_Rescan library':self.client.library.update,
+				u'File_Quit':sys.exit,
 				u'Edit_Preferences':self.parent.show_preferences,
 				u'Playback_Play':self.set_play,
 				u'Playback_Stop':self.client.playback.stop,
@@ -52,6 +56,7 @@ class MenuBar(wx.MenuBar):
 				u'View_Focus current':self.focus_song,
 				}
 		self.__keys = {
+				u'File_Quit':'Ctrl+Q',
 				u'Edit_Preferences':'Ctrl+,',
 				u'Playback_Play':'Space',
 				u'Playback_Next':'Ctrl+Right',
