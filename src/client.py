@@ -181,6 +181,9 @@ class Connection(Object):
 						print traceback.format_exc()
 						pass
 					self.__connection.command_list_end()
+			except mpd.ProtocolError:
+				self.connected = False
+				self.call(self.CLOSE_UNEXPECT)
 			except mpd.MPDError,err:
 				print 'err at',func_name,args,kwargs
 				print 'mpderr',traceback.format_exc()
