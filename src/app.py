@@ -69,11 +69,23 @@ class App(wx.App):
 
 		if self.__debug: print 'init frame.'
 		self.frame = frame.Frame(None,self.client,self.__debug)
+		if environment.gui == 'mac':
+			self.frame.Bind(wx.EVT_CLOSE,self.OnClose)
+			self.Bind(wx.EVT_ACTIVATE_APP, self.OnActivate)
 		if self.__debug: print 'show frame.'
 		self.frame.Show()
 		if self.__debug: print 'frame viewing now.'
 		self.connect_default()
 		return True
+
+	def OnClose(self,event):
+		self.frame.Hide()
+
+	def OnActivate(self,event):
+		self.frame.Show()
+
+	def MacReopenApp(self):
+		self.frame.Show()
 
 	def exit(self):
 		self.client.connection.close()
