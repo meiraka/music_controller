@@ -2,6 +2,7 @@
 import sys
 import wx
 import preferences
+import version
 
 class MenuBar(wx.MenuBar):
 	NORMAL = 'normal'
@@ -37,6 +38,9 @@ class MenuBar(wx.MenuBar):
 				(wx.NewId(),u'Library',self.SELECT),
 				(wx.NewId(),u'splitter',self.SPLITTER),
 				(wx.NewId(),u'Focus current',self.NORMAL)
+				]),
+			('Help',[
+				(wx.ID_ABOUT,u'About',self.NORMAL)
 				])
 			]
 
@@ -54,6 +58,7 @@ class MenuBar(wx.MenuBar):
 				u'View_Playlist':self.parent.show_playlist,
 				u'View_Library':self.parent.show_library,
 				u'View_Focus current':self.focus_song,
+				u'Help_About':AboutDialog
 				}
 		self.__keys = {
 				u'File_Quit':'Ctrl+Q',
@@ -217,4 +222,27 @@ class MenuBar(wx.MenuBar):
 					new = True if key in status and status[key] == u'1' else False
 					if not current == new:
 						menu.Check(id,new)
-			
+
+
+class AboutDialog(object):
+	def __init__(self):
+		info = wx.AboutDialogInfo()
+		info.SetName(u'MusicController')
+		info.SetVersion(version.__version__)
+		app_description = _('MPD client')
+		python_version = _('Python %(python)s on %(system)s') % \
+			{u'python': sys.version.split()[0] ,u'system':sys.platform}
+		platform = list(wx.PlatformInfo[1:])
+		platform[0] += (" " + wx.VERSION_STRING)
+		wx_info = ", ".join(platform)
+		build_info = 'execute source'
+		try:
+			import buildinfo
+			build_info = 'build by: %s@%s' %(buildinfo.user,buildinfo.host)
+		except:
+			pass
+		info.SetDescription(u'\n'.join([app_description,python_version,wx_info,build_info]))
+		info.SetCopyright('Copyright (C) 2011-2012 mei raka')
+		wx.AboutBox(info)
+
+
