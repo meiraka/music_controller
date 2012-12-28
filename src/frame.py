@@ -9,11 +9,13 @@ import preferences
 import environment
 
 class Frame(wx.Frame):
+	TITLE = 'MusicController'
 	def __init__(self,parent,client,debug=False):
 		""" generate main app window."""
 		self.parent = parent
 		self.client = client
 		wx.Frame.__init__(self,parent,-1)
+		self.SetTitle(self.TITLE)
 		self.SetSize((640,480))
 		self.menubar = menubar.MenuBar(self,client,accele=False if environment.gui == 'mac' else True)
 		self.SetMenuBar(self.menubar)
@@ -50,14 +52,13 @@ class Frame(wx.Frame):
 		self.change_title()
 		if self.client.connection.current:
 			self.show_playlist()
-		self.SetTitle(u'MusicController connecting...')
 		self.Show()
 		if debug: print 'sized.'
 		self.client.playback.bind(self.client.playback.UPDATE_PLAYING,self.change_title)
 		if debug: print 'binded.'
 
 	def show_connection(self):
-		self.SetTitle(u'MusicController')
+		self.SetTitle(self.TITLE +' - '+ 'connection')
 		self.dammy.Hide()
 		self.playlist.Hide()
 		self.library.Hide()
@@ -86,12 +87,12 @@ class Frame(wx.Frame):
 
 	def __change_title(self):
 		status = self.client.playback.status
-		title = 'MusicController'
+		title = self.TITLE
 		if status and status.has_key(u'song'):
 			song_id = int(status[u'song'])
 			if len(self.client.playlist) > song_id:
 				song = self.client.playlist[song_id]
-				title = title + ' - ' + song.format('%title% - %artist%')
+				title = self.TITLE +u' - '+ song.format('%title% - %artist%')
 		self.SetTitle(title)
 
 	def show_preferences(self):

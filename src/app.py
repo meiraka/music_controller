@@ -5,6 +5,9 @@ import frame
 import environment
 import thread
 import time
+import gettext
+
+NAME = 'MusicController'
 
 class App(wx.App):
 	"""
@@ -21,6 +24,7 @@ class App(wx.App):
 		if params.has_key('debug'):self.__debug = True
 		else:self.__debug = False
 		self.__connected = None
+		gettext.install('music-controller',unicode=1)
 		wx.App.__init__(self)
 
 	def connect_default(self):
@@ -66,7 +70,7 @@ class App(wx.App):
 	def OnInit(self):
 		""" Event func when app init
 		"""
-
+		self.SetAppName(NAME)
 		if self.__debug: print 'init frame.'
 		self.frame = frame.Frame(None,self.client,self.__debug)
 		if environment.gui == 'mac':
