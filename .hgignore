@@ -8,3 +8,5 @@ debian/musiccontroller*
 debian/files
 python-module-stampdir/musiccontroller
 musiccontroller.egg-info*
+src/buildinfo.py
+*.orig
