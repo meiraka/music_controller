@@ -45,7 +45,8 @@ class Song(Data):
 	__param = re.compile(u'\\%([^\\%]+\\%)')
 	def __init__(self,data):
 		if u'time' in data:
-			data[u'length'] = u'%i:%s' % (int(data[u'time'])/60,str(int(data[u'time'])%60).zfill(2))
+			t = int(data[u'time'].split(u':')[0])
+			data[u'length'] = u'%i:%s' % (t/60,str(t%60).zfill(2))
 		if data.has_key(u'track'):
 			data[u'track_index'] = data[u'track'].zfill(2)
 		if not data.has_key(u'albumartist') and data.has_key(u'artist'):
