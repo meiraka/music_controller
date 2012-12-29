@@ -238,7 +238,7 @@ class AboutDialog(object):
 		build_info = 'execute source'
 		try:
 			import buildinfo
-			build_info = 'build by: %s@%s' %(buildinfo.user,buildinfo.host)
+			build_info = 'build by %s@%s' %(buildinfo.user,buildinfo.host)
 		except:
 			pass
 		info.SetDescription(u'\n'.join([app_description,python_version,wx_info,build_info]))

@@ -52,8 +52,8 @@ class LibraryBase(wx.VListBox):
 		self.__criteria_album_height = criteria_album_height
 		self.Bind(wx.EVT_LEFT_UP,self.OnClick)
 		self.library.bind(self.library.UPDATE,self.clear)
-		#self.Bind(wx.EVT_LEFT_DCLICK,self.OnActivate)
 		self.Bind(wx.EVT_RIGHT_UP,self.OnRightClick)
+		self.Bind(wx.EVT_KEY_UP,self.OnKeys)
 
 	def clear(self):
 		self.items = []
@@ -197,6 +197,16 @@ class LibraryBase(wx.VListBox):
 
 	def OnClick(self,event):
 		index = self.GetSelection()
+		self.expand(index)
+
+	def expand(self,index):
+		""" expands given index.
+
+		if given index was expanded, closes index.
+		
+		Arguments:
+			index - expand / close position.
+		"""
 		x,y = self.state
 		key,key_y = self.items[y][index]
 		if key_y == y:
@@ -207,6 +217,21 @@ class LibraryBase(wx.VListBox):
 				x,y = self.state
 				index = self.items[y].index((key,key_y))
 				self.__open(index)
+
+	def OnKeys(self,event):
+		""" catch key event.
+		return - select and replaces song
+		right - expand list
+		"""
+		index = self.GetSelection()
+		key = event.GetKeyCode()
+		if key == wx.WXK_RIGHT or key == wx.WXK_LEFT:
+			self.expand(index)
+		elif key == wx.WXK_RETURN:
+			self.and_item(index)
+			self.replace_master()	
+		else:
+			event.Skip()
 
 	def OnRightClick(self,event):
 		index = self.HitTest(event.GetPosition())

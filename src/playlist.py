@@ -28,6 +28,7 @@ class PlaylistBase(wx.VListBox):
 		self.playlist.bind(self.playlist.FOCUS,self.focus)
 		self.playback.bind(self.playback.UPDATE,self.refresh)
 		self.Bind(wx.EVT_LEFT_DCLICK,self.OnActivate)
+		self.Bind(wx.EVT_KEY_UP,self.OnKeys)
 
 	def refresh(self,*args):
 		wx.CallAfter(self.__refresh)
@@ -43,6 +44,9 @@ class PlaylistBase(wx.VListBox):
 
 	def OnActivate(self,event):
 		index,n = self.GetFirstSelected()
+		self.play(index)
+
+	def play(self,index):
 		if len(self.ui_songs) > index:
 			type,index,song = self.ui_songs[index]
 			if song:
@@ -123,6 +127,13 @@ class PlaylistBase(wx.VListBox):
 				self.draw_head(dc,rect,index,song)
 		except:
 			pass
+
+	def OnKeys(self,event):
+		if event.GetUnicodeKey() == wx.WXK_RETURN:
+			index,n = self.GetFirstSelected()
+			self.play(index)
+		else:
+			event.Skip()
 
 class Playlist(PlaylistBase):
 	def __init__(self,parent,playlist,playback,debug=False):
