@@ -12,10 +12,13 @@ from setuptools import setup
 def generate_build_info():
 	data = dict(
 		user = os.environ['USER'],
-		host = os.environ['HOST']
+		host = os.environ['HOST'],
+		revision = get_rev()
 		)
+	
 	f = open('src/buildinfo.py','w')
 	f.write('\n'.join(['%s = "%s"' % (k,v) for k,v in data.iteritems()]))
+
 def get_rev():
 	import commands
 	import re

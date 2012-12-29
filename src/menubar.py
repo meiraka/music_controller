@@ -239,10 +239,11 @@ class AboutDialog(object):
 		try:
 			import buildinfo
 			build_info = 'build by %s@%s' %(buildinfo.user,buildinfo.host)
+			info.SetVersion(version.__version__+build_info.revison)
 		except:
 			pass
 		info.SetDescription(u'\n'.join([app_description,python_version,wx_info,build_info]))
-		info.SetCopyright('Copyright (C) 2011-2012 mei raka')
+		info.SetCopyright('Copyright (C) 2012 mei raka')
 		wx.AboutBox(info)
 
 
