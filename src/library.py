@@ -229,7 +229,6 @@ class LibraryBase(wx.VListBox):
 			self.expand(index)
 		elif key == wx.WXK_RETURN:
 			self.and_item(index)
-			self.replace_master()	
 		else:
 			event.Skip()
 
@@ -244,6 +243,7 @@ class LibraryBase(wx.VListBox):
 		key,key_y = self.items[y][row]
 		self.__master = self.songs[key_y][key]
 		wx.CallAfter(self.__reset)
+		self.replace_master()
 
 	def not_item(self,index):
 		row = index
@@ -254,13 +254,13 @@ class LibraryBase(wx.VListBox):
 			if not k == key:
 				self.__master = self.__master + m
 		wx.CallAfter(self.__reset)
+		self.replace_master()
 
 	def replace_master(self):
 		song_indexed = [(song.format(self.sorter),song) for song in self.__master]
 		song_indexed.sort()
 		songs = [song for title,song in song_indexed]
 		self.playlist.replace(songs)
-		self.parent.show_playlist()
 
 
 class Menu(wx.Menu):
@@ -268,7 +268,7 @@ class Menu(wx.Menu):
 		wx.Menu.__init__(self)
 		self.parent = parent
 		self.index=  index
-		items = [u'and',u'not',u'clear',u'replace']
+		items = [u'and',u'not',u'clear']
 		self.__items = dict([(item,wx.NewId())for item in items])
 		for item in items:
 			self.Append(self.__items[item],item,item)
@@ -282,9 +282,6 @@ class Menu(wx.Menu):
 
 	def clear_item(self,event):
 		self.parent.clear()
-
-	def replace_item(self,event):
-		self.parent.replace_master()	
 
 
 class Library(LibraryBase):
