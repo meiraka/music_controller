@@ -147,6 +147,13 @@ class Connection(Object):
 			pass
 		self.call(self.CLOSE)
 
+	def __enter__(self):
+		self.__connection.command_list_ok_begin()
+
+	def __exit__(self,exc_type, exc_value, traceback):
+		self.__connection.command_list_end()
+		return True
+
 	def execute(self,func_name,skip=False,*args,**kwargs):
 		'''execute mpd commands.
 		
@@ -170,20 +177,7 @@ class Connection(Object):
 				if type(func_name) == str or type(func_name) == unicode:
 					func_name = str(func_name)
 					value = self.__decode(getattr(self.__connection,func_name)(*args,**kwargs))
-				elif type(func_name) == list:
-					self.__connection.command_list_ok_begin()
-					try:
-						for index,func_name_part in enumerate(func_name):
-							func = self.__decode(getattr(self.__connection,func_name_part))
-							func_args = [args_part[index] for args_part in args if not args_part[index] == 'mpdclient_noitem']
-							func_kwargs = dict([(key,values[index]) for key,values in kwargs.iteritems()])
-							if len(func_args)>0 and type(func_args[0]) == tuple:
-								func_args = func_args[0]
-							func(*func_args,**func_kwargs)
-					except Exception:
-						print traceback.format_exc()
-						pass
-					self.__connection.command_list_end()
+				
 			except mpd.ProtocolError:
 				self.connected = False
 				self.call(self.CLOSE_UNEXPECT)
@@ -425,9 +419,10 @@ class Playlist(Object):
 		"""marge the playlist and given songs into the playlist.
 		"""
 		add = 'add'
-		add = [add for song in songs if song.has_key(u'file')]
 		filepath = [song[u'file'].encode('utf8') for song in songs if song.has_key(u'file')]
-		self.__connection.execute(add,False,filepath)
+		with self.__connection:
+			for i in filepath:
+				self.__connection.execute('add',False,i)
 		self.__playback.update()
 
 	def clear(self):
@@ -455,14 +450,14 @@ class Playlist(Object):
 						id = index
 						seek = True
 						break
-		add = 'add'
-		no_arg = 'mpdclient_noitem'
-		add = ['clear']+[add for song in songs if song.has_key(u'file')]
-		filepath = [no_arg]+ [song[u'file'].encode('utf8') for song in songs if song.has_key(u'file')]
-		if seek:
-			add = add + ['seek','play']
-			filepath = filepath + [(str(id),time),no_arg]
-		self.__connection.execute(add,False,filepath)
+		filepath = [song[u'file'].encode('utf8') for song in songs if song.has_key(u'file')]
+		with self.__connection:
+			self.__connection.execute('clear')
+			for i in filepath:
+				self.__connection.execute('add',False,i)
+			if seek:
+				self.__connection.execute('seek',False,str(id),time)
+			self.__connection.execute('play')
 		self.__playback.update()
 
 	

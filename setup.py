@@ -74,7 +74,18 @@ if sys.argv.count('py2app'):
 	setup_args['setup_requires'] = ['py2app']
 	setup_args['options'] = get_options()
 
-setup(name='MusicController',
-	version=version.__version__,
-	author='mei raka',
-	**setup_args)
+if not sys.argv.count('test'):
+	setup(name='MusicController',
+		version=version.__version__,
+		author='mei raka',
+		**setup_args)
+else:
+	sys.path.append(os.path.abspath('src'))
+	sys.path.append(os.path.abspath('tests'))
+	import unittest
+	import client_test
+	classes = [getattr(client_test,i) for i in dir(client_test) if i.startswith('Test')]
+	for i in classes:
+		s = unittest.makeSuite(i)
+		unittest.TextTestRunner(verbosity=2).run(s)
+	
