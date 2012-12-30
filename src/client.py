@@ -177,6 +177,8 @@ class Connection(Object):
 							func = self.__decode(getattr(self.__connection,func_name_part))
 							func_args = [args_part[index] for args_part in args if not args_part[index] == 'mpdclient_noitem']
 							func_kwargs = dict([(key,values[index]) for key,values in kwargs.iteritems()])
+							if len(func_args)>0 and type(func_args[0]) == tuple:
+								func_args = func_args[0]
 							func(*func_args,**func_kwargs)
 					except Exception:
 						print traceback.format_exc()
@@ -435,10 +437,31 @@ class Playlist(Object):
 		self.__playback.update()
 
 	def replace(self,songs):
+		status = self.__playback.status
+		# set seek pos
+		seek = False
+		id = 0
+		if status and u'song' in status:
+			song_id = int(status[u'song'])
+			if len(self.__data) > song_id:
+				play_song = self.__data[song_id]
+				check_keys = [u'title',u'artist',u'album']
+				time = status[u'time'].split(':')[0] if u'time' in status else '0'
+				for index,song in enumerate(songs):
+					for i in check_keys:
+						if not song[i] == play_song[i]:
+							break
+					else:
+						id = index
+						seek = True
+						break
 		add = 'add'
 		no_arg = 'mpdclient_noitem'
-		add = ['clear']+[add for song in songs if song.has_key(u'file')]+['play']
-		filepath = [no_arg]+ [song[u'file'].encode('utf8') for song in songs if song.has_key(u'file')] + [no_arg]
+		add = ['clear']+[add for song in songs if song.has_key(u'file')]
+		filepath = [no_arg]+ [song[u'file'].encode('utf8') for song in songs if song.has_key(u'file')]
+		if seek:
+			add = add + ['seek','play']
+			filepath = filepath + [(str(id),time),no_arg]
 		self.__connection.execute(add,False,filepath)
 		self.__playback.update()
 
