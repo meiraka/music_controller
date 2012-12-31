@@ -19,6 +19,9 @@ def generate_build_info():
 	f = open('src/buildinfo.py','w')
 	f.write('\n'.join(['%s = "%s"' % (k,v) for k,v in data.iteritems()]))
 
+def delete_build_info():
+	os.remove('src/buildinfo.py')
+
 def get_rev():
 	import commands
 	import re
@@ -88,4 +91,5 @@ else:
 	for i in classes:
 		s = unittest.makeSuite(i)
 		unittest.TextTestRunner(verbosity=2).run(s)
-	
+
+delete_build_info()
