@@ -269,8 +269,8 @@ class Playback(Object,threading.Thread):
 			if not self.__check_playlist == self.__status[u'playlist']:
 				self.__check_playlist = self.__status[u'playlist']
 				self.call(self.UPDATE_PLAYLIST)
-			if self.__status.has_key(u'song') and not self.__playing == self.__status[u'song']:
-				self.__playing = self.__status[u'song']
+			if self.song is not None and not self.__playing == self.song:
+				self.__playing = self.song
 				self.call(self.UPDATE_PLAYING)
 		if not self.__check_library == False and \
 			not self.__status.has_key('updating_db'):
@@ -310,9 +310,9 @@ class Playback(Object,threading.Thread):
 		self.connection.execute('single',not(block),arg)
 
 	def seek(self,second):
-		if u'song' in self.status:
-			song = self.status[u'song']
-			self.connection.execute('seek',True,song,second)
+		song_id = self.song
+		if song_id is not None:
+			self.connection.execute('seek',True,song_id,second)
 
 	def __get_status(self):
 		if self.__running:
@@ -320,20 +320,37 @@ class Playback(Object,threading.Thread):
 		else:
 			self.update()
 			return self.__status
-	status = property(lambda self:self.__get_status())
 
+	def __get(key,value_type,default):
+		def get(self):
+			if not self.__running:
+				self.update()
+			if self.__status and key in self.__status:
+				return value_type(self.__status[key])
+			else:
+				return default
+		return get
+	status = property(lambda self:self.__get_status())
+	time = property(__get(u'time',int,0))
+	song = property(__get(u'song',int,None))
 		
 class Playlist(Object):
+	""" This class provides current MPD play queue.
+	"""
 	UPDATE = 'update'
 	FOCUS = 'focus'
 	SELECT = 'select'
 
 	class Song(Song):
+		""" A playable song object.
+		"""
 		def __init__(self,song,connection):
 			Song.__init__(self,song)
 			self.__connection = connection
 
 		def play(self):
+			""" Plays this song.
+			"""
 			self.__connection.execute(u'play',True,self[u'pos'])
 			
 	def __init__(self,connection,playback,config):
@@ -385,17 +402,16 @@ class Playlist(Object):
 	def focus_playing(self):
 		""" set focus and select value to current playing song.
 		"""
-		if self.__playback.status and self.__playback.status.has_key(u'song'):
-			status = self.__playback.status
-			if not status or not status.has_key(u'song'):
-				return False
-			if not len(self.__data) > int(status[u'song']):
-				return False
-			song = self.__data[int(status[u'song'])]
-			if not song == self.__current:
-				self.__current = song
-				self.__set_select([song])
-				self.__set_focus(song)
+		song_id = self.__playback.song
+		if song_id is None:
+			return False
+		if not len(self.__data) > song_id:
+			return False
+		song = self.__data[song_id]
+		if not song == self.__current:
+			self.__current = song
+			self.__set_select([song])
+			self.__set_focus(song)
 
 	def __focus_playing(self,*args,**kwargs):
 		self.focus_playing()
@@ -433,12 +449,20 @@ class Playlist(Object):
 		self.__playback.update()
 
 	def replace(self,songs):
+		""" Replaces playlist by given songs.
+
+		if mpd plays song, search that in given songs and
+		plays after playlist was updated.
+
+		Arguments:
+			songs - list of Song object.
+		"""
 		status = self.__playback.status
 		# set seek pos
 		seek = False
 		id = 0
-		if status and u'song' in status:
-			song_id = int(status[u'song'])
+		song_id = self.__playback.song
+		if song_id is not None:
 			if len(self.__data) > song_id:
 				play_song = self.__data[song_id]
 				check_keys = [u'title',u'artist',u'album']
