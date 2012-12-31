@@ -62,7 +62,7 @@ class App(wx.App):
 			wx.CallAfter(self.frame.show_connection)
 
 	def connected(self):
-		wx.CallAfter(self.frame.show_playlist)
+		wx.CallAfter(self.frame.show_not_connection)
 
 	def MainLoop(self):
 		wx.App.MainLoop(self)

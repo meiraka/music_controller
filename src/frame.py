@@ -10,10 +10,13 @@ import environment
 
 class Frame(wx.Frame):
 	TITLE = 'MusicController'
+	VIEW_PLAYLIST = 'playlist'
+	VIEW_LIBRARY = 'librarary'
 	def __init__(self,parent,client,debug=False):
 		""" generate main app window."""
 		self.parent = parent
 		self.client = client
+		self.current_view = None
 		wx.Frame.__init__(self,parent,-1)
 		self.SetTitle(self.TITLE)
 		self.SetSize((640,480))
@@ -51,7 +54,7 @@ class Frame(wx.Frame):
 		self.preferences = None
 		self.change_title()
 		if self.client.connection.current:
-			self.show_playlist()
+			self.show_not_connection()
 		self.Show()
 		if debug: print 'sized.'
 		self.client.playback.bind(self.client.playback.UPDATE_PLAYING,self.change_title)
@@ -66,7 +69,21 @@ class Frame(wx.Frame):
 		self.connection.Show()
 		self.Layout()
 
+	def show_not_connection(self):
+		if not self.current_view:
+			if len(self.client.playlist):
+				self.show_playlist()
+			else:
+				self.show_library()
+		else:
+			if self.current_view == self.VIEW_PLAYLIST:
+				self.show_playlist()
+			else:
+				self.show_library()
+
 	def show_library(self):
+		self.current_view = self.VIEW_LIBRARY
+		self.change_title()
 		self.dammy.Hide()
 		self.connection.Hide()
 		self.playlist.Hide()
@@ -75,6 +92,8 @@ class Frame(wx.Frame):
 		self.Layout()
 	
 	def show_playlist(self):
+		self.current_view = self.VIEW_PLAYLIST
+		self.change_title()
 		self.dammy.Hide()
 		self.connection.Hide()
 		self.library.Hide()

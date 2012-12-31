@@ -177,7 +177,6 @@ class Connection(Object):
 				if type(func_name) == str or type(func_name) == unicode:
 					func_name = str(func_name)
 					value = self.__decode(getattr(self.__connection,func_name)(*args,**kwargs))
-				
 			except mpd.ProtocolError:
 				self.connected = False
 				self.call(self.CLOSE_UNEXPECT)
@@ -246,6 +245,7 @@ class Playback(Object,threading.Thread):
 		self.__check_library = False
 		self.__playing = None
 		self.__running = False
+		self.connection.bind(self.connection.CONNECT,self.update)
 
 	def check_library(self):
 		self.__check_library = True
@@ -348,6 +348,7 @@ class Playlist(Object):
 		self.__connection.bind(self.__connection.CONNECT,self.__update_cache)
 		self.__playback.bind(self.__playback.UPDATE_PLAYLIST,self.__update_cache)
 		self.__playback.bind(self.__playback.UPDATE,self.__focus_playing)
+		self.__connection.bind(self.__connection.CONNECT,self.__update_cache)
 
 	def __iter__(self):
 		return list.__iter__(self.__data)
