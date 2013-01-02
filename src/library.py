@@ -4,6 +4,7 @@ import wx
 import artwork
 import thread
 import environment
+import song
 
 CRITERIA_STYLE_ROOT = u'root'
 CRITERIA_STYLE_DEFAULT = u'default'

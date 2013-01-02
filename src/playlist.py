@@ -6,6 +6,7 @@ import wx
 
 import artwork
 import environment
+import song
 
 class PlaylistBase(wx.VListBox):
 	def __init__(self,parent,playlist,playback,
@@ -128,7 +129,6 @@ class PlaylistBase(wx.VListBox):
 				self.draw_head(dc,rect,index,song)
 		except:
 			pass
-
 	def OnKeys(self,event):
 		if event.GetUnicodeKey() == wx.WXK_RETURN:
 			index,n = self.GetFirstSelected()
@@ -139,15 +139,30 @@ class PlaylistBase(wx.VListBox):
 	def OnRight(self,event):
 		self.PopupMenu(Menu(self))
 
+
+	def __selected(self):
+		index,n = self.GetFirstSelected()
+		items = []
+		while not index == wx.NOT_FOUND:
+			type,group_index,song = self.ui_songs[index]
+			items.append(song)
+			index,n = self.GetNextSelected(n)
+		return items	
+	selected = property(__selected)
+
 class Menu(wx.Menu):
 	def __init__(self,parent):
 		wx.Menu.__init__(self)
 		self.parent = parent
-		items = [u'remove']
+		items = [u'get_info',u'remove']
 		self.__items = dict([(item,wx.NewId()) for item in items])
 		for item in items:
-			self.Append(self.__items[item],item,item)
+			label = item.replace(u'_',' ')
+			self.Append(self.__items[item],label,label)
 			self.Bind(wx.EVT_MENU,getattr(self,item+'_item'),id=self.__items[item])
+
+	def get_info_item(self,event):
+		song.SongDialog(self.parent,self.parent.selected)
 
 	def remove_item(self,event):
 		pass
