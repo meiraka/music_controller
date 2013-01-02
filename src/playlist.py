@@ -29,6 +29,7 @@ class PlaylistBase(wx.VListBox):
 		self.playback.bind(self.playback.UPDATE,self.refresh)
 		self.Bind(wx.EVT_LEFT_DCLICK,self.OnActivate)
 		self.Bind(wx.EVT_KEY_UP,self.OnKeys)
+		self.Bind(wx.EVT_RIGHT_UP,self.OnRight)
 
 	def refresh(self,*args):
 		wx.CallAfter(self.__refresh)
@@ -134,6 +135,22 @@ class PlaylistBase(wx.VListBox):
 			self.play(index)
 		else:
 			event.Skip()
+
+	def OnRight(self,event):
+		self.PopupMenu(Menu(self))
+
+class Menu(wx.Menu):
+	def __init__(self,parent):
+		wx.Menu.__init__(self)
+		self.parent = parent
+		items = [u'remove']
+		self.__items = dict([(item,wx.NewId()) for item in items])
+		for item in items:
+			self.Append(self.__items[item],item,item)
+			self.Bind(wx.EVT_MENU,getattr(self,item+'_item'),id=self.__items[item])
+
+	def remove_item(self,event):
+		pass
 
 class Playlist(PlaylistBase):
 	def __init__(self,parent,playlist,playback,debug=False):
