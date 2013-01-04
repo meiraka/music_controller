@@ -12,8 +12,9 @@ class SongDialog(wx.Frame):
 		sub.Expand()
 		self.__mast_pane = must.GetPane()
 		self.__sub_pane = sub.GetPane()
+		self.__text_style = wx.TE_READONLY|wx.BORDER_NONE|wx.TE_MULTILINE|wx.TE_DONTWRAP
 		must_labels = [wx.StaticText(self.__mast_pane,-1,tag+':') for tag in self.must_tags]
-		self.must_values = [wx.TextCtrl(self.__mast_pane,-1,u'',style=wx.TE_READONLY|wx.BORDER_NONE) for tag in self.must_tags]
+		self.must_values = [wx.TextCtrl(self.__mast_pane,-1,u'',style=self.__text_style) for tag in self.must_tags]
 		for value in self.must_values:
 			value.SetBackgroundColour(self.GetBackgroundColour())
 		self.sub_tags = []
@@ -47,7 +48,7 @@ class SongDialog(wx.Frame):
 			if len(self.sub_tags)-1 <= index:
 				self.sub_tags.append(
 					(wx.StaticText(self.__sub_pane,-1,u''),
-					wx.TextCtrl(self.__sub_pane,-1,u'',style=wx.TE_READONLY|wx.BORDER_NONE))
+					wx.TextCtrl(self.__sub_pane,-1,u'',style=self.__text_style))
 					)
 				self.sub_tags[-1][1].SetBackgroundColour(self.GetBackgroundColour())
 				self.s_sizer.Add(self.sub_tags[-1][0],(index,0),flag=wx.ALIGN_RIGHT)
