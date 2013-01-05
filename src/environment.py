@@ -17,10 +17,11 @@ class __UI(object):
 	"""
 	__cached = {}
 	fill_readonly_background = False
-
+	subitem_small_font = False
 	def __init__(self):
 		if wx.PlatformInfo[1] == 'wxMac':
 			self.fill_readonly_background = True
+			self.subitem_small_font = True
 	def __get_font(self):
 		key = u'font'
 		if self.__cached.has_key(key):
