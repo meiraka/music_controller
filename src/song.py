@@ -1,40 +1,53 @@
 
 import wx
+import environment
 
 class SongDialog(wx.Frame):
 	def __init__(self,parent,songs):
 		wx.Frame.__init__(self,None,-1)
 		self.songs = songs
 		self.must_tags = [u'artist',u'title',u'album']
-		must = wx.CollapsiblePane(self,-1,'')
-		sub = wx.CollapsiblePane(self,-1,'')
-		must.Expand()
-		sub.Expand()
+		must = wx.CollapsiblePane(self,-1,'General')
+		sub = wx.CollapsiblePane(self,-1,'Extra')
 		self.__mast_pane = must.GetPane()
 		self.__sub_pane = sub.GetPane()
-		self.__text_style = wx.TE_READONLY|wx.BORDER_NONE|wx.TE_MULTILINE|wx.TE_DONTWRAP
+		self.__text_style = wx.TE_READONLY
+		if environment.ui.fill_readonly_background:
+			self.__text_style = wx.TE_READONLY|wx.BORDER_NONE
+		self.title = wx.TextCtrl(self,-1,style=self.__text_style)
+		self.description = wx.TextCtrl(self,-1,style=self.__text_style)
 		must_labels = [wx.StaticText(self.__mast_pane,-1,tag+':') for tag in self.must_tags]
 		self.must_values = [wx.TextCtrl(self.__mast_pane,-1,u'',style=self.__text_style) for tag in self.must_tags]
-		for value in self.must_values:
-			value.SetBackgroundColour(self.GetBackgroundColour())
+		if environment.ui.fill_readonly_background:
+			for value in self.must_values:
+				value.SetThemeEnabled(False)
+				value.SetBackgroundColour(self.GetBackgroundColour())
 		self.sub_tags = []
 		m_sizer = wx.GridBagSizer()
 		for index,tag in enumerate(self.must_tags):
-			m_sizer.Add(must_labels[index],(index,0),flag=wx.ALIGN_RIGHT)
-			m_sizer.Add(self.must_values[index],(index,1),flag=wx.EXPAND)
+			m_sizer.Add(must_labels[index],(index,0),flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL|wx.ALL,border=3)
+			m_sizer.Add(self.must_values[index],(index,1),flag=wx.EXPAND|wx.ALL,border=3)
 		m_sizer.AddGrowableCol(1)
 		self.s_sizer = wx.GridBagSizer()
 		self.__sub_pane.SetSizer(self.s_sizer)
 		self.__mast_pane.SetSizer(m_sizer)
 		m_sizer.SetSizeHints(self.__mast_pane)
 		sizer = wx.BoxSizer(wx.VERTICAL)
+		sizer.Add(self.title,0,wx.EXPAND|wx.ALL,border=3)
+		sizer.Add(self.description,0,wx.EXPAND|wx.ALL,border=3)
 		sizer.Add(must,0,wx.EXPAND)
 		sizer.Add(sub,0,wx.EXPAND)
 		self.SetSizer(sizer)
 		self.show(songs[0])
+		must.Expand()
+		#sub.Expand()
 		self.Show()
+		self.title.SetMinSize((self.title.GetSize()[0],-1))
+
 
 	def show(self,song):
+		self.title.SetValue(song.format('%title% - %artist%'))
+		self.description.SetValue(song.format('%file%'))
 		for index,tag in enumerate(self.must_tags):
 			if tag in song:
 				self.must_values[index].SetValue(song[tag])
@@ -50,9 +63,11 @@ class SongDialog(wx.Frame):
 					(wx.StaticText(self.__sub_pane,-1,u''),
 					wx.TextCtrl(self.__sub_pane,-1,u'',style=self.__text_style))
 					)
-				self.sub_tags[-1][1].SetBackgroundColour(self.GetBackgroundColour())
-				self.s_sizer.Add(self.sub_tags[-1][0],(index,0),flag=wx.ALIGN_RIGHT)
-				self.s_sizer.Add(self.sub_tags[-1][1],(index,1),flag=wx.EXPAND)
+				if environment.ui.fill_readonly_background:
+					self.sub_tags[-1][1].SetBackgroundColour(self.GetBackgroundColour())
+					self.sub_tags[-1][1].SetThemeEnabled(False)
+				self.s_sizer.Add(self.sub_tags[-1][0],(index,0),flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL|wx.ALL,border=3)
+				self.s_sizer.Add(self.sub_tags[-1][1],(index,1),flag=wx.EXPAND|wx.ALL,border=3)
 				if index == 0:
 					self.s_sizer.AddGrowableCol(1)
 			label,value = self.sub_tags[index]

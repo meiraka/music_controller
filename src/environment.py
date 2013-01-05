@@ -2,6 +2,7 @@
 import os
 import wx
 
+
 config_dir = '%s/.config/MusicController' % os.environ['HOME']
 if wx.PlatformInfo[1] == 'wxMac':
 	gui = 'mac'
@@ -15,6 +16,11 @@ class __UI(object):
 	params for ui.*
 	"""
 	__cached = {}
+	fill_readonly_background = False
+
+	def __init__(self):
+		if wx.PlatformInfo[1] == 'wxMac':
+			self.fill_readonly_background = True
 	def __get_font(self):
 		key = u'font'
 		if self.__cached.has_key(key):
