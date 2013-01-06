@@ -8,6 +8,17 @@ config_dir = '%s/.config/MusicController' % os.environ['HOME']
 class __UI(object):
 	"""
 	params for ui.*
+	
+	parameters:
+		+ cat get values at anytime.
+		fill_readonly_background - fill background readonly wx.TextCtrl
+		subitem_small_font - decrease font size to div font pt by 1.2 
+		subwindow_small_frame - uses wx.MiniFrame when True
+		style - gtk or mac or None.
+		
+		+ can get values after wx.App inited.
+		font - desktop font.
+		text_height - desktop font height.
 	"""
 	__cached = dict(
 		fill_readonly_background = False,
