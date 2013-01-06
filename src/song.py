@@ -2,9 +2,13 @@
 import wx
 import environment
 
-class SongDialog(wx.MiniFrame):
+frame = wx.Frame
+if environment.userinterface.subwindow_small_frame:
+	frame = wx.MiniFrame
+
+class SongDialog(frame):
 	def __init__(self,parent,songs):
-		wx.MiniFrame.__init__(self,None,-1,style=wx.CLOSE_BOX)
+		frame.__init__(self,None,-1,style=wx.CLOSE_BOX|wx.CAPTION)
 		self.songs = songs
 		self.must_tags = [u'artist',u'title',u'album']
 		must = wx.CollapsiblePane(self,-1,'General info:')
@@ -13,15 +17,15 @@ class SongDialog(wx.MiniFrame):
 		self.__sub_pane = sub.GetPane()
 		self.__text_style = wx.TE_READONLY
 		self.__border = 3
-		if environment.ui.fill_readonly_background:
+		if environment.userinterface.fill_readonly_background:
 			self.__text_style = wx.TE_READONLY|wx.BORDER_NONE
-		if environment.ui.subitem_small_font:
+		if environment.userinterface.subitem_small_font:
 			self.__border = 0
 		self.title = wx.StaticText(self,-1,style=self.__text_style)
 		self.description = wx.StaticText(self,-1,style=self.__text_style)
 		must_labels = [wx.StaticText(self.__mast_pane,-1,tag+':') for tag in self.must_tags]
 		self.must_values = [wx.TextCtrl(self.__mast_pane,-1,u'',style=self.__text_style) for tag in self.must_tags]
-		if environment.ui.fill_readonly_background:
+		if environment.userinterface.fill_readonly_background:
 			for value in self.must_values+[self.title,self.description]:
 				value.SetThemeEnabled(False)
 				value.SetBackgroundColour(self.GetBackgroundColour())
@@ -32,7 +36,7 @@ class SongDialog(wx.MiniFrame):
 			m_sizer.Add(must_labels[index],(index,0),flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL|wx.ALL,border=self.__border)
 			m_sizer.Add(self.must_values[index],(index,1),flag=wx.EXPAND|wx.ALL,border=self.__border)
 		m_sizer.AddGrowableCol(1)
-		if environment.ui.subitem_small_font:
+		if environment.userinterface.subitem_small_font:
 			small_font = self.title.GetFont()
 			small_font.SetPointSize(int(1.0*small_font.GetPointSize()/1.2))
 			smalls = [self.description,must,sub,self.__mast_pane,self.__sub_pane]+must_labels+self.must_values
@@ -77,10 +81,10 @@ class SongDialog(wx.MiniFrame):
 					(wx.StaticText(self.__sub_pane,-1,u''),
 					wx.TextCtrl(self.__sub_pane,-1,u'',style=self.__text_style))
 					)
-				if environment.ui.fill_readonly_background:
+				if environment.userinterface.fill_readonly_background:
 					self.sub_tags[-1][1].SetBackgroundColour(self.GetBackgroundColour())
 					self.sub_tags[-1][1].SetThemeEnabled(False)
-				if environment.ui.subitem_small_font:
+				if environment.userinterface.subitem_small_font:
 					self.sub_tags[-1][0].SetFont(self.__smallfont)
 					self.sub_tags[-1][1].SetFont(self.__smallfont)
 				self.s_sizer.Add(self.sub_tags[-1][0],(index,0),flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL|wx.ALL,border=self.__border)

@@ -73,7 +73,7 @@ class App(wx.App):
 		self.SetAppName(NAME)
 		if self.__debug: print 'init frame.'
 		self.frame = frame.Frame(None,self.client,self.__debug)
-		if environment.gui == 'mac':
+		if environment.userinterface.style == 'mac':
 			self.frame.Bind(wx.EVT_CLOSE,self.OnClose)
 			self.Bind(wx.EVT_ACTIVATE_APP, self.OnActivate)
 		if self.__debug: print 'show frame.'

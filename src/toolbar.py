@@ -85,7 +85,7 @@ class GTKToolbar(object):
 			self.parent.show_library()
 		
 
-if environment.gui == 'mac':
+if environment.userinterface.style == 'mac':
 	Toolbar = MacToolbar
 else:
 	Toolbar = GTKToolbar

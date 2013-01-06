@@ -15,7 +15,7 @@ class Info(wx.Panel):
 		self.__currentsong = 0
 		self.__lock = False
 		self.__image = None
-		h = environment.ui.text_height
+		h = environment.userinterface.text_height
 		self.artwork = wx.StaticBitmap(self,-1)
 		self.artwork_mirror = wx.StaticBitmap(self,-1)
 		self.single_text = dict(
@@ -68,10 +68,10 @@ class Info(wx.Panel):
 		if self.__currentsong is not None:
 			for key,label in self.single_text.iteritems():
 				label.SetLabel(song.format(u'%'+key+u'%'))
-				label.Wrap(environment.ui.text_height*16)
+				label.Wrap(environment.userinterface.text_height*16)
 			for key,label in self.double_text.iteritems():
 				label.SetLabel(song.format(u'%'+key+u'%'))
-				label.Wrap(environment.ui.text_height*8)
+				label.Wrap(environment.userinterface.text_height*8)
 			self.Layout()
 		if u'time' in status:
 			current,max = [int(i) for i in status[u'time'].split(u':')]

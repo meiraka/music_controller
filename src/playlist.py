@@ -23,7 +23,7 @@ class PlaylistBase(wx.VListBox):
 		self.__list_head_size = list_head_size
 		self.__list_height = list_height
 		self.__list_min_row = list_min_low
-		self.font = environment.ui.font
+		self.font = environment.userinterface.font
 		self.font_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOXTEXT)
 		self.playlist.bind(self.playlist.UPDATE,self.update_playlist)
 		self.playlist.bind(self.playlist.FOCUS,self.focus)
@@ -169,7 +169,7 @@ class Menu(wx.Menu):
 
 class Playlist(PlaylistBase):
 	def __init__(self,parent,playlist,playback,debug=False):
-		text_height = environment.ui.text_height
+		text_height = environment.userinterface.text_height
 		PlaylistBase.__init__(self,parent,playlist,playback,
 			text_height*3/2,2,6,debug)
 		self.active_background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT )
@@ -255,6 +255,6 @@ class Playlist(PlaylistBase):
 		bmp = self.artwork[song]
 		if bmp:
 			image_pos = rect.GetPosition()
-			image_pos = [i+environment.ui.text_height/2 for i in image_pos]
+			image_pos = [i+environment.userinterface.text_height/2 for i in image_pos]
 			dc.DrawBitmap(bmp,*image_pos)
 

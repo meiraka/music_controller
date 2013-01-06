@@ -45,7 +45,7 @@ class LibraryBase(wx.VListBox):
 		self.styles = [[style for format,style in i] for i in default_settings]
 		self.sorter = default_sorter
 		self.__master = []
-		self.default_font = environment.ui.font
+		self.default_font = environment.userinterface.font
 		self.default_font_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOXTEXT)
 		self.__criteria_default_height = criteria_default_height
 		self.__criteria_root_height = criteria_root_height
@@ -287,7 +287,7 @@ class Menu(wx.Menu):
 
 class Library(LibraryBase):
 	def __init__(self,parent,library,playlist,debug=False):
-		text_height = environment.ui.text_height
+		text_height = environment.userinterface.text_height
 		self.active_background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT )
 		self.background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX)
 	

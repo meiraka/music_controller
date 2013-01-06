@@ -20,7 +20,7 @@ class Frame(wx.Frame):
 		wx.Frame.__init__(self,parent,-1)
 		self.SetTitle(self.TITLE)
 		self.SetSize((640,480))
-		self.menubar = menubar.MenuBar(self,client,accele=False if environment.gui == 'mac' else True)
+		self.menubar = menubar.MenuBar(self,client,accele=False if environment.userinterface.style == 'mac' else True)
 		self.SetMenuBar(self.menubar)
 		if debug: print 'init frame'
 		self.toolbar = toolbar.Toolbar(self,self.client.playback)
@@ -49,7 +49,7 @@ class Frame(wx.Frame):
 		self.SetSizer(self.sizer)
 		self.Layout()
 		self.info.Hide()
-		h = environment.ui.text_height
+		h = environment.userinterface.text_height
 		self.SetSize((h*48,h*36))
 		self.preferences = None
 		self.change_title()
