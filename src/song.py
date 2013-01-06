@@ -2,13 +2,13 @@
 import wx
 import environment
 
-class SongDialog(wx.Frame):
+class SongDialog(wx.MiniFrame):
 	def __init__(self,parent,songs):
-		wx.Frame.__init__(self,None,-1)
+		wx.MiniFrame.__init__(self,None,-1,style=wx.CLOSE_BOX)
 		self.songs = songs
 		self.must_tags = [u'artist',u'title',u'album']
-		must = wx.CollapsiblePane(self,-1,'General')
-		sub = wx.CollapsiblePane(self,-1,'Extra')
+		must = wx.CollapsiblePane(self,-1,'General info:')
+		sub = wx.CollapsiblePane(self,-1,'Extra info:')
 		self.__mast_pane = must.GetPane()
 		self.__sub_pane = sub.GetPane()
 		self.__text_style = wx.TE_READONLY
@@ -35,9 +35,10 @@ class SongDialog(wx.Frame):
 		if environment.ui.subitem_small_font:
 			small_font = self.title.GetFont()
 			small_font.SetPointSize(int(1.0*small_font.GetPointSize()/1.2))
-			smalls = [self.description,must,sub]+must_labels+self.must_values
+			smalls = [self.description,must,sub,self.__mast_pane,self.__sub_pane]+must_labels+self.must_values
 			for i in smalls:
 				i.SetFont(small_font)
+			self.SetFont(small_font)
 			self.__smallfont = small_font
 			
 		self.s_sizer = wx.GridBagSizer()
@@ -47,19 +48,20 @@ class SongDialog(wx.Frame):
 		sizer = wx.BoxSizer(wx.VERTICAL)
 		sizer.Add(self.title,0,wx.EXPAND|wx.ALL,border=3)
 		sizer.Add(self.description,0,wx.EXPAND|wx.ALL,border=3)
+		#sizer.Add(wx.StaticLine(self,-1,style=wx.BORDER_SIMPLE|wx.LI_HORIZONTAL),0,wx.EXPAND|wx.ALL,border=3)
 		sizer.Add(must,0,wx.EXPAND)
 		sizer.Add(sub,0,wx.EXPAND)
 		self.SetSizer(sizer)
 		self.show(songs[0])
 		must.Expand()
-		#sub.Expand()
+		sub.Expand()
 		self.Show()
 		self.title.SetMinSize((self.title.GetSize()[0],-1))
 
 
 	def show(self,song):
-		self.title.SetLabel(song.format('%title% - %artist%'))
-		self.description.SetLabel(song.format('%file%'))
+		self.title.SetLabel(song.format('%title% - %artist% %length%'))
+		self.description.SetLabel(song.format('%album% %genre% %date%   %file%'))
 		for index,tag in enumerate(self.must_tags):
 			if tag in song:
 				self.must_values[index].SetValue(song[tag])
