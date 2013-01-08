@@ -17,6 +17,7 @@ class __UI(object):
 		style - gtk or mac or None.
 		
 		+ can get values after wx.App inited.
+		colors - two color found in app.
 		font - desktop font.
 		text_height - desktop font height.
 	"""
@@ -30,10 +31,10 @@ class __UI(object):
 		if wx.PlatformInfo[1] == 'wxGTK':
 			self.__cached['style'] = u'gtk'
 		if wx.PlatformInfo[1] == 'wxMac':
-			self.__cached['self.fill_readonly_background'] = True
-			self.__cached['self.subitem_small_font'] = True
-			self.__cached['self.subwindow_small_frame'] = True
-			self.__cached['self.style'] = u'mac'
+			self.__cached['fill_readonly_background'] = True
+			self.__cached['subitem_small_font'] = True
+			self.__cached['subwindow_small_frame'] = True
+			self.__cached['style'] = u'mac'
 	def __get_font(self):
 		key = u'font'
 		if self.__cached.has_key(key):
@@ -54,18 +55,38 @@ class __UI(object):
 			self.__cached[u'text_height'] = text_height
 			return self.__cached[u'text_height']
 
-	def __set(self,key,value):
-		self.__cached[key] = value
+	def __get_colors(self):
+		if self.__cached.has_key(u'colors'):
+			return self.__cached[u'colors']
+		else:
+			base = wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWFRAME)
+			indexes = [wx.SYS_COLOUR_WINDOW,wx.SYS_COLOUR_HIGHLIGHT,wx.SYS_COLOUR_WINDOWTEXT,wx.SYS_COLOUR_HIGHLIGHTTEXT,wx.SYS_COLOUR_BTNFACE]
+			if not base == wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX):
+				self.__cached[u'colors'] = (base, wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX))
+			for index in indexes:
+				if not base == wx.SystemSettings.GetColour(index):
+					self.__cached[u'colors'] = (base,wx.SystemSettings.GetColour(index))
+					break
+			else:
+				self.__cached[u'colors'] = (base,base)
+			return self.__cached[u'colors']
+
+	def __set(key):
+		def set(self,value):
+			self.__cached[key] = value
+		return set
 
 	def __get(key):
 		def get(self):
 			return self.__cached[key]
 		return get
-	font = property(__get_font,lambda self,value: self.__set(u'font',value))
-	text_height = property(__get_text_height)
-	fill_readonly_background =property(__get('fill_readonly_background'))
-	subitem_small_font =      property(__get('subitem_small_font'))
-	subwindow_small_frame =   property(__get('subwindow_small_frame')) 
-	style =                   property(__get('style')) 
+
+	fill_readonly_background = property(__get('fill_readonly_background'))
+	subitem_small_font =       property(__get('subitem_small_font'))
+	subwindow_small_frame =    property(__get('subwindow_small_frame')) 
+	style =                    property(__get('style')) 
+	colors =                   property(__get_colors)
+	font =                     property(__get_font, __set(u'font'))
+	text_height =              property(__get_text_height)
 
 userinterface = __UI()

@@ -4,6 +4,7 @@ import os
 import thread
 import wx
 import environment
+import math
 
 class ArtworkFinder(object):
 	def __init__(self):
@@ -29,7 +30,8 @@ class ArtworkFinder(object):
 
 class Artwork(ArtworkFinder):
 	class Mirror(ArtworkFinder):
-		def __init__(self):
+		def __init__(self,parent):
+			self.parent = parent
 			ArtworkFinder.__init__(self)
 			self.__images = {}
 			self.__empty_image = None
@@ -68,7 +70,10 @@ class Artwork(ArtworkFinder):
 
 		def __empty(self):
 			if not self.__empty_image:
-				image = wx.EmptyImage(*self.size)
+				image = wx.ImageFromBitmap(self.parent.empty)
+				image = image.Mirror()
+				image = image.Rotate90()
+				image = image.Rotate90()
 				h = int(image.GetHeight()*self.length)
 				image = image.Size((image.GetWidth(),h),(0,0))
 				w,h = image.GetSize()
@@ -89,7 +94,7 @@ class Artwork(ArtworkFinder):
 		self.resize = True
 		self.__callbacks = []
 		self.__size = (120,120)
-		self.mirror = Artwork.Mirror()
+		self.mirror = Artwork.Mirror(self)
 
 	def attach(self,func):
 		""" attach function to listen artwork loader event.
@@ -128,8 +133,23 @@ class Artwork(ArtworkFinder):
 
 	def __get_empty_image(self):
 		if not self.__empty:
-			self.__empty = wx.EmptyBitmap(*size)
+			self.__empty = wx.EmptyBitmap(*self.__size)
+			writer = wx.MemoryDC(self.__empty)
+			bg,fg = environment.userinterface.colors
+			writer.SetBrush(wx.Brush(bg))
+			writer.SetPen(wx.Pen(bg))
+			writer.DrawRectangle(0,0,*self.__size)
+			writer.SetBrush(wx.Brush(fg))
+			width = environment.userinterface.text_height/2
+			space = int(math.sqrt(width*width*2))
+			writer.SetPen(wx.Pen(fg,width=width))
+			for x in xrange(self.__size[0]/space):
+				if x%2:
+					writer.DrawLine(x*space,0,x*space+self.__size[0],self.__size[1])
+					writer.DrawLine(0,x*space,self.__size[0],x*space+self.__size[1])
 		return self.__empty
+
+		
 
 	def __cache_image(self,path,image):
 		bmp = wx.BitmapFromImage(image)
@@ -143,9 +163,10 @@ class Artwork(ArtworkFinder):
 		if size:
 			self.__size = size
 			self.mirror.size = size
-			self.__empty = wx.EmptyBitmap(*size)
+			self.__empty = None
+			self.__get_empty_image()
 		else:
 			return self.__size
 	size = property(__change_size,__change_size)
-
+	empty = property(__get_empty_image)
 
