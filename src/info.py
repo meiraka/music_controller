@@ -29,7 +29,7 @@ class Info(wx.BoxSizer):
 			album  = wx.StaticText(parent,-1)
 			,genre = wx.StaticText(parent,-1)
 			)
-		self.artwork_loader = artwork.Artwork()
+		self.artwork_loader = artwork.Artwork(mirror=True)
 		self.artwork_loader.size = (h*12,h*12)
 		self.SetMinSize((h*16,h*16))
 		self.artwork_loader.attach(self.update)

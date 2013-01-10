@@ -30,14 +30,19 @@ class ArtworkFinder(object):
 
 class Artwork(ArtworkFinder):
 	class Mirror(ArtworkFinder):
-		def __init__(self,parent):
+		def __init__(self,parent,enable=False):
 			self.parent = parent
 			ArtworkFinder.__init__(self)
 			self.__images = {}
 			self.__empty_image = None
+			self.__enable = enable
+			if not enable:
+				self.__empty_image = self.parent.empty
 			self.size = (120,120)
 			self.length = 0.3
 		def __getitem__(self,song):
+			if not self.__enable:
+				return self.__empty()
 			path = self.get_image_path(song)
 			if not path:
 				return self.__empty()
@@ -66,8 +71,6 @@ class Artwork(ArtworkFinder):
 			bmp = wx.BitmapFromImage(image)
 			self.__images[(path,self.size)] = bmp
 
-
-
 		def __empty(self):
 			if not self.__empty_image:
 				image = wx.ImageFromBitmap(self.parent.empty)
@@ -87,14 +90,15 @@ class Artwork(ArtworkFinder):
 				self.__empty_image = wx.BitmapFromImage(image)
 			return self.__empty_image
 			
-	def __init__(self):
+	def __init__(self,mirror=False):
 		ArtworkFinder.__init__(self)
 		self.__files = []
 		self.__images = {}
 		self.resize = True
+		self.__empty = None
 		self.__callbacks = []
 		self.__size = (120,120)
-		self.mirror = Artwork.Mirror(self)
+		self.mirror = Artwork.Mirror(self,mirror)
 
 	def attach(self,func):
 		""" attach function to listen artwork loader event.
@@ -143,7 +147,7 @@ class Artwork(ArtworkFinder):
 			width = environment.userinterface.text_height/2
 			space = int(math.sqrt(width*width*2))
 			writer.SetPen(wx.Pen(fg,width=width))
-			for x in xrange(self.__size[0]/space):
+			for x in xrange(self.__size[0]/space+1):
 				if x%2:
 					writer.DrawLine(x*space,0,x*space+self.__size[0],self.__size[1])
 					writer.DrawLine(0,x*space,self.__size[0],x*space+self.__size[1])
