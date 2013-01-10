@@ -8,25 +8,25 @@ import artwork
 import environment
 from client import Song
 
-class Info(wx.Panel):
+class Info(wx.BoxSizer):
 	def __init__(self,parent,client,debug=False):
-		wx.Panel.__init__(self,parent,-1)
+		wx.BoxSizer.__init__(self)
 		self.client = client
 		self.__currentsong = 0
 		self.__lock = False
 		self.__image = None
 		h = environment.userinterface.text_height
-		self.artwork = wx.StaticBitmap(self,-1)
-		self.artwork_mirror = wx.StaticBitmap(self,-1)
+		self.artwork = wx.StaticBitmap(parent,-1)
+		self.artwork_mirror = wx.StaticBitmap(parent,-1)
 		self.single_text = dict(
-			title   = wx.StaticText(self,-1)
-			,artist = wx.StaticText(self,-1)
+			title   = wx.StaticText(parent,-1)
+			,artist = wx.StaticText(parent,-1)
 			)
-		self.slider = wx.Slider(self,-1,50,0,100,size=(h*12,-1))
+		self.slider = wx.Slider(parent,-1,50,0,100,size=(h*12,-1))
 		self.slider.Bind(wx.EVT_SCROLL_THUMBTRACK,self.OnSlider)
 		self.double_text = dict(
-			album  = wx.StaticText(self,-1)
-			,genre = wx.StaticText(self,-1)
+			album  = wx.StaticText(parent,-1)
+			,genre = wx.StaticText(parent,-1)
 			)
 		self.artwork_loader = artwork.Artwork()
 		self.artwork_loader.size = (h*12,h*12)
@@ -41,16 +41,22 @@ class Info(wx.Panel):
 			singlesizer.Add(label,0,wx.ALIGN_CENTRE|wx.ALL,border=3)
 		doublesizer = wx.GridBagSizer()
 		for index,(key,label) in enumerate(self.double_text.iteritems()):
-			doublesizer.Add(wx.StaticText(self,-1,key+':'),(index,0),flag=wx.ALIGN_RIGHT|wx.ALL,border=3)
+			doublesizer.Add(wx.StaticText(parent,-1,key+':'),(index,0),flag=wx.ALIGN_RIGHT|wx.ALL,border=3)
 			doublesizer.Add(label,(index,1),flag=wx.ALIGN_LEFT|wx.ALL,border=3)
-		sizer = wx.BoxSizer(wx.VERTICAL)
-		sizer.Add(imgsizer,0,wx.ALIGN_CENTRE|wx.TOP,border=h*2)
-		sizer.Add(singlesizer,0,wx.ALIGN_CENTRE)
-		sizer.Add(self.slider,0,wx.ALIGN_CENTRE)
-		sizer.Add(doublesizer,0,wx.ALIGN_CENTRE|wx.BOTTOM,border=h*2)
-		self.SetSizer(sizer)
+		self.sizer = wx.BoxSizer(wx.VERTICAL)
+		self.sizer.Add(imgsizer,0,wx.ALIGN_CENTRE|wx.ALIGN_CENTRE_VERTICAL|wx.TOP,border=h*2)
+		self.sizer.Add(singlesizer,0,wx.ALIGN_CENTRE)
+		self.sizer.Add(self.slider,0,wx.ALIGN_CENTRE)
+		self.sizer.Add(doublesizer,0,wx.ALIGN_CENTRE|wx.BOTTOM,border=h*2)
+		self.Add(self.sizer,1,wx.EXPAND)
 		self.__update({},Song({}))
 		self.client.playback.bind(self.client.playback.UPDATE,self.update)
+
+	def Hide(self):
+		wx.BoxSizer.Show(self,self.sizer,show=False,recursive=True)
+
+	def Show(self):
+		wx.BoxSizer.Show(self,self.sizer,show=True,recursive=True)
 
 	def update(self,*args,**kwargs):
 		wx.CallAfter(self.__update,self.client.playback.status)
