@@ -11,6 +11,7 @@ from client import Song
 class Info(wx.BoxSizer):
 	def __init__(self,parent,client,debug=False):
 		wx.BoxSizer.__init__(self)
+		self.parent = parent
 		self.client = client
 		self.__currentsong = 0
 		self.__lock = False
@@ -53,10 +54,12 @@ class Info(wx.BoxSizer):
 		self.client.playback.bind(self.client.playback.UPDATE,self.update)
 
 	def Hide(self):
-		wx.BoxSizer.Show(self,self.sizer,show=False,recursive=True)
+		self.ShowItems(False)
+		self.parent.Layout()
 
 	def Show(self):
-		wx.BoxSizer.Show(self,self.sizer,show=True,recursive=True)
+		self.ShowItems(True)
+		self.parent.Layout()
 
 	def update(self,*args,**kwargs):
 		wx.CallAfter(self.__update,self.client.playback.status)
@@ -67,11 +70,11 @@ class Info(wx.BoxSizer):
 	def __update(self,status,song=None):
 		if song is None and (not status or not status.has_key(u'song')):
 			return
-		if song is None:
+		if song is None and len(self.client.playlist)> int(status[u'song']):
 			song = self.client.playlist[int(status[u'song'])]
 			if not self.__currentsong == status[u'song']:
 				self.__currentsong = status[u'song']
-		if self.__currentsong is not None:
+		if song and self.__currentsong is not None:
 			for key,label in self.single_text.iteritems():
 				label.SetLabel(song.format(u'%'+key+u'%'))
 				label.Wrap(environment.userinterface.text_height*16)

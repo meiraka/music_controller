@@ -5,26 +5,30 @@ class Frame(wx.Frame):
 		wx.Frame.__init__(self,parent,-1)
 		self.client = client
 		self.connection = Connection(self,client.connection,client.config)
+		sizer = wx.BoxSizer()
+		sizer.Add(self.connection,1,wx.EXPAND)
+		self.SetSizer(sizer)
 
 
-class Connection(wx.Panel):
+class Connection(wx.BoxSizer):
 	def __init__(self,parent,connection,config):
-		wx.Panel.__init__(self,parent,-1)
+		wx.BoxSizer.__init__(self)
+		self.parent = parent
 		self.connection = connection
 		self.config = config
 
-		self.box = wx.ListBox(self,-1)
-		self.add = wx.Button(self,-1,'+',style=wx.BU_EXACTFIT)
-		self.delete = wx.Button(self,-1,'-',style=wx.BU_EXACTFIT)
+		self.box = wx.ListBox(parent,-1)
+		self.add = wx.Button(parent,-1,'+',style=wx.BU_EXACTFIT)
+		self.delete = wx.Button(parent,-1,'-',style=wx.BU_EXACTFIT)
 		
-		self.mpd = wx.StaticText(self,-1,u'mpd')
-		self.host_label = wx.StaticText(self,-1,u'host:')
-		self.host = wx.TextCtrl(self,-1)
-		self.port_label = wx.StaticText(self,-1,u'port:')
-		self.port = wx.TextCtrl(self,-1)
-		self.use_password = wx.CheckBox(self,-1,u'password:')
-		self.password = wx.TextCtrl(self,-1)
-		self.connect = wx.Button(self,-1,u'connect')
+		self.mpd = wx.StaticText(parent,-1,u'mpd')
+		self.host_label = wx.StaticText(parent,-1,u'host:')
+		self.host = wx.TextCtrl(parent,-1)
+		self.port_label = wx.StaticText(parent,-1,u'port:')
+		self.port = wx.TextCtrl(parent,-1)
+		self.use_password = wx.CheckBox(parent,-1,u'password:')
+		self.password = wx.TextCtrl(parent,-1)
+		self.connect = wx.Button(parent,-1,u'connect')
 		sizer = wx.GridBagSizer()
 		params = dict(flag=wx.ALL|wx.ALIGN_CENTRE_VERTICAL,border=3)
 		params_label = dict(flag=wx.ALL|wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT,border=3)
@@ -43,10 +47,9 @@ class Connection(wx.Panel):
 		sizer.Add(self.connect,(6,5),**params)
 		sizer.AddGrowableCol(4)
 		sizer.AddGrowableRow(5)
-		border = wx.BoxSizer()
-		border.Add(sizer,1,wx.ALL|wx.EXPAND,9)
+		self.sizer = wx.BoxSizer()
+		self.Add(sizer,1,wx.ALL|wx.EXPAND,9)
 	
-		self.SetSizer(border)
 		self.selected = None
 		self.selected_index = -1
 		self.__update()
@@ -54,9 +57,18 @@ class Connection(wx.Panel):
 		self.connect.Bind(wx.EVT_BUTTON,self.OnConnect)
 		self.add.Bind(wx.EVT_BUTTON,self.OnNew)
 		self.delete.Bind(wx.EVT_BUTTON,self.OnDel)
-		self.Bind(wx.EVT_TEXT,self.OnText)
-		self.Bind(wx.EVT_CLOSE,self.OnClose)
-	
+		texts = [self.host,self.port,self.password]
+		for text in texts:
+			text.Bind(wx.EVT_TEXT,self.OnText)
+		self.Layout()
+
+	def Hide(self):
+		self.ShowItems(False)
+		self.parent.Layout()
+
+	def Show(self):
+		self.ShowItems(True)
+		self.parent.Layout()
 
 	def update(self):
 		wx.CallAfter(self.__update)
@@ -137,8 +149,5 @@ class Connection(wx.Panel):
 	def OnDel(self,event):
 		index = self.box.GetSelection()
 		self.__del(index)
-	
-	def OnClose(self,event):
-		self.Hide()
-		
+
 
