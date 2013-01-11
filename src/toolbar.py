@@ -16,7 +16,8 @@ class MacToolbar(object):
 			pause=wx.ArtProvider.GetBitmap(wx.ART_GO_FORWARD,size=size),
 			next=wx.ArtProvider.GetBitmap(wx.ART_GOTO_LAST,size=size),
 			playlist=wx.ArtProvider.GetBitmap(wx.ART_GOTO_LAST,size=size),
-			library=wx.ArtProvider.GetBitmap(wx.ART_GOTO_LAST,size=size)
+			library=wx.ArtProvider.GetBitmap(wx.ART_GOTO_LAST,size=size),
+			lyric=wx.ArtProvider.GetBitmap(wx.ART_GOTO_LAST,size=size)
 			)
 		self.icons = dict([(k, (v, wx.NewId() ) ) for k,v in icons.iteritems()])
 		self.__tool.AddStretchableSpace()
@@ -36,6 +37,8 @@ class MacToolbar(object):
 					self.parent.show_playlist()
 				elif func_name == 'library':
 					self.parent.show_library()
+				elif func_name == 'lyric':
+					self.parent.show_lyric()
 
 class GTKToolbar(object):
 	def __init__(self,parent,playback):
