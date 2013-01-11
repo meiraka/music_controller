@@ -4,6 +4,7 @@ import toolbar
 import playlist
 import library
 import info
+import lyrics
 import menubar
 import preferences
 import environment
@@ -11,7 +12,8 @@ import environment
 class Frame(wx.Frame):
 	TITLE = 'MusicController'
 	VIEW_PLAYLIST = 'playlist'
-	VIEW_LIBRARY = 'librarary'
+	VIEW_LIBRARY = 'library'
+	VIEW_LIBRARY = 'lyric'
 	def __init__(self,parent,client,debug=False):
 		""" generate main app window."""
 		self.parent = parent
@@ -31,6 +33,7 @@ class Frame(wx.Frame):
 		self.library = library.Library(self,self.client.library,self.client.playlist,debug)
 		self.info = info.Info(self,self.client,debug)
 		self.connection = preferences.Connection(self,self.client.connection,self.client.config)
+		self.lyric = lyrics.Lyric(self,self.client)
 		if debug: print 'sizing'
 
 		self.sizer = wx.BoxSizer()
@@ -38,6 +41,7 @@ class Frame(wx.Frame):
 		s.Add(self.playlist,1,flag=wx.EXPAND)
 		s.Add(self.library,1,flag=wx.EXPAND)
 		s.Add(self.connection,1,flag=wx.EXPAND)
+		s.Add(self.lyric,1,flag=wx.EXPAND)
 		self.sizer.Add(s,1,flag=wx.EXPAND)
 		self.sizer.Add(self.info,0,wx.EXPAND)
 		#self.sizer.Add(self.albumlist,0,flag=wx.EXPAND)
@@ -62,6 +66,7 @@ class Frame(wx.Frame):
 		self.SetTitle(self.TITLE +' - '+ 'connection')
 		self.playlist.Hide()
 		self.library.Hide()
+		self.lyric.Hide()
 		self.info.Hide()
 		self.Layout()
 		self.connection.Show()
@@ -80,24 +85,42 @@ class Frame(wx.Frame):
 				self.show_library()
 
 	def show_library(self):
+		""" Show library and song info."""
 		self.current_view = self.VIEW_LIBRARY
 		self.change_title()
 		self.connection.Hide()
 		self.playlist.Hide()
+		self.lyric.Hide()
 		self.Layout()
 		self.info.Show()
 		self.library.Show()
 		self.Layout()
 	
 	def show_playlist(self):
+		""" Show playlist and song info."""
 		self.current_view = self.VIEW_PLAYLIST
 		self.change_title()
 		self.connection.Hide()
 		self.library.Hide()
+		self.lyric.Hide()
 		self.Layout()
 		self.info.Show()
 		self.playlist.Show()
 		self.Layout()
+
+	def show_lyric(self):
+		""" Show lyric and song info."""
+		self.current_view = self.VIEW_LYRIC
+		self.change_title()
+		self.connection.Hide()
+		self.library.Hide()
+		self.playlist.Hide()
+		self.Layout()
+		self.info.Show()
+		self.lyric.Show()
+		self.Layout()
+
+
 
 	def change_title(self):
 		wx.CallAfter(self.__change_title)
