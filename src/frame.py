@@ -13,7 +13,7 @@ class Frame(wx.Frame):
 	TITLE = 'MusicController'
 	VIEW_PLAYLIST = 'playlist'
 	VIEW_LIBRARY = 'library'
-	VIEW_LIBRARY = 'lyric'
+	VIEW_LYRIC = 'lyric'
 	def __init__(self,parent,client,debug=False):
 		""" generate main app window."""
 		self.parent = parent
