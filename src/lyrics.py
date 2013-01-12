@@ -19,11 +19,11 @@ class Lyric(wx.Panel):
 		wx.Panel.__init__(self,parent,-1)
 		self.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX))
 		self.font = environment.userinterface.font
-		#self.timer = wx.Timer(self.parent,-1)
-		#wx.EVT_TIMER(self.parent,-1,self.update)
-		#self.timer.Start(200)
+		self.timer = wx.Timer(self.parent,-1)
+		wx.EVT_TIMER(self.parent,-1,self.update)
+		self.timer.Start(200)
 		self.parent.Bind(wx.EVT_ERASE_BACKGROUND,self.update)
-		self.parent.Bind(wx.EVT_PAINT,self.OnPaint)
+		#self.parent.Bind(wx.EVT_PAINT,self.OnPaint)
 		self.update()
 
 	def OnPaint(self,event):
@@ -43,10 +43,12 @@ class Lyric(wx.Panel):
 		dc.EndDrawing()
 
 	def draw(self,dc,rect):
-		self.Refresh()
+		#dc = wx.GCDC(dc)
+		dc.Clear()
 		x,y,w,h = rect
 		try:
 			dc.DrawText('hello test',0,0)
+			dc.DrawText(self.client.playback.status[u'time'],0,100)
 		except Exception,err:
 			print err
 		
