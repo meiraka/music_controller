@@ -57,6 +57,7 @@ class GTKToolbar(object):
 		self.next = wx.Button(self.__tool,-1,u'next')
 		self.playlist = wx.Button(self.__tool,-1,u'playlist')
 		self.library = wx.Button(self.__tool,-1,u'library')
+		self.lyric = wx.Button(self.__tool,-1,u'lyric')
 		self.state = ''
 		self.__tool.Bind(wx.EVT_BUTTON,self.OnButton)
 		self.__tool.AddControl(self.previous)
@@ -64,6 +65,7 @@ class GTKToolbar(object):
 		self.__tool.AddControl(self.next)
 		self.__tool.AddControl(self.playlist)
 		self.__tool.AddControl(self.library)
+		self.__tool.AddControl(self.lyric)
 		self.__tool.Realize()
 		self.playback.bind(self.playback.UPDATE,self.update_label)
 
@@ -91,6 +93,8 @@ class GTKToolbar(object):
 			self.playback.previous()
 		elif obj == self.playlist:
 			self.parent.show_playlist()
+		elif obj == self.lyric:
+			self.parent.show_lyric()
 		elif obj == self.library:
 			self.parent.show_library()
 		
