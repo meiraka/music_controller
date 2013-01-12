@@ -10,18 +10,17 @@ class MacToolbar(object):
 		#size = (19,19)
 		size = None
 		#self.__tool.SetToolBitmapSize(size)
-		icons = dict(
-			previous=wx.ArtProvider.GetBitmap(wx.ART_GOTO_FIRST,size=size),
-			play=wx.ArtProvider.GetBitmap(wx.ART_GO_FORWARD,size=size),
-			pause=wx.ArtProvider.GetBitmap(wx.ART_GO_FORWARD,size=size),
-			next=wx.ArtProvider.GetBitmap(wx.ART_GOTO_LAST,size=size),
-			playlist=wx.ArtProvider.GetBitmap(wx.ART_GOTO_LAST,size=size),
-			library=wx.ArtProvider.GetBitmap(wx.ART_GOTO_LAST,size=size),
-			lyric=wx.ArtProvider.GetBitmap(wx.ART_GOTO_LAST,size=size)
-			)
-		self.icons = dict([(k, (v, wx.NewId() ) ) for k,v in icons.iteritems()])
+		icons = [
+			(u'previous', wx.ArtProvider.GetBitmap(wx.ART_GOTO_FIRST,size=size)),
+			(u'play',     wx.ArtProvider.GetBitmap(wx.ART_GO_FORWARD,size=size)),
+			(u'next',     wx.ArtProvider.GetBitmap(wx.ART_GOTO_LAST,size=size)),
+			(u'playlist', wx.ArtProvider.GetBitmap(wx.ART_NORMAL_FILE,size=size)),
+			(u'library',  wx.ArtProvider.GetBitmap(wx.ART_HARDDISK,size=size)),
+			(u'lyric',    wx.ArtProvider.GetBitmap(wx.ART_PASTE,size=size))
+			]
+		self.icons = [(k, (v, wx.NewId() ) ) for k,v in icons]
 		self.__tool.AddStretchableSpace()
-		for k,(icon,id) in self.icons.iteritems():
+		for k,(icon,id) in self.icons:
 			self.__tool.AddLabelTool(id,k,icon)
 		self.__tool.AddStretchableSpace()
 		self.__tool.Realize()
@@ -29,16 +28,24 @@ class MacToolbar(object):
 
 	def OnTool(self,event):
 		event_id = event.GetId()
-		for func_name,(icon,id) in self.icons.iteritems():
+		for func_name,(icon,id) in self.icons:
 			if event_id == id:
-				if hasattr(self.playback,func_name):
-					getattr(self.playback,func_name)()
+				obj = self.__tool.FindById(id)
+				if obj.GetLabel() == u'play':
+					self.playback.play()
+					obj.SetLabel(u'pause')
+				elif obj.GetLabel() == u'pause':
+					self.playback.pause()
+					obj.SetLabel(u'play')
 				elif func_name == 'playlist':
 					self.parent.show_playlist()
 				elif func_name == 'library':
 					self.parent.show_library()
 				elif func_name == 'lyric':
 					self.parent.show_lyric()
+				elif hasattr(self.playback,func_name):
+					getattr(self.playback,func_name)()
+
 
 class GTKToolbar(object):
 	def __init__(self,parent,playback):
