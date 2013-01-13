@@ -5,10 +5,12 @@ import thread
 import wx
 import environment
 import math
+import lastfm
 
 class ArtworkFinder(object):
 	def __init__(self):
 		self.__check_dir = environment.config_dir + u'/artwork'
+		self.lastfm = lastfm.Album()
 		self.cache()
 
 	def cache(self):
@@ -25,6 +27,9 @@ class ArtworkFinder(object):
 				return self.__check_dir + u'/' + file
 		else:
 			return None
+
+	def get_image_from_lastfm(self,song):
+		return self.lastfm[song]
 
 
 
@@ -99,6 +104,9 @@ class Artwork(ArtworkFinder):
 		self.__callbacks = []
 		self.__size = (120,120)
 		self.mirror = Artwork.Mirror(self,mirror)
+		self.__lastfm = mirror
+		self.lastfm.bind(self.lastfm.DOWNLOADED,self.__load_image)
+
 
 	def attach(self,func):
 		""" attach function to listen artwork loader event.
@@ -110,7 +118,7 @@ class Artwork(ArtworkFinder):
 		del self.__callbacks[self.__callbacks.index(func)]
 
 	def __getitem__(self,song):
-		path = self.get_image_path(song)
+		path = self.get_image_from_lastfm(song)
 		if not path:
 			return self.__get_empty_image()
 		if self.__images.has_key((path,self.size)) and self.__images[(path,self.size)]:
@@ -126,6 +134,8 @@ class Artwork(ArtworkFinder):
 		if self.resize:
 			image = wx.Image(path)
 			w,h = image.GetSize()
+			if w is 0 or h is 0:
+				return
 			if w > h:
 				new_size = (self.size[0],int(1.0*h/w*self.size[1]))
 			else:

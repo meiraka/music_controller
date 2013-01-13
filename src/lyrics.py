@@ -63,7 +63,7 @@ class LyricDatabase(client.Object):
 		lyric = cursor.fetchone()
 		if lyric is None:
 			thread.start_new_thread(self.download,(song,))
-			return ''
+			return None
 		else:
 			return lyric[0]
 		
@@ -78,11 +78,6 @@ class LyricDatabase(client.Object):
 		query = urllib.quote(title+'/'+artist)
 		json_text = urllib.urlopen('http://geci.me/api/lyric/'+query).read()
 		json_parsed = json.loads(json_text.decode('utf8'))
-		if u'result' in json_parsed and not json_parsed[u'result']:
-			query = urllib.quote(title)
-			json_text = urllib.urlopen('http://geci.me/api/lyric/'+query).read()
-			json_parsed = json.loads(json_text.decode('utf8'))
-
 		lyric = u''
 		if u'result' in json_parsed and json_parsed[u'result']:
 			lyric_page = urllib.urlopen(json_parsed[u'result'][0][u'lrc'])
@@ -98,9 +93,6 @@ class LyricDatabase(client.Object):
 				lyric
 				)
 			)
-		if not lyric:
-			print 'not found'
-			print json_text
 		connection.commit()
 		self.call(self.UPDATE,lyric)
 
@@ -159,6 +151,8 @@ class Lyric(wx.Panel):
 		self.__raw_lyric = lyric
 		self.__lyric = []
 		result = []
+		if not lyric:
+			return
 		for line in lyric.split(u'\n'):
 			for i in self.__decode_line(line):
 				result.append(i)
@@ -196,20 +190,31 @@ class Lyric(wx.Panel):
 		except:
 			pass
 		dc.SetFont(self.font)
+		dc.SetBackground(wx.Brush(self.bg))
+		dc.SetPen(wx.Pen(self.bg))
+		dc.SetBrush(wx.Brush(self.bg))
+		dc.SetTextForeground(self.fg)
+		dc.DrawRectangle(0,0,*self.GetSize())
 		x,y = self.GetPosition()
 		w,h = self.GetSize()
-		self.draw(dc,(x,y,w,h))
+		if self.__lyric:
+			self.draw(dc,(x,y,w,h))
+		else:
+			if self.__raw_lyric is None:
+				title = u'Searching lyric...'
+			else:
+				title = u'Lyrics not found.'
+			x = (w - dc.GetTextExtent(title)[0])/2
+			y = h / 2
+			dc.DrawText(title,x,y)
+
 		dc.EndDrawing()
 
 	def draw(self,dc,rect):
 		self.update_time()
 		#dc = wx.GCDC(dc)
 		dc.Clear()
-		dc.SetBackground(wx.Brush(self.bg))
-		dc.SetPen(wx.Pen(self.bg))
-		dc.SetBrush(wx.Brush(self.bg))
-		dc.SetTextForeground(self.fg)
-		dc.DrawRectangle(0,0,*self.GetSize())
+
 		dc.SetPen(wx.Pen(self.hbg))
 		dc.SetBrush(wx.Brush(self.hbg))
 
@@ -237,7 +242,6 @@ class Lyric(wx.Panel):
 				last_time = time
 		self.__time_msec = self.__time_msec + interval
 		try:
-			#dc.DrawText(self.__raw_lyric,0,0)
 			pos =  self.GetSize()[0] / height / 2
 			for index,(time,line) in enumerate(self.__lyric):
 				if index == current_line:
