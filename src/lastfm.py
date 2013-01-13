@@ -13,11 +13,14 @@ KEY = u'1f898a6986e69cd5a456d18e56051e0c'
 SECRET = u'4c77ec44c856dc04bbc5b69a6068a8d9'
 
 class Album(client.Object):
+	"""
+	Download and cache image from Last.fm
+
+	"""
 	DOWNLOADED = 'downloaded'
 	def __init__(self):
 		client.Object.__init__(self)
-		self.__doing = {}
-		self.__cache = {}
+		self.__cache = {} # song.format('%albumartist% %album%') = fullpath
 		sql_init = '''
 		CREATE TABLE IF NOT EXISTS
 		albums
@@ -40,6 +43,8 @@ class Album(client.Object):
 			artist=? and
 			album=?
 		'''
+
+		# check cache.
 		key = song.format('%albumartist% %album%')
 		if not song:
 			return None
@@ -92,7 +97,8 @@ class Album(client.Object):
 			cursor = connection.cursor()
 			cursor.execute(sql_delete,(artist,album))
 			connection.commit()
-			del self.__cache[song.format('%albumartist% %album%')]
+			key = song.format('%albumartist% %album%')
+			del self.__cache[key]
 
 
 	def __download(self,song):
@@ -110,10 +116,14 @@ class Album(client.Object):
 		'''
 		artist = song.format('%albumartist%')
 		album = song.format('%album%')
+		key = song.format('%albumartist% %album%')
+		# fill with '' to block another instance start download.
 		connection = self.__get_connection()
 		cursor = connection.cursor()
 		cursor.execute(sql_write,(artist,album,''))
 		connection.commit()
+
+		# download from lastfm.
 		reqest = 'http://ws.audioscrobbler.com/2.0/?method=album.getinfo&api_key=%(key)s&artist=%(artist)s&album=%(album)s&format=json'
 		reqest = reqest % dict(key=KEY,
 			artist=urllib.quote(artist.encode('utf8')),
@@ -128,15 +138,13 @@ class Album(client.Object):
 					path = image['#text']
 		if path:
 			image_bin = urllib.urlopen(path).read()
-			filename = song.format('%albumartist% %album%').replace('/','_')
+			filename = key.replace('/','_')
 			fullpath = environment.config_dir+'/artwork/'+filename
 			f = open(fullpath,'w')
 			f.write(image_bin)
 			f.close()
 			cursor.execute(sql_update,(filename,artist,album))
 			connection.commit()
-			self.__cache[song.format('%albumartist% %album%')] = fullpath
+			self.__cache[key] = fullpath
 			self.call(self.DOWNLOADED,fullpath,song)
-		
-					
-			
+
