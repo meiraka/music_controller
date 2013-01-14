@@ -12,7 +12,7 @@ import environment
 KEY = u'1f898a6986e69cd5a456d18e56051e0c'
 SECRET = u'4c77ec44c856dc04bbc5b69a6068a8d9'
 
-class Album(client.Object):
+class Artwork(client.Object):
 	"""
 	Download and cache image from Last.fm
 

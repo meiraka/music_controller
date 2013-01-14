@@ -12,7 +12,7 @@ class ArtworkFinder(client.Object):
 	DOWNLOADED = 'downloaded'
 	def __init__(self):
 		client.Object.__init__(self)
-		self.__lastfm = lastfm.Album()
+		self.__lastfm = lastfm.Artwork()
 		self.__lastfm.download_auto = True
 		self.__lastfm.download_background = True
 		self.__lastfm.bind(self.__lastfm.DOWNLOADED,self.__downloaded)
