@@ -222,7 +222,8 @@ class Lyric(wx.Panel):
 		
 		# calc offset
 		last_time = 0.0
-		height = environment.userinterface.text_height * 2
+		text_height = environment.userinterface.text_height
+		height = text_height * 3 / 2
 		interval = float(self.__update_interval)/1000.0
 		current_line = -1
 		for index,(time,line) in enumerate(self.__lyric):
@@ -250,7 +251,7 @@ class Lyric(wx.Panel):
 					dc.SetTextForeground(self.hfg)
 				else:
 					dc.SetTextForeground(self.fg)
-				draw_y = height/4+(index+pos)*height-int(self.__offset)
+				draw_y = (height-text_height)/2+(index+pos)*height-int(self.__offset)
 				if -height < draw_y < self.GetSize()[1]:
 					dc.DrawText(line,12,draw_y)
 		except Exception,err:
