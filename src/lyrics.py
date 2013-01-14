@@ -189,6 +189,7 @@ class Lyric(wx.Panel):
 			dc = event.GetDC()
 		except:
 			pass
+		dc = wx.BufferedDC(dc)
 		dc.SetFont(self.font)
 		dc.SetBackground(wx.Brush(self.bg))
 		dc.SetPen(wx.Pen(self.bg))
@@ -212,7 +213,6 @@ class Lyric(wx.Panel):
 
 	def draw(self,dc,rect):
 		self.update_time()
-		#dc = wx.GCDC(dc)
 		dc.Clear()
 
 		dc.SetPen(wx.Pen(self.hbg))
