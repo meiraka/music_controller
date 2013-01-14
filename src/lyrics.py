@@ -18,6 +18,8 @@ class LyricDatabase(client.Object):
 	"""
 	UPDATE = 'update'
 	def __init__(self):
+		self.download_auto = False
+		self.download_background = False
 		""" init database.
 
 		if not exists database, create table.
@@ -62,7 +64,11 @@ class LyricDatabase(client.Object):
 			)
 		lyric = cursor.fetchone()
 		if lyric is None:
-			thread.start_new_thread(self.download,(song,))
+			if self.download_auto:
+				if self.download_background:
+					thread.start_new_thread(self.download,(song,))
+				else:
+					return self.download(song)
 			return None
 		else:
 			return lyric[0]
@@ -95,6 +101,7 @@ class LyricDatabase(client.Object):
 			)
 		connection.commit()
 		self.call(self.UPDATE,lyric)
+		return lyric
 
 
 
@@ -107,6 +114,8 @@ class Lyric(wx.Panel):
 		self.hbg = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT)
 		self.hfg = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT)
 		self.database = LyricDatabase()
+		self.database.download_auto = True
+		self.database.download_background = True
 		self.__time = 0
 		self.__time_msec = 0.0
 		self.__index = 0
