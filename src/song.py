@@ -1,6 +1,7 @@
 
 import wx
 import environment
+import lyrics
 
 frame = wx.Frame
 if environment.userinterface.subwindow_small_frame:
@@ -10,11 +11,14 @@ class SongDialog(frame):
 	def __init__(self,parent,songs):
 		frame.__init__(self,None,-1,style=wx.CLOSE_BOX|wx.CAPTION)
 		self.songs = songs
+		self.lyrics_database = lyrics.Database()
 		self.must_tags = [u'artist',u'title',u'album']
 		must = wx.CollapsiblePane(self,-1,'General info:')
 		sub = wx.CollapsiblePane(self,-1,'Extra info:')
+		lyric = wx.CollapsiblePane(self,-1,'Lyric:')
 		self.__mast_pane = must.GetPane()
 		self.__sub_pane = sub.GetPane()
+		self.__lyric_pane = lyric.GetPane()
 		self.__text_style = wx.TE_READONLY
 		self.__border = 3
 		if environment.userinterface.fill_readonly_background:
@@ -25,6 +29,8 @@ class SongDialog(frame):
 		self.description = wx.StaticText(self,-1,style=self.__text_style)
 		must_labels = [wx.StaticText(self.__mast_pane,-1,tag+':') for tag in self.must_tags]
 		self.must_values = [wx.TextCtrl(self.__mast_pane,-1,u'',style=self.__text_style) for tag in self.must_tags]
+		self.lyric = wx.TextCtrl(self.__lyric_pane,-1,style=wx.TE_MULTILINE)
+		self.lyric.SetMinSize((-1,environment.userinterface.text_height*8))
 		if environment.userinterface.fill_readonly_background:
 			for value in self.must_values+[self.title,self.description]:
 				value.SetThemeEnabled(False)
@@ -39,7 +45,9 @@ class SongDialog(frame):
 		if environment.userinterface.subitem_small_font:
 			small_font = self.title.GetFont()
 			small_font.SetPointSize(int(1.0*small_font.GetPointSize()/1.2))
-			smalls = [self.description,must,sub,self.__mast_pane,self.__sub_pane]+must_labels+self.must_values
+			smalls = [self.description,must,sub,lyric,self.lyric,
+					self.__mast_pane,self.__sub_pane
+					]+must_labels+self.must_values
 			for i in smalls:
 				i.SetFont(small_font)
 			self.SetFont(small_font)
@@ -49,12 +57,16 @@ class SongDialog(frame):
 		self.__sub_pane.SetSizer(self.s_sizer)
 		self.__mast_pane.SetSizer(m_sizer)
 		m_sizer.SetSizeHints(self.__mast_pane)
+		self.l_sizer = wx.BoxSizer(wx.VERTICAL)
+		self.l_sizer.Add(self.lyric,1,wx.EXPAND|wx.ALL,border=6)
+		self.__lyric_pane.SetSizer(self.l_sizer)
 		sizer = wx.BoxSizer(wx.VERTICAL)
 		sizer.Add(self.title,0,wx.EXPAND|wx.ALL,border=3)
 		sizer.Add(self.description,0,wx.EXPAND|wx.ALL,border=3)
 		#sizer.Add(wx.StaticLine(self,-1,style=wx.BORDER_SIMPLE|wx.LI_HORIZONTAL),0,wx.EXPAND|wx.ALL,border=3)
 		sizer.Add(must,0,wx.EXPAND)
 		sizer.Add(sub,0,wx.EXPAND)
+		sizer.Add(lyric,0,wx.EXPAND)
 		self.SetSizer(sizer)
 		self.show(songs[0])
 		must.Expand()
@@ -95,3 +107,4 @@ class SongDialog(frame):
 			label.SetLabel(tag+':')
 			value.SetValue(song[tag])
 		self.SetTitle(u'%s info' % song.format(u'%title% - %artist%'))
+		self.lyric.SetValue(self.lyrics_database[song])
