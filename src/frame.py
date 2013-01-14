@@ -84,8 +84,10 @@ class Frame(wx.Frame):
 		else:
 			if self.current_view == self.VIEW_PLAYLIST:
 				self.show_playlist()
-			else:
+			elif self.current_view == sefl.VIEW_LIBRARY:
 				self.show_library()
+			else:
+				self.show_lyric()
 
 	def show_library(self):
 		""" Show library and song info."""
