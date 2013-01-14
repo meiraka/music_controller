@@ -24,18 +24,16 @@ class Frame(wx.Frame):
 		self.SetSize((640,480))
 		self.menubar = menubar.MenuBar(self,client,accele=False if environment.userinterface.style == 'mac' else True)
 		self.SetMenuBar(self.menubar)
-		if debug: print 'init frame'
 		self.toolbar = toolbar.Toolbar(self,self.client.playback)
 
-		if debug: print 'init playlist'
-		self.playlist = playlist.Playlist(self,self.client.playlist,self.client.playback,debug)
-		if debug: print 'init library'
-		self.library = library.Library(self,self.client.library,self.client.playlist,debug)
+		self.playlist = playlist.Playlist(self,self.client.playlist,
+				self.client.playback,debug)
+		self.library = library.Library(self,self.client.library,
+				self.client.playlist,debug)
 		self.info = info.Info(self,self.client,debug)
-		self.connection = preferences.Connection(self,self.client.connection,self.client.config)
+		self.connection = preferences.Connection(self,
+				self.client.connection,self.client.config)
 		self.lyric = lyrics.Lyric(self,self.client)
-		if debug: print 'sizing'
-
 		self.sizer = wx.BoxSizer()
 		s = wx.BoxSizer()
 		s.Add(self.playlist,1,flag=wx.EXPAND)
@@ -45,11 +43,8 @@ class Frame(wx.Frame):
 		self.sizer.Add(s,1,flag=wx.EXPAND)
 		self.sizer.Add(self.info,0,wx.EXPAND)
 		#self.sizer.Add(self.albumlist,0,flag=wx.EXPAND)
-		self.playlist.Hide()
-		self.library.Hide()
-		self.connection.Hide()
 		self.SetSizer(self.sizer)
-		self.info.Hide()
+		self.hide_children()
 		self.Layout()
 		h = environment.userinterface.text_height
 		self.SetSize((h*48,h*36))
@@ -61,6 +56,14 @@ class Frame(wx.Frame):
 		if debug: print 'sized.'
 		self.client.playback.bind(self.client.playback.UPDATE_PLAYING,self.change_title)
 		if debug: print 'binded.'
+
+	def hide_children(self):
+		self.playlist.Hide()
+		self.library.Hide()
+		self.connection.Hide()
+		self.info.Hide()
+		self.lyric.Hide()
+
 
 	def show_connection(self):
 		self.SetTitle(self.TITLE +' - '+ 'connection')
@@ -92,8 +95,8 @@ class Frame(wx.Frame):
 		self.playlist.Hide()
 		self.lyric.Hide()
 		self.Layout()
-		self.info.Show()
 		self.library.Show()
+		self.info.Show()
 		self.Layout()
 	
 	def show_playlist(self):
@@ -104,8 +107,8 @@ class Frame(wx.Frame):
 		self.library.Hide()
 		self.lyric.Hide()
 		self.Layout()
-		self.info.Show()
 		self.playlist.Show()
+		self.info.Show()
 		self.Layout()
 
 	def show_lyric(self):
@@ -116,8 +119,8 @@ class Frame(wx.Frame):
 		self.library.Hide()
 		self.playlist.Hide()
 		self.Layout()
-		self.info.Show()
 		self.lyric.Show()
+		self.info.Show()
 		self.Layout()
 
 
