@@ -12,7 +12,7 @@ import re
 Draw lyric 
 """
 
-class LyricDatabase(client.Object):
+class Database(client.Object):
 	"""
 	Downloads and manages lyric.
 	"""
@@ -113,7 +113,7 @@ class Lyric(wx.Panel):
 		self.fg = wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWTEXT)
 		self.hbg = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT)
 		self.hfg = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT)
-		self.database = LyricDatabase()
+		self.database = Database()
 		self.database.download_auto = True
 		self.database.download_background = True
 		self.__time = 0
