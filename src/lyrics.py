@@ -245,15 +245,17 @@ class Lyric(wx.Panel):
 		try:
 			pos =  self.GetSize()[0] / height / 2
 			for index,(time,line) in enumerate(self.__lyric):
-				if index == current_line:
-					y = (index+pos)*height-int(self.__offset)
-					dc.DrawRectangle(0,y,self.GetSize()[0],height)
-					dc.SetTextForeground(self.hfg)
-				else:
-					dc.SetTextForeground(self.fg)
-				draw_y = (height-text_height)/2+(index+pos)*height-int(self.__offset)
-				if -height < draw_y < self.GetSize()[1]:
-					dc.DrawText(line,12,draw_y)
+				# do not draw line text is empty.
+				if line.strip():
+					if index == current_line:
+						y = (index+pos)*height-int(self.__offset)
+						dc.DrawRectangle(0,y,self.GetSize()[0],height)
+						dc.SetTextForeground(self.hfg)
+					else:
+						dc.SetTextForeground(self.fg)
+					draw_y = (height-text_height)/2+(index+pos)*height-int(self.__offset)
+					if -height < draw_y < self.GetSize()[1]:
+						dc.DrawText(line,12,draw_y)
 		except Exception,err:
 			print err
 		
