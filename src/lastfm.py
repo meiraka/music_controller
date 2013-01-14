@@ -21,7 +21,8 @@ class Album(client.Object):
 	def __init__(self):
 		client.Object.__init__(self)
 		self.__cache = {} # song.format('%albumartist% %album%') = fullpath
-		self.download_image = True
+		self.download_auto = False
+		self.download_background = False
 		sql_init = '''
 		CREATE TABLE IF NOT EXISTS
 		albums
@@ -67,9 +68,12 @@ class Album(client.Object):
 			# not in db, download
 			# write cache empty value
 			self.__cache[key] = ''
-			if self.download_image:
-				thread.start_new_thread(self.download,(song,))
-			return None
+			if self.download_auto:
+				if self.download_background:
+					thread.start_new_thread(self.download,(song,))
+				else:
+					self.download(song)
+			return self.__cache[key]
 		elif artwork[0]:
 			# found image in db
 			# write cache path
@@ -80,7 +84,7 @@ class Album(client.Object):
 			return None
 
 	def download(self,song):
-		""" download image and write db, cache path.
+		""" download image and write db andcache path.
 
 		if timeout, delete from db and cache.
 		"""
@@ -101,12 +105,15 @@ class Album(client.Object):
 			connection.commit()
 			key = song.format('%albumartist% %album%')
 			del self.__cache[key]
+			return ''
 
 
 	def __download(self,song):
 		""" part of download()
 
 		Donwload and write db, cache path.
+		Returns:
+			fullpath of image if downloaded else None
 		"""
 		sql_write = '''
 		INSERT OR REPLACE INTO albums
@@ -153,4 +160,5 @@ class Album(client.Object):
 			connection.commit()
 			self.__cache[key] = fullpath
 			self.call(self.DOWNLOADED,fullpath,song)
-
+			return fullpath
+		return None

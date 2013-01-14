@@ -13,6 +13,8 @@ class ArtworkFinder(client.Object):
 	def __init__(self):
 		client.Object.__init__(self)
 		self.__lastfm = lastfm.Album()
+		self.__lastfm.download_auto = True
+		self.__lastfm.download_background = True
 		self.__lastfm.bind(self.__lastfm.DOWNLOADED,self.__downloaded)
 
 	def __getitem__(self,song):
@@ -20,7 +22,6 @@ class ArtworkFinder(client.Object):
 
 	def __downloaded(self,path,song):
 		""" event function for lastfm.Album.DOWNLOADED. """
-		print path
 		self.call(self.DOWNLOADED,path,song)
 
 
