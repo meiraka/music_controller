@@ -26,6 +26,7 @@ class SongDialog(frame):
 		if environment.userinterface.subitem_small_font:
 			self.__border = 0
 		self.title = wx.StaticText(self,-1,style=self.__text_style)
+		self.title.SetMinSize((environment.userinterface.text_height*20,-1))
 		self.description = wx.StaticText(self,-1,style=self.__text_style)
 		must_labels = [wx.StaticText(self.__mast_pane,-1,tag+':') for tag in self.must_tags]
 		self.must_values = [wx.TextCtrl(self.__mast_pane,-1,u'',style=self.__text_style) for tag in self.must_tags]
@@ -72,12 +73,11 @@ class SongDialog(frame):
 		must.Expand()
 		sub.Expand()
 		self.Show()
-		self.title.SetMinSize((self.title.GetSize()[0],-1))
 
 
 	def show(self,song):
 		self.title.SetLabel(song.format('%title% - %artist% %length%'))
-		self.description.SetLabel(song.format('%album% %genre% %date%   %file%'))
+		self.description.SetLabel(song.format('%album% %genre%'))
 		for index,tag in enumerate(self.must_tags):
 			if tag in song:
 				self.must_values[index].SetValue(song[tag])

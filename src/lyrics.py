@@ -16,6 +16,7 @@ class Database(client.Object):
 	"""
 	Downloads and manages lyric.
 	"""
+	UPDATING = 'updating'
 	UPDATE = 'update'
 	def __init__(self):
 		self.download_auto = False
@@ -69,7 +70,7 @@ class Database(client.Object):
 					thread.start_new_thread(self.download,(song,))
 				else:
 					return self.download(song)
-			return None
+			return ''
 		else:
 			return lyric[0]
 		
@@ -79,6 +80,7 @@ class Database(client.Object):
 		(artist,title,album,lyric)
 		VALUES(?, ?, ?, ?)
 		'''
+		self.call(self.UPDATING)
 		title = song.format(u'%title%').replace(u'/',u' ').encode('utf8')
 		artist = song.format(u'%artist%').replace(u'/',u' ').encode('utf8')
 		query = urllib.quote(title+'/'+artist)
