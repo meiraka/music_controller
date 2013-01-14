@@ -297,7 +297,7 @@ class Library(LibraryBase):
 		self.diff = text_height/4
 		self.artwork = artwork.Artwork()
 		self.artwork.size = (text_height*7/2,text_height*7/2)
-		self.artwork.attach(self.RefreshAll)
+		self.artwork.bind(self.artwork.UPDATE,self.RefreshAll)
 	
 	def draw_default(self,dc,rect,label,songs,index,depth):
 		diff = depth*self.text_height*2

@@ -3,37 +3,30 @@
 import os
 import thread
 import wx
+import client
 import environment
 import math
 import lastfm
 
-class ArtworkFinder(object):
+class ArtworkFinder(client.Object):
+	DOWNLOADED = 'downloaded'
 	def __init__(self):
-		self.__check_dir = environment.config_dir + u'/artwork'
-		self.lastfm = lastfm.Album()
-		self.cache()
+		client.Object.__init__(self)
+		self.__lastfm = lastfm.Album()
+		self.__lastfm.bind(self.__lastfm.DOWNLOADED,self.__downloaded)
 
-	def cache(self):
-		""" check art work dir and caching."""
-		if not os.path.exists(self.__check_dir):
-			os.makedirs(self.__check_dir)
-		self.__files = os.listdir(self.__check_dir)
+	def __getitem__(self,song):
+		return self.__lastfm[song]
 
-	def get_image_path(self,song):
-		if not(song and song.has_key(u'album')):
-			return None
-		for file in self.__files:
-			if file.count(song[u'album']):
-				return self.__check_dir + u'/' + file
-		else:
-			return None
-
-	def get_image_from_lastfm(self,song):
-		return self.lastfm[song]
+	def __downloaded(self,path,song):
+		""" event function for lastfm.Album.DOWNLOADED. """
+		print path
+		self.call(self.DOWNLOADED,path,song)
 
 
 
 class Artwork(ArtworkFinder):
+	UPDATE = 'update'
 	class Mirror(ArtworkFinder):
 		def __init__(self,parent,enable=False):
 			self.parent = parent
@@ -46,9 +39,11 @@ class Artwork(ArtworkFinder):
 			self.size = (120,120)
 			self.length = 0.3
 		def __getitem__(self,song):
+			""" Returns mirrored artwork image.
+			"""
 			if not self.__enable:
 				return self.__empty()
-			path = self.get_image_path(song)
+			path = ArtworkFinder.__getitem__(self,song)
 			if not path:
 				return self.__empty()
 			if self.__images.has_key((path,self.size)):
@@ -99,26 +94,15 @@ class Artwork(ArtworkFinder):
 		ArtworkFinder.__init__(self)
 		self.__files = []
 		self.__images = {}
-		self.resize = True
 		self.__empty = None
 		self.__callbacks = []
 		self.__size = (120,120)
 		self.mirror = Artwork.Mirror(self,mirror)
-		self.__lastfm = mirror
-		self.lastfm.bind(self.lastfm.DOWNLOADED,self.__load_image)
+		self.bind(self.DOWNLOADED,self.__load_image)
 
-
-	def attach(self,func):
-		""" attach function to listen artwork loader event.
-		if image was loaded, call function.
-		"""
-		self.__callbacks.append(func)
-
-	def detach(self,func):
-		del self.__callbacks[self.__callbacks.index(func)]
 
 	def __getitem__(self,song):
-		path = self.get_image_from_lastfm(song)
+		path = ArtworkFinder.__getitem__(self,song)
 		if not path:
 			return self.__get_empty_image()
 		if self.__images.has_key((path,self.size)) and self.__images[(path,self.size)]:
@@ -130,20 +114,23 @@ class Artwork(ArtworkFinder):
 			return None
 
 	def __load_image(self,path,song):
+		""" Generates given path of image object.
+		
+		
+		"""
 		self.__images[(path,self.size)] = None
-		if self.resize:
-			image = wx.Image(path)
-			w,h = image.GetSize()
-			if w is 0 or h is 0:
-				return
-			if w > h:
-				new_size = (self.size[0],int(1.0*h/w*self.size[1]))
-			else:
-				new_size = (int(1.0*w/h*self.size[0]),self.size[1])
-			if all([i > 0 for i in new_size]):
-				image.Rescale(*new_size,quality=wx.IMAGE_QUALITY_HIGH)
-			self.mirror.load(path,image)
-			wx.CallAfter(self.__cache_image,path,image)
+		image = wx.Image(path)
+		w,h = image.GetSize()
+		if w is 0 or h is 0:
+			return
+		if w > h:
+			new_size = (self.size[0],int(1.0*h/w*self.size[1]))
+		else:
+			new_size = (int(1.0*w/h*self.size[0]),self.size[1])
+		if all([i > 0 for i in new_size]):
+			image.Rescale(*new_size,quality=wx.IMAGE_QUALITY_HIGH)
+		self.mirror.load(path,image)
+		wx.CallAfter(self.__cache_image,path,image)
 
 	def __get_empty_image(self):
 		if not self.__empty:
@@ -166,10 +153,13 @@ class Artwork(ArtworkFinder):
 		
 
 	def __cache_image(self,path,image):
+		""" converts image to bitmap and stores __cache
+
+		Raises UPDATE event.
+		"""
 		bmp = wx.BitmapFromImage(image)
 		self.__images[(path,self.size)] = bmp
-		for func in self.__callbacks:
-			func()
+		self.call(self.UPDATE)
 
 	
 	

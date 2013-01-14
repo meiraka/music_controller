@@ -32,7 +32,7 @@ class Info(wx.BoxSizer):
 		self.artwork_loader = artwork.Artwork(mirror=True)
 		self.artwork_loader.size = (h*12,h*12)
 		self.SetMinSize((h*16,h*16))
-		self.artwork_loader.attach(self.update)
+		self.artwork_loader.bind(self.artwork_loader.UPDATE,self.update)
 
 		imgsizer = wx.BoxSizer(wx.VERTICAL)
 		imgsizer.Add(self.artwork,0)

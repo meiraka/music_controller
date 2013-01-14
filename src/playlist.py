@@ -176,7 +176,7 @@ class Playlist(PlaylistBase):
 		self.background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX)
 		self.artwork = artwork.Artwork()
 		self.artwork.size = (text_height*8,text_height*8)
-		self.artwork.attach(self.RefreshAll)
+		self.artwork.bind(self.artwork.UPDATE,self.RefreshAll)
 
 	def head(self,song):
 		if song.has_key(u'album'):

@@ -21,7 +21,7 @@ class Album(client.Object):
 	def __init__(self):
 		client.Object.__init__(self)
 		self.__cache = {} # song.format('%albumartist% %album%') = fullpath
-		self.download = True
+		self.download_image = True
 		sql_init = '''
 		CREATE TABLE IF NOT EXISTS
 		albums
@@ -46,9 +46,9 @@ class Album(client.Object):
 		'''
 
 		# check cache.
-		key = song.format('%albumartist% %album%')
 		if not song:
 			return None
+		key = song.format('%albumartist% %album%')
 		if key in self.__cache:
 			return self.__cache[key]
 
@@ -67,7 +67,7 @@ class Album(client.Object):
 			# not in db, download
 			# write cache empty value
 			self.__cache[key] = ''
-			if self.download:
+			if self.download_image:
 				thread.start_new_thread(self.download,(song,))
 			return None
 		elif artwork[0]:
