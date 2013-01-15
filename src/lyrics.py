@@ -194,7 +194,7 @@ class Lyric(wx.Panel):
 		self.update(event)
 
 	def update(self,event=None):
-		dc = wx.AutoBufferedPaintDC(self)
+		dc = wx.ClientDC(self)
 		if environment.userinterface.draw_double_buffered:
 			dc = wx.BufferedDC(dc)
 		dc.SetFont(self.font)
