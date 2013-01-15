@@ -127,7 +127,7 @@ class Lyric(wx.Panel):
 		self.__lyric = []
 		self.__update_interval = 100
 		wx.Panel.__init__(self,parent,-1)
-		self.SetBackgroundColour(self.bg)
+		#self.SetBackgroundColour(self.bg)
 		self.font = environment.userinterface.font
 		self.timer = wx.Timer(self.parent,-1)
 		wx.EVT_TIMER(self.parent,-1,self.update)
@@ -194,13 +194,9 @@ class Lyric(wx.Panel):
 		self.update(event)
 
 	def update(self,event=None):
-		dc = wx.ClientDC(self)
-		dc.BeginDrawing()
-		try:
-			dc = event.GetDC()
-		except:
-			pass
-		dc = wx.BufferedDC(dc)
+		dc = wx.AutoBufferedPaintDC(self)
+		if environment.userinterface.draw_double_buffered:
+			dc = wx.BufferedDC(dc)
 		dc.SetFont(self.font)
 		dc.SetBackground(wx.Brush(self.bg))
 		dc.SetPen(wx.Pen(self.bg))
@@ -220,11 +216,8 @@ class Lyric(wx.Panel):
 			y = h / 2
 			dc.DrawText(title,x,y)
 
-		dc.EndDrawing()
-
 	def draw(self,dc,rect):
 		self.update_time()
-		dc.Clear()
 
 		dc.SetPen(wx.Pen(self.hbg))
 		dc.SetBrush(wx.Brush(self.hbg))

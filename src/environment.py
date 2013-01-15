@@ -25,7 +25,8 @@ class __UI(object):
 		fill_readonly_background = False,
 		subitem_small_font = False,
 		subwindow_small_frame = False,
-		style = None
+		style = None,
+		draw_double_buffered = True
 		)
 	def __init__(self):
 		if wx.PlatformInfo[1] == 'wxGTK':
@@ -35,6 +36,7 @@ class __UI(object):
 			self.__cached['subitem_small_font'] = True
 			self.__cached['subwindow_small_frame'] = True
 			self.__cached['style'] = u'mac'
+			self.__cached['draw_double_buffered'] = False
 	def __get_font(self):
 		key = u'font'
 		if self.__cached.has_key(key):
@@ -85,6 +87,7 @@ class __UI(object):
 	subitem_small_font =       property(__get('subitem_small_font'))
 	subwindow_small_frame =    property(__get('subwindow_small_frame')) 
 	style =                    property(__get('style')) 
+	draw_double_buffered =     property(__get('draw_double_buffered')) 
 	colors =                   property(__get_colors)
 	font =                     property(__get_font, __set(u'font'))
 	text_height =              property(__get_text_height)
