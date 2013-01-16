@@ -26,7 +26,9 @@ class __UI(object):
 		subitem_small_font = False,
 		subwindow_small_frame = False,
 		style = None,
-		draw_double_buffered = True
+		draw_double_buffered = True,
+		toolbar_icon_centre = False,
+		toolbar_icon_horizontal = True,
 		)
 	def __init__(self):
 		if wx.PlatformInfo[1] == 'wxGTK':
@@ -37,6 +39,8 @@ class __UI(object):
 			self.__cached['subwindow_small_frame'] = True
 			self.__cached['style'] = u'mac'
 			self.__cached['draw_double_buffered'] = False
+			self.__cached['toolbar_icon_centre'] = True
+			self.__cached['toolbar_icon_horizontal'] = False
 	def __get_font(self):
 		key = u'font'
 		if self.__cached.has_key(key):
@@ -88,6 +92,8 @@ class __UI(object):
 	subwindow_small_frame =    property(__get('subwindow_small_frame')) 
 	style =                    property(__get('style')) 
 	draw_double_buffered =     property(__get('draw_double_buffered')) 
+	toolbar_icon_centre =      property(__get('toolbar_icon_centre'))
+	toolbar_icon_horizontal =  property(__get('toolbar_icon_horizontal'))
 	colors =                   property(__get_colors)
 	font =                     property(__get_font, __set(u'font'))
 	text_height =              property(__get_text_height)
