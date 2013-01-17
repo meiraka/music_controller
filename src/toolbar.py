@@ -12,27 +12,37 @@ class Toolbar(object):
 		self.playback = playback
 		size = None
 		gtk = True if environment.userinterface.style == 'gtk' else False
-		icons = [
-			(u'previous', 'gtk-media-next-rtl' if gtk else wx.ART_GOTO_FIRST),
-			(u'play',     'gtk-media-play-ltr' if gtk else wx.ART_GO_FORWARD),
-			(u'next',     'gtk-media-next-ltr' if gtk else wx.ART_GOTO_LAST),
-			(u'playlist', wx.ART_NORMAL_FILE),
-			(u'library',  wx.ART_HARDDISK),
-			(u'lyric',    wx.ART_PASTE)
+		icons = dict(
+			previous = 'gtk-media-next-rtl' if gtk else wx.ART_GOTO_FIRST,
+			play =     'gtk-media-play-ltr' if gtk else wx.ART_GO_FORWARD,
+			next =     'gtk-media-next-ltr' if gtk else wx.ART_GOTO_LAST,
+			playlist = wx.ART_NORMAL_FILE,
+			library =  wx.ART_HARDDISK,
+			lyric =    wx.ART_PASTE
+			)
+		labels = [
+			(u'previous',),
+                        (u'play',    ),
+                        (u'next',    ),
+                        (u'playlist',),
+                        (u'library', ),
+                        (u'lyric',   )
 			]
-		self.icons = [(k, (wx.ArtProvider.GetBitmap(v,size=size), wx.NewId() ) ) for k,v in icons]
+		self.__buttons = [
+			(label,wx.ArtProvider.GetBitmap(icons[label]),wx.NewId()) for (label,) in labels
+			]
 		if environment.userinterface.toolbar_icon_centre:
 			self.__tool.AddStretchableSpace()
-		for k,(icon,id) in self.icons:
-			self.__tool.AddLabelTool(id,k,icon)
+		for label,icon,id in self.__buttons:
+			self.__tool.AddLabelTool(id,label,icon)
 		if environment.userinterface.toolbar_icon_centre:
 			self.__tool.AddStretchableSpace()
-		self.__tool.Realize()
 		self.__tool.Bind(wx.EVT_TOOL,self.OnTool)
+		self.__tool.Realize()
 
 	def OnTool(self,event):
 		event_id = event.GetId()
-		for func_name,(icon,id) in self.icons:
+		for func_name,icon,id in self.__buttons:
 			if event_id == id:
 				obj = self.__tool.FindById(id)
 				if obj.GetLabel() == u'play':
