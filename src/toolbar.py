@@ -39,6 +39,24 @@ class Toolbar(object):
 			self.__tool.AddStretchableSpace()
 		self.__tool.Bind(wx.EVT_TOOL,self.OnTool)
 		self.__tool.Realize()
+		self.playback.bind(self.playback.UPDATE,self.update)
+
+	def update(self):
+		def __update():
+			obj = None
+			for label,icon,id in self.__buttons:
+				if label == u'play':
+					obj = self.__tool.FindById(id)
+					break
+			else:
+				return
+			if u'state' in self.playback.status and self.playback.status[u'state'] == u'play':
+				if obj.GetLabel() == u'play':
+					obj.SetLabel(u'pause')
+			else:
+				if not obj.GetLabel() == u'play':
+					obj.SetLabel(u'play')
+		wx.CallAfter(__update)
 
 	def OnTool(self,event):
 		event_id = event.GetId()

@@ -265,7 +265,7 @@ class Playback(Object,threading.Thread):
 		status = self.connection.execute('status')
 		if status and not self.__status == status:
 			self.__status = status
-			self.call(self.UPDATE,self.__status)
+			self.call(self.UPDATE)
 			if not self.__check_playlist == self.__status[u'playlist']:
 				self.__check_playlist = self.__status[u'playlist']
 				self.call(self.UPDATE_PLAYLIST)
