@@ -3,13 +3,14 @@ import wx
 import environment
 
 class Toolbar(object):
-	def __init__(self,parent,playback):
+	def __init__(self,parent,client):
 		self.parent = parent
 		toolbar_style = wx.TB_TEXT
 		if environment.userinterface.toolbar_icon_horizontal:
 			toolbar_style = wx.TB_HORZ_TEXT
 		self.__tool = parent.CreateToolBar(toolbar_style)
-		self.playback = playback
+		self.playback = client.playback
+		self.connection = client.connection
 		size = None
 		gtk = True if environment.userinterface.style == 'gtk' else False
 		icons = dict(
@@ -39,9 +40,13 @@ class Toolbar(object):
 			self.__tool.AddStretchableSpace()
 		self.__tool.Bind(wx.EVT_TOOL,self.OnTool)
 		self.__tool.Realize()
-		self.playback.bind(self.playback.UPDATE,self.update)
+		self.playback.bind(self.playback.UPDATE,self.update_playback)
+		self.connection.bind(self.connection.CONNECT,self.update_connection)
+		self.connection.bind(self.connection.CLOSE,self.update_connection)
+		self.connection.bind(self.connection.CLOSE_UNEXPECT,self.update_connection)
+		self.update_connection()
 
-	def update(self):
+	def update_playback(self):
 		def __update():
 			obj = None
 			for label,icon,id in self.__buttons:
@@ -58,6 +63,14 @@ class Toolbar(object):
 					obj.SetLabel(u'play')
 		wx.CallAfter(__update)
 
+	def update_connection(self):
+		updates = [u'playlist',u'library',u'lyric']
+		enable = self.connection.connected
+		def __update():
+			for label,icon,id in self.__buttons:
+				if updates.count(label):
+					self.__tool.EnableTool(id,enable)
+		wx.CallAfter(__update)
 	def OnTool(self,event):
 		event_id = event.GetId()
 		for func_name,icon,id in self.__buttons:

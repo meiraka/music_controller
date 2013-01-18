@@ -24,7 +24,7 @@ class Frame(wx.Frame):
 		self.SetSize((640,480))
 		self.menubar = menubar.MenuBar(self,client,accele=False if environment.userinterface.style == 'mac' else True)
 		self.SetMenuBar(self.menubar)
-		self.toolbar = toolbar.Toolbar(self,self.client.playback)
+		self.toolbar = toolbar.Toolbar(self,self.client)
 
 		self.playlist = playlist.Playlist(self,self.client.playlist,
 				self.client.playback,debug)
