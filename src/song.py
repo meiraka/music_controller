@@ -30,6 +30,7 @@ class SongDialog(frame):
 		self.description = wx.StaticText(self,-1,style=self.__text_style)
 		must_labels = [wx.StaticText(self.__mast_pane,-1,tag+':') for tag in self.must_tags]
 		self.must_values = [wx.TextCtrl(self.__mast_pane,-1,u'',style=self.__text_style) for tag in self.must_tags]
+		self.must_values[0].SetFocus()
 		self.lyric = wx.TextCtrl(self.__lyric_pane,-1,style=wx.TE_MULTILINE)
 		self.lyric.SetMinSize((-1,environment.userinterface.text_height*8))
 		if environment.userinterface.fill_readonly_background:
@@ -73,6 +74,18 @@ class SongDialog(frame):
 		must.Expand()
 		sub.Expand()
 		self.Show()
+		self.set_accelerator()
+
+	def set_accelerator(self):
+		id = wx.NewId()
+		self.Bind(wx.EVT_MENU,self.close)
+		table = [(wx.ACCEL_NORMAL,wx.WXK_ESCAPE,id)]
+		self.SetAcceleratorTable(wx.AcceleratorTable(table))
+
+	def close(self,event):
+		self.Close()
+
+
 
 
 	def show(self,song):
