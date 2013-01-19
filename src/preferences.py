@@ -1,6 +1,9 @@
 import wx
 
-class Frame(wx.Frame):
+class App(wx.Frame):
+	"""
+	Application preferences window.
+	"""
 	def __init__(self,parent,client,debug=False):
 		wx.Frame.__init__(self,parent,-1)
 		self.client = client
@@ -8,6 +11,16 @@ class Frame(wx.Frame):
 		sizer = wx.BoxSizer()
 		sizer.Add(self.connection,1,wx.EXPAND)
 		self.SetSizer(sizer)
+		self.set_accelerator()
+
+	def set_accelerator(self):
+		id = wx.NewId()
+		self.Bind(wx.EVT_MENU,self.close)
+		table = [(wx.ACCEL_NORMAL,wx.WXK_ESCAPE,id)]
+		self.SetAcceleratorTable(wx.AcceleratorTable(table))
+
+	def close(self,event):
+		self.Hide()
 
 
 class Connection(wx.BoxSizer):
@@ -24,6 +37,7 @@ class Connection(wx.BoxSizer):
 		self.mpd = wx.StaticText(parent,-1,u'mpd')
 		self.host_label = wx.StaticText(parent,-1,u'host:')
 		self.host = wx.TextCtrl(parent,-1)
+		self.host.SetFocus()
 		self.port_label = wx.StaticText(parent,-1,u'port:')
 		self.port = wx.TextCtrl(parent,-1)
 		self.use_password = wx.CheckBox(parent,-1,u'password:')

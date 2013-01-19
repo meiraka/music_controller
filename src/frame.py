@@ -142,6 +142,6 @@ class Frame(wx.Frame):
 
 	def show_preferences(self):
 		if not self.preferences:
-			self.preferences = preferences.Frame(None,self.client)
+			self.preferences = preferences.App(None,self.client)
 		self.preferences.Show()
 
