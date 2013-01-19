@@ -465,10 +465,12 @@ class Playlist(Object):
 		if song_id is not None:
 			if len(self.__data) > song_id:
 				play_song = self.__data[song_id]
-				check_keys = [u'title',u'artist',u'album']
+				check_keys = [u'file']
 				time = status[u'time'].split(':')[0] if u'time' in status else '0'
 				for index,song in enumerate(songs):
 					for i in check_keys:
+						if not i in song and i in play_song:
+							break
 						if not song[i] == play_song[i]:
 							break
 					else:
