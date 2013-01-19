@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import thread
 import wx
 import artwork
 import thread
@@ -261,7 +262,7 @@ class LibraryBase(wx.VListBox):
 		song_indexed = [(song.format(self.sorter),song) for song in self.__master]
 		song_indexed.sort()
 		songs = [song for title,song in song_indexed]
-		self.playlist.replace(songs)
+		thread.start_new_thread(self.playlist.replace,(songs,))
 
 
 class Menu(wx.Menu):
