@@ -258,6 +258,15 @@ class LibraryBase(wx.VListBox):
 		wx.CallAfter(self.__reset)
 		self.replace_master()
 
+	def get_info(self,index):
+		x,y = self.state
+		key,key_y = self.items[y][index]
+		style = self.styles[x][key_y]
+		if len( self.songs[key_y][key]):
+			songs = self.songs[key_y][key]
+			song.SongDialog(None,songs)
+		
+
 	def replace_master(self):
 		song_indexed = [(song.format(self.sorter),song) for song in self.__master]
 		song_indexed.sort()
@@ -270,11 +279,11 @@ class Menu(wx.Menu):
 		wx.Menu.__init__(self)
 		self.parent = parent
 		self.index=  index
-		items = [u'and',u'not',u'clear']
+		items = [u'and',u'not',u'clear','get info']
 		self.__items = dict([(item,wx.NewId())for item in items])
 		for item in items:
 			self.Append(self.__items[item],item,item)
-			self.Bind(wx.EVT_MENU,getattr(self,item+'_item'),id=self.__items[item])
+			self.Bind(wx.EVT_MENU,getattr(self,item.replace(' ','_')+'_item'),id=self.__items[item])
 	
 	def and_item(self,event):
 		self.parent.and_item(self.index)
@@ -284,6 +293,9 @@ class Menu(wx.Menu):
 
 	def clear_item(self,event):
 		self.parent.clear()
+
+	def get_info_item(self,event):
+		self.parent.get_info(self.index)
 
 
 class Library(LibraryBase):
