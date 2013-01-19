@@ -93,11 +93,10 @@ class Info(wx.BoxSizer):
 			if self.__image:
 				self.artwork.SetBitmap(self.__image)
 				self.artwork_mirror.SetBitmap(self.artwork_loader.mirror[song])
-				self.artwork.Show()
-				self.artwork_mirror.Show()
 			else:
-				self.artwork.Hide()
-				self.artwork_mirror.Hide()
+				self.artwork.SetBitmap(self.artwork_loader.empty)
+				self.artwork_mirror.SetBitmap(self.artwork_loader.mirror.empty)
+
 			self.Layout()
 
 	def OnSlider(self,event):

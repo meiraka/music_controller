@@ -43,16 +43,19 @@ class Artwork(ArtworkFinder):
 			""" Returns mirrored artwork image.
 			"""
 			if not self.__enable:
-				return self.__empty()
+				return self.__get_empty_image()
 			path = ArtworkFinder.__getitem__(self,song)
 			if not path:
-				return self.__empty()
+				return self.__get_empty_image()
 			if self.__images.has_key((path,self.size)):
 				return self.__images[(path,self.size)]
 			else:
-				return self.__empty()
+				return self.__get_empty_image()
 
 		def load(self,path,image):
+			""" converts image to mirror image and 
+			stores image as given path of image.
+			"""
 			mirror = image.Mirror()
 			h = int(mirror.GetHeight()*self.length)
 			mirror = mirror.Rotate90()
@@ -66,13 +69,14 @@ class Artwork(ArtworkFinder):
 					if y:
 						p = int(y*1.0/h * 200)
 						mirror.SetAlpha(x,y,200-p if 200-p>0 else 0)
-			wx.CallAfter(self.__cache_image,path,mirror)
 
-		def __cache_image(self,path,image):
-			bmp = wx.BitmapFromImage(image)
-			self.__images[(path,self.size)] = bmp
+			def __cache_image(path,image):
+				bmp = wx.BitmapFromImage(image)
+				self.__images[(path,self.size)] = bmp
+			wx.CallAfter(__cache_image,path,mirror)
 
-		def __empty(self):
+
+		def __get_empty_image(self):
 			if not self.__empty_image:
 				image = wx.ImageFromBitmap(self.parent.empty)
 				image = image.Mirror()
@@ -90,6 +94,8 @@ class Artwork(ArtworkFinder):
 							image.SetAlpha(x,y,200-p if 200-p>0 else 0)
 				self.__empty_image = wx.BitmapFromImage(image)
 			return self.__empty_image
+
+		empty = property(__get_empty_image)
 			
 	def __init__(self,mirror=False):
 		ArtworkFinder.__init__(self)
@@ -134,6 +140,11 @@ class Artwork(ArtworkFinder):
 		wx.CallAfter(self.__cache_image,path,image)
 
 	def __get_empty_image(self):
+		""" Returns image for "Not found".
+
+		if empty image was not generated, generates and
+		returns image.
+		"""
 		if not self.__empty:
 			self.__empty = wx.EmptyBitmap(*self.__size)
 			writer = wx.MemoryDC(self.__empty)
