@@ -3,6 +3,8 @@ import wx
 import environment
 
 class Toolbar(object):
+	TYPE_TOGGLE = 'toggle'
+	TYPE_NORMAL = 'normal'
 	def __init__(self,parent,client):
 		self.parent = parent
 		toolbar_style = wx.TB_TEXT
@@ -22,20 +24,28 @@ class Toolbar(object):
 			lyric =    wx.ART_PASTE
 			)
 		labels = [
-			(u'previous',),
-                        (u'play',    ),
-                        (u'next',    ),
-                        (u'playlist',),
-                        (u'library', ),
-                        (u'lyric',   )
+			(u'previous',self.TYPE_NORMAL),
+                        (u'play',    self.TYPE_TOGGLE),
+                        (u'next',    self.TYPE_NORMAL),
+                        (u'playlist',self.TYPE_TOGGLE),
+                        (u'library', self.TYPE_TOGGLE),
+                        (u'lyric',   self.TYPE_TOGGLE)
 			]
 		self.__buttons = [
-			(label,wx.ArtProvider.GetBitmap(icons[label]),wx.NewId()) for (label,) in labels
+			(label,wx.ArtProvider.GetBitmap(icons[label]),wx.NewId(),button_type) for (label,button_type) in labels
 			]
+		self.__ids = dict([(label,id) for label,bmp,id,button_type in self.__buttons])
+		self.__labels = dict([(id,label) for label,bmp,id,button_type in self.__buttons])
 		if environment.userinterface.toolbar_icon_centre:
 			self.__tool.AddStretchableSpace()
-		for label,icon,id in self.__buttons:
-			self.__tool.AddLabelTool(id,label,icon)
+		for label,icon,id,button_type in self.__buttons:
+			if environment.userinterface.toolbar_toggle:
+				if button_type == self.TYPE_TOGGLE:
+					self.__tool.AddCheckLabelTool(id,label,icon)
+				else:
+					self.__tool.AddLabelTool(id,label,icon)
+			else:
+				self.__tool.AddLabelTool(id,label,icon)
 		if environment.userinterface.toolbar_icon_centre:
 			self.__tool.AddStretchableSpace()
 		self.__tool.Bind(wx.EVT_TOOL,self.OnTool)
@@ -44,12 +54,14 @@ class Toolbar(object):
 		self.connection.bind(self.connection.CONNECT,self.update_connection)
 		self.connection.bind(self.connection.CLOSE,self.update_connection)
 		self.connection.bind(self.connection.CLOSE_UNEXPECT,self.update_connection)
+		self.update_playback()
 		self.update_connection()
 
 	def update_playback(self):
 		def __update():
 			obj = None
-			for label,icon,id in self.__buttons:
+			id = None
+			for label,icon,id,button_type in self.__buttons:
 				if label == u'play':
 					obj = self.__tool.FindById(id)
 					break
@@ -58,37 +70,56 @@ class Toolbar(object):
 			if u'state' in self.playback.status and self.playback.status[u'state'] == u'play':
 				if obj.GetLabel() == u'play':
 					obj.SetLabel(u'pause')
+					if environment.userinterface.toolbar_toggle:
+						self.__tool.ToggleTool(id,True)
+					self.__tool.Realize()
 			else:
 				if not obj.GetLabel() == u'play':
 					obj.SetLabel(u'play')
+					if environment.userinterface.toolbar_toggle:
+						obj.SetToggle(False)
+						self.__tool.ToggleTool(id,False)
+					self.__tool.Realize()
 		wx.CallAfter(__update)
 
 	def update_connection(self):
 		updates = [u'playlist',u'library',u'lyric']
 		enable = self.connection.connected
 		def __update():
-			for label,icon,id in self.__buttons:
+			for label,icon,id,button_type in self.__buttons:
 				if updates.count(label):
 					self.__tool.EnableTool(id,enable)
+			self.update_selector()
 		wx.CallAfter(__update)
+
+	def update_selector(self):
+		if not environment.userinterface.toolbar_toggle:
+			return
+		updates = [u'playlist',u'library',u'lyric']
+		for view in updates:
+			self.__tool.ToggleTool(self.__ids[view],view==self.parent.current_view)
+
 	def OnTool(self,event):
 		event_id = event.GetId()
-		for func_name,icon,id in self.__buttons:
-			if event_id == id:
-				obj = self.__tool.FindById(id)
-				if obj.GetLabel() == u'play':
-					self.playback.play()
-					obj.SetLabel(u'pause')
-				elif obj.GetLabel() == u'pause':
-					self.playback.pause()
-					obj.SetLabel(u'play')
-				elif func_name == 'playlist':
-					self.parent.show_playlist()
-				elif func_name == 'library':
-					self.parent.show_library()
-				elif func_name == 'lyric':
-					self.parent.show_lyric()
-				elif hasattr(self.playback,func_name):
-					getattr(self.playback,func_name)()
+		obj = self.__tool.FindById(event_id)
+		func_name = self.__labels[event_id]
+		radio = ['playlist','library','lyric']
+		if obj.GetLabel() == u'play':
+			self.playback.play()
+			obj.SetLabel(u'pause')
+		elif obj.GetLabel() == u'pause':
+			self.playback.pause()
+			obj.SetLabel(u'play')
+		elif func_name == 'playlist':
+			self.parent.show_playlist()
+			self.update_selector()
+		elif func_name == 'library':
+			self.parent.show_library()
+			self.update_selector()
+		elif func_name == 'lyric':
+			self.parent.show_lyric()
+			self.update_selector()
+		elif hasattr(self.playback,func_name):
+			getattr(self.playback,func_name)()
 
 

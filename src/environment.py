@@ -27,6 +27,7 @@ class __UI(object):
 		subwindow_small_frame = False,
 		style = None,
 		draw_double_buffered = True,
+		toolbar_toggle = True,
 		toolbar_icon_centre = False,
 		toolbar_icon_horizontal = True,
 		)
@@ -39,6 +40,7 @@ class __UI(object):
 			self.__cached['subwindow_small_frame'] = True
 			self.__cached['style'] = u'mac'
 			self.__cached['draw_double_buffered'] = False
+			self.__cached['toolbar_toggle'] = False
 			self.__cached['toolbar_icon_centre'] = True
 			self.__cached['toolbar_icon_horizontal'] = False
 	def __get_font(self):
@@ -92,6 +94,7 @@ class __UI(object):
 	subwindow_small_frame =    property(__get('subwindow_small_frame')) 
 	style =                    property(__get('style')) 
 	draw_double_buffered =     property(__get('draw_double_buffered')) 
+	toolbar_toggle =           property(__get('toolbar_toggle'))
 	toolbar_icon_centre =      property(__get('toolbar_icon_centre'))
 	toolbar_icon_horizontal =  property(__get('toolbar_icon_horizontal'))
 	colors =                   property(__get_colors)
