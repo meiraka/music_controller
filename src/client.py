@@ -148,10 +148,10 @@ class Connection(Object):
 		self.call(self.CLOSE)
 
 	def __enter__(self):
-		self.__connection.command_list_ok_begin()
+		self.execute('command_list_ok_begin')
 
 	def __exit__(self,exc_type, exc_value, traceback):
-		self.__connection.command_list_end()
+		self.execute('command_list_end')
 		return True
 
 	def execute(self,func_name,skip=False,*args,**kwargs):
