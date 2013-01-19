@@ -72,14 +72,11 @@ class Toolbar(object):
 					obj.SetLabel(u'pause')
 					if environment.userinterface.toolbar_toggle:
 						self.__tool.ToggleTool(id,True)
-					self.__tool.Realize()
 			else:
 				if not obj.GetLabel() == u'play':
 					obj.SetLabel(u'play')
 					if environment.userinterface.toolbar_toggle:
-						obj.SetToggle(False)
 						self.__tool.ToggleTool(id,False)
-					self.__tool.Realize()
 		wx.CallAfter(__update)
 
 	def update_connection(self):
