@@ -352,6 +352,9 @@ class Playlist(Object):
 			""" Plays this song.
 			"""
 			self.__connection.execute(u'play',True,self[u'pos'])
+
+		def remove(self):
+			self.__connection.execute(u'deleteid',False,self[u'id'])
 			
 	def __init__(self,connection,playback,config):
 		Object.__init__(self)
@@ -379,9 +382,7 @@ class Playlist(Object):
 		self.__playback.update()
 
 	def __delslice__(self,start,end):
-		pos = [song[u'pos'] for song in self.__data[start:end]]
-		delete = ['delete' for song in self.__data[start:end]]
-		self.__connection.execute(delete,False,pos)
+		self.__connection.execute('delete',False,'%i:%i' % (start,end))
 		self.__playback.update()
 
 	def __getslice__(self,start,end):

@@ -138,18 +138,23 @@ class PlaylistBase(wx.VListBox):
 
 	def OnRightClick(self,event):
 		index = self.HitTest(event.GetPosition())
-		self.SetSelection(index)
+		selected = self.__selected_indexes()
+		if not index in selected:
+			self.DeselectAll()
+			self.SetSelection(index)
 		self.PopupMenu(Menu(self))
 
-
-	def __selected(self):
+	def __selected_indexes(self):
 		index,n = self.GetFirstSelected()
 		items = []
 		while not index == wx.NOT_FOUND:
-			type,group_index,song = self.ui_songs[index]
-			items.append(song)
+			items.append(index)
 			index,n = self.GetNextSelected(n)
 		return items	
+	
+	def __selected(self):
+		songs = [self.ui_songs[index][2] for index in self.__selected_indexes()]
+		return songs
 	selected = property(__selected)
 
 class Menu(wx.Menu):
@@ -167,7 +172,8 @@ class Menu(wx.Menu):
 		song.SongDialog(self.parent,self.parent.selected)
 
 	def remove_item(self,event):
-		pass
+		for song in self.parent.selected:
+			song.remove()
 
 class Playlist(PlaylistBase):
 	def __init__(self,parent,playlist,playback,debug=False):
