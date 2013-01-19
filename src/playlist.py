@@ -30,7 +30,7 @@ class PlaylistBase(wx.VListBox):
 		self.playback.bind(self.playback.UPDATE,self.refresh)
 		self.Bind(wx.EVT_LEFT_DCLICK,self.OnActivate)
 		self.Bind(wx.EVT_KEY_UP,self.OnKeys)
-		self.Bind(wx.EVT_RIGHT_UP,self.OnRight)
+		self.Bind(wx.EVT_RIGHT_UP,self.OnRightClick)
 
 	def refresh(self,*args):
 		wx.CallAfter(self.__refresh)
@@ -136,7 +136,9 @@ class PlaylistBase(wx.VListBox):
 		else:
 			event.Skip()
 
-	def OnRight(self,event):
+	def OnRightClick(self,event):
+		index = self.HitTest(event.GetPosition())
+		self.SetSelection(index)
 		self.PopupMenu(Menu(self))
 
 
