@@ -1,0 +1,6 @@
+alkaloid (3.0.0~ppa1) oneiric; urgency=low
+
+  * create deb package for ubuntu 11.10
+
+ -- mei raka <meiraka.pre@gmail.com>  Sun, 05 Sep 2010 00:55:57 +0530
+

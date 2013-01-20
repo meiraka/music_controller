@@ -1,0 +1,18 @@
+Source: music-controller
+Section: x11
+Priority: optional
+Maintainer: mei raka <meiraka.pre@gmail.com>
+Build-Depends: debhelper (>= 5), cdbs, python-dev (>= 2.7), python-central (>= 0.5), python-setuptools, python-mpd
+Build-Depends-Indep: python-distutils-extra
+Standards-Version: 3.9.1
+XS-Python-Version: current
+
+Package: music-controller
+Architecture: all
+XB-Python-Version: ${python:Versions}
+Depends: ${python:Depends}, ${misc:Depends}, python-wxgtk2.8, python-rsvg, python-mpd
+Description: MPD client which written in wxPython
+ MusicController is a client for MusicPlayerDaemon.
+ Features:
+  * Artwork
+  * timetag lyric (LRC)
