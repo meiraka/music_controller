@@ -1,8 +1,11 @@
 #!/usr/bin/python -u
 
+args = {}
 try:
-	import src as musiccontroller
-	musiccontroller.run(debug=True)
+	import src as MusicController
+	args = dict(debug=True)
+	print 'execute current source'
 except:
 	import MusicController
-	MusicController.run()
+
+MusicController.run(**args)
