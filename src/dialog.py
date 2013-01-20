@@ -10,9 +10,9 @@ if environment.userinterface.subwindow_small_frame:
 class Frame(frame):
 	""" Frames for dialog. close with Esc key."""
 	def __init__(self,parent=None):
-		frame.__init__(self,parent,-1,style=wx.CLOSE_BOX|wx.CAPTION)
+		frame.__init__(self,parent,-1,style=wx.CLOSE_BOX|wx.CAPTION|wx.FRAME_NO_TASKBAR)
 		id = wx.NewId()
-		self.Bind(wx.EVT_MENU,self.close,id=id)
+		self.Bind(wx.EVT_MENU,self.OnClose,id=id)
 		table = [(wx.ACCEL_NORMAL,wx.WXK_ESCAPE,id)]
 		self.SetAcceleratorTable(wx.AcceleratorTable(table))
 
