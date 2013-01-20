@@ -36,6 +36,7 @@ class MenuBar(wx.MenuBar):
 			('View',[
 				(wx.NewId(),u'Playlist',self.SELECT),
 				(wx.NewId(),u'Library',self.SELECT),
+				(wx.NewId(),u'Lyric',self.SELECT),
 				(wx.NewId(),u'splitter',self.SPLITTER),
 				(wx.NewId(),u'Focus current',self.NORMAL)
 				]),
@@ -57,6 +58,7 @@ class MenuBar(wx.MenuBar):
 				u'Playback_Single':self.set_single,
 				u'View_Playlist':self.parent.show_playlist,
 				u'View_Library':self.parent.show_library,
+				u'View_Lyric':self.parent.show_lyric,
 				u'View_Focus current':self.focus_song,
 				u'Help_About':AboutDialog
 				}
@@ -71,9 +73,11 @@ class MenuBar(wx.MenuBar):
 				u'Playback_Single':'Ctrl+m',
 				u'View_Playlist':'Ctrl+1',
 				u'View_Library':'Ctrl+2',
+				u'View_Lyric':'Ctrl+3',
 				}
 
 		self.__ids = {}
+		self.__labels = {}
 		for head,items in self.menu_list:
 			menu = wx.Menu()
 			menu.Bind(wx.EVT_MENU,self.OnMenu)
@@ -81,14 +85,17 @@ class MenuBar(wx.MenuBar):
 			for id,label,menu_type in items:
 				if menu_type == self.NORMAL:
 					self.__ids[id] = head+u'_'+label
+					self.__labels[head+u'_'+label] = id
 					menu.Append(id,label)
 				elif menu_type == self.SPLITTER:
 					menu.AppendSeparator()
 				elif menu_type == self.TOGGLE:
 					self.__ids[id] = head+u'_'+label
+					self.__labels[head+u'_'+label] = id
 					menu.AppendCheckItem(id,label)
 				elif menu_type == self.SELECT:
 					self.__ids[id] = head+u'_'+label
+					self.__labels[head+u'_'+label] = id
 					menu.AppendRadioItem(id,label)
 					
 		self.parent.Bind(wx.EVT_MENU,self.OnMenu)
@@ -96,6 +103,7 @@ class MenuBar(wx.MenuBar):
 			self.set_accelerator_table(self.__keys)
 		self.set_menu_accelerator(self.__keys,self.accele)
 		self.client.playback.bind(self.client.playback.UPDATE,self.OnUpdate)
+		self.parent.bind(self.parent.VIEW,self.update_by_frame)
 
 	def set_accelerator_table(self,keys):
 		flag_tables = dict(Ctrl=wx.ACCEL_CTRL)
@@ -223,6 +231,13 @@ class MenuBar(wx.MenuBar):
 					if not current == new:
 						menu.Check(id,new)
 
+	def update_by_frame(self):
+		current = self.parent.current_view
+		if not current:
+			current = 'playlist'
+		id = self.__labels['View_' + current.capitalize()]
+		if not self.IsChecked(id):
+			self.Check(id,True)
 
 class AboutDialog(object):
 	def __init__(self):

@@ -8,9 +8,11 @@ import lyrics
 import menubar
 import preferences
 import environment
+from client import Object 
 
-class Frame(wx.Frame):
+class Frame(wx.Frame,Object):
 	TITLE = 'MusicController'
+	VIEW = 'view'
 	VIEW_PLAYLIST = 'playlist'
 	VIEW_LIBRARY = 'library'
 	VIEW_LYRIC = 'lyric'
@@ -20,6 +22,7 @@ class Frame(wx.Frame):
 		self.client = client
 		self.current_view = None
 		wx.Frame.__init__(self,parent,-1)
+		Object.__init__(self)
 		self.SetTitle(self.TITLE)
 		self.SetSize((640,480))
 		self.menubar = menubar.MenuBar(self,client,accele=False if environment.userinterface.style == 'mac' else True)
@@ -74,6 +77,7 @@ class Frame(wx.Frame):
 		self.Layout()
 		self.connection.Show()
 		self.Layout()
+		self.call(self.VIEW)
 
 	def show_not_connection(self):
 		if not self.current_view:
@@ -100,6 +104,7 @@ class Frame(wx.Frame):
 		self.library.Show()
 		self.info.Show()
 		self.Layout()
+		self.call(self.VIEW)
 	
 	def show_playlist(self):
 		""" Show playlist and song info."""
@@ -112,6 +117,7 @@ class Frame(wx.Frame):
 		self.playlist.Show()
 		self.info.Show()
 		self.Layout()
+		self.call(self.VIEW)
 
 	def show_lyric(self):
 		""" Show lyric and song info."""
@@ -124,6 +130,7 @@ class Frame(wx.Frame):
 		self.lyric.Show()
 		self.info.Show()
 		self.Layout()
+		self.call(self.VIEW)
 
 
 
