@@ -71,10 +71,11 @@ setup_args = {}
 setup_args['packages'] = ['MusicController']
 setup_args['package_dir'] = {'MusicController':'src'}
 setup_args['data_files'] = [('bin',['music-controller'])]
+setup_args['setup_requires'] = ['mpd']
 
 if sys.argv.count('py2app'):
 	setup_args['app'] = ['src/__main__.py']
-	setup_args['setup_requires'] = ['py2app']
+	setup_args['setup_requires'].append('py2app')
 	setup_args['options'] = get_options()
 
 if not sys.argv.count('test'):
