@@ -7,25 +7,36 @@ Usage:
 import os
 import sys
 import glob
+import subprocess
 from setuptools import setup
 
+
+def get_command_out(command):
+	try:
+		return subprocess.check_output(command)[:-1]
+	except:
+		return ''
+
 def generate_build_info():
+	""" Returns Builder information."""
 	data = dict(
-		user = os.environ['USER'],
-		host = os.environ['HOST'],
+		user = get_command_out('whoami'),
+		host = get_command_out('hostname'),
 		revision = get_rev()
 		)
-	
+	build_info = '\n'.join(['%s = "%s"' % (k,v) for k,v in data.iteritems()])
+	print build_info
 	f = open('src/buildinfo.py','w')
-	f.write('\n'.join(['%s = "%s"' % (k,v) for k,v in data.iteritems()]))
+	f.write(build_info)
 
 def delete_build_info():
 	os.remove('src/buildinfo.py')
 
 def get_rev():
+	""" Returns Mercurial CVS rev."""
 	import commands
 	import re
-	out = commands.getoutput('hg summary')
+	out = get_command_out('hg summary')
 	match = re.search('parent:\s+([^\s]+)',out)
 	if match:
 		return match.groups()[0]
@@ -33,6 +44,7 @@ def get_rev():
 		return ''
 
 def get_options():
+	""" Returns Mac app options."""
 	returns = {}
 	from plistlib import Plist
 	PLIST = Plist.fromFile('osx/Info.plist')
@@ -71,7 +83,7 @@ setup_args = {}
 setup_args['packages'] = ['MusicController']
 setup_args['package_dir'] = {'MusicController':'src'}
 setup_args['data_files'] = [('bin',['music-controller'])]
-setup_args['setup_requires'] = ['mpd']
+setup_args['setup_requires'] = ['python-mpd']
 
 if sys.argv.count('py2app'):
 	setup_args['app'] = ['src/__main__.py']

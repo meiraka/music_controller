@@ -4,4 +4,5 @@ try:
 	import src as musiccontroller
 	musiccontroller.run(debug=True)
 except:
-	import musiccontroller
+	import MusicController
+	MusicController.run()

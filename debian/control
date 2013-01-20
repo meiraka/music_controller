@@ -2,7 +2,7 @@ Source: music-controller
 Section: x11
 Priority: optional
 Maintainer: mei raka <meiraka.pre@gmail.com>
-Build-Depends: debhelper (>= 5), cdbs, python-dev (>= 2.7), python-central (>= 0.5), python-setuptools, python-mpd
+Build-Depends: debhelper (>= 5), cdbs, coreutils, hostname, python-dev (>= 2.7), python-central (>= 0.5), python-setuptools, python-mpd
 Build-Depends-Indep: python-distutils-extra
 Standards-Version: 3.9.1
 XS-Python-Version: current
