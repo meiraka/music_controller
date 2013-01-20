@@ -254,7 +254,8 @@ class AboutDialog(object):
 		try:
 			import buildinfo
 			build_info = 'build by %s@%s' %(buildinfo.user,buildinfo.host)
-			info.SetVersion(version.__version__+'.'+buildinfo.revision)
+			if buildinfo.revision:
+				info.SetVersion(version.__version__+'.'+buildinfo.revision)
 		except Exception,err:
 			pass
 		info.SetDescription(u'\n'.join([app_description,python_version,wx_info,build_info]))
