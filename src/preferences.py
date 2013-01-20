@@ -1,4 +1,5 @@
 import wx
+import environment
 
 class App(wx.Frame):
 	"""
@@ -7,9 +8,37 @@ class App(wx.Frame):
 	def __init__(self,parent,client,debug=False):
 		wx.Frame.__init__(self,parent,-1)
 		self.client = client
-		self.connection = Connection(self,client.connection,client.config)
+		self.__windows = [
+			(u'Connection',Connection,wx.ART_GO_FORWARD),
+			(u'Lyrics',Lyrics,wx.ART_GO_FORWARD)
+			]
+
+		self.__ids = {}
+		self.__indexes = []
+
+		# toolbar
+		toolbar_style = wx.TB_TEXT
+		if environment.userinterface.toolbar_icon_horizontal:
+			toolbar_style = wx.TB_HORZ_TEXT
+		self.__tool = self.CreateToolBar(toolbar_style)
+		for label,c,icon in self.__windows:
+			id = wx.NewId()
+			self.__ids[label] = id
+			self.__indexes.append(id)
+			bmp = wx.ArtProvider.GetBitmap(icon)
+			if environment.userinterface.toolbar_toggle:
+				self.__tool.AddCheckLabelTool(id,label,bmp)
+			else:
+				self.__tool.AddLabelTool(id,label,bmp)
+		self.__tool.Bind(wx.EVT_TOOL,self.OnTool)
+		self.__tool.Realize()
+
+		self.__sizers = [config_class(self,client) for label,config_class,i in self.__windows]
 		sizer = wx.BoxSizer()
-		sizer.Add(self.connection,1,wx.EXPAND)
+		for config_sizer in self.__sizers:
+			config_sizer.Hide()
+			sizer.Add(config_sizer,1,wx.EXPAND)
+		self.__sizers[0].Show()
 		self.SetSizer(sizer)
 		self.set_accelerator()
 
@@ -22,13 +51,50 @@ class App(wx.Frame):
 	def close(self,event):
 		self.Hide()
 
+	def OnTool(self,event):
+		click_id = event.GetId()
+		click_index = self.__indexes.index(click_id)
+		for label,id in self.__ids.iteritems():
+			if environment.userinterface.toolbar_toggle:
+				self.__tool.ToggleTool(id,id==click_id)
+		for index,sizer in enumerate(self.__sizers):
+			if index == click_index:
+				sizer.Show()
+			else:
+				sizer.Hide()
+
+class Lyrics(wx.BoxSizer):
+	def __init__(self,parent,client):
+		self.parent = parent
+		wx.BoxSizer.__init__(self,wx.VERTICAL)
+	
+		self.download = wx.CheckBox(parent,-1,u'Download lyric')
+		self.__downloads_api = [
+			u'geti.me'
+			]
+		self.downloads = [
+			wx.CheckBox(parent,-1,u'Download from '+api) for api in self.__downloads_api
+			]
+		self.Add(self.download)
+		for sizer in self.downloads:
+			self.Add(sizer)
+
+	def Hide(self):
+		self.ShowItems(False)
+		self.parent.Layout()
+
+	def Show(self):
+		self.ShowItems(True)
+		self.parent.Layout()
+
+
 
 class Connection(wx.BoxSizer):
-	def __init__(self,parent,connection,config):
+	def __init__(self,parent,client):
 		wx.BoxSizer.__init__(self)
 		self.parent = parent
-		self.connection = connection
-		self.config = config
+		self.connection = client.connection
+		self.config = client.config
 
 		self.box = wx.ListBox(parent,-1)
 		self.add = wx.Button(parent,-1,'+',style=wx.BU_EXACTFIT)
