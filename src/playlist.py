@@ -6,7 +6,7 @@ import wx
 
 import artwork
 import environment
-import song
+import dialog
 
 class PlaylistBase(wx.VListBox):
 	def __init__(self,parent,playlist,playback,
@@ -169,7 +169,7 @@ class Menu(wx.Menu):
 			self.Bind(wx.EVT_MENU,getattr(self,item+'_item'),id=self.__items[item])
 
 	def get_info_item(self,event):
-		song.SongDialog(self.parent,self.parent.selected)
+		dialog.SongInfo(self.parent,self.parent.selected)
 
 	def remove_item(self,event):
 		for song in self.parent.selected:

@@ -5,7 +5,7 @@ import wx
 import artwork
 import thread
 import environment
-import song
+import dialog
 
 CRITERIA_STYLE_ROOT = u'root'
 CRITERIA_STYLE_DEFAULT = u'default'
@@ -264,7 +264,7 @@ class LibraryBase(wx.VListBox):
 		style = self.styles[x][key_y]
 		if len( self.songs[key_y][key]):
 			songs = self.songs[key_y][key]
-			song.SongDialog(None,songs)
+			dialog.SongInfo(self.parent,songs)
 		
 
 	def replace_master(self):

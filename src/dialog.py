@@ -7,7 +7,7 @@ frame = wx.Frame
 if environment.userinterface.subwindow_small_frame:
 	frame = wx.MiniFrame
 
-class SongDialog(frame):
+class SongInfo(frame):
 	def __init__(self,parent,songs):
 		frame.__init__(self,None,-1,style=wx.CLOSE_BOX|wx.CAPTION)
 		self.songs = songs
