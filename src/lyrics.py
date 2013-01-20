@@ -8,6 +8,7 @@ import urllib
 import json
 import thread
 import re
+import socket
 """
 Draw lyric 
 """
@@ -21,6 +22,10 @@ class Database(client.Object):
 	def __init__(self):
 		self.download_auto = False
 		self.download_background = False
+		self.downloaders = dict(
+			geci_me = self.download_from_geci_me
+			)
+
 		""" init database.
 
 		if not exists database, create table.
@@ -81,16 +86,14 @@ class Database(client.Object):
 		VALUES(?, ?, ?, ?)
 		'''
 		self.call(self.UPDATING)
-		title = song.format(u'%title%').replace(u'/',u' ').encode('utf8')
-		artist = song.format(u'%artist%').replace(u'/',u' ').encode('utf8')
-		query = urllib.quote(title+'/'+artist)
-		json_text = urllib.urlopen('http://geci.me/api/lyric/'+query).read()
-		json_parsed = json.loads(json_text.decode('utf8'))
 		lyric = u''
-		if u'result' in json_parsed and json_parsed[u'result']:
-			lyric_page = urllib.urlopen(json_parsed[u'result'][0][u'lrc'])
-			lyric_encode = lyric_page.info()
-			lyric = lyric_page.read().decode('utf8')
+		for k,downloader in self.downloaders.iteritems():
+			try:
+				lyric = downloader(song)
+			except socket.error:
+				pass
+			if lyric:
+				break
 		connection = self.__get_connection()
 		cursor = connection.cursor()
 		cursor.execute(sql_write,
@@ -105,6 +108,19 @@ class Database(client.Object):
 		self.call(self.UPDATE,lyric)
 		return lyric
 
+	def download_from_geci_me(self,song):
+		title = song.format(u'%title%').replace(u'/',u' ').encode('utf8')
+		artist = song.format(u'%artist%').replace(u'/',u' ').encode('utf8')
+		query = urllib.quote(title+'/'+artist)
+		json_text = urllib.urlopen('http://geci.me/api/lyric/'+query).read()
+		json_parsed = json.loads(json_text.decode('utf8'))
+		if u'result' in json_parsed and json_parsed[u'result']:
+			print json_text
+			lyric_page = urllib.urlopen(json_parsed[u'result'][0][u'lrc'])
+			lyric_encode = lyric_page.info()
+			lyric = lyric_page.read().decode('utf8')
+			return lyric
+		return None
 
 
 class Lyric(wx.Panel):
