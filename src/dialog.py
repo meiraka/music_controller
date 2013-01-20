@@ -7,9 +7,23 @@ frame = wx.Frame
 if environment.userinterface.subwindow_small_frame:
 	frame = wx.MiniFrame
 
-class SongInfo(frame):
+class Frame(frame):
+	""" Frames for dialog. close with Esc key."""
+	def __init__(self,parent=None):
+		frame.__init__(self,parent,-1,style=wx.CLOSE_BOX|wx.CAPTION)
+		id = wx.NewId()
+		self.Bind(wx.EVT_MENU,self.close,id=id)
+		table = [(wx.ACCEL_NORMAL,wx.WXK_ESCAPE,id)]
+		self.SetAcceleratorTable(wx.AcceleratorTable(table))
+
+	def OnClose(self,event):
+		""" Close event."""
+		self.Close()
+
+
+class SongInfo(Frame):
 	def __init__(self,parent,songs):
-		frame.__init__(self,None,-1,style=wx.CLOSE_BOX|wx.CAPTION)
+		Frame.__init__(self,None)
 		self.songs = songs
 		self.lyrics_database = lyrics.Database()
 		self.must_tags = [u'artist',u'title',u'album']
@@ -74,19 +88,6 @@ class SongInfo(frame):
 		must.Expand()
 		sub.Expand()
 		self.Show()
-		self.set_accelerator()
-
-	def set_accelerator(self):
-		id = wx.NewId()
-		self.Bind(wx.EVT_MENU,self.close)
-		table = [(wx.ACCEL_NORMAL,wx.WXK_ESCAPE,id)]
-		self.SetAcceleratorTable(wx.AcceleratorTable(table))
-
-	def close(self,event):
-		self.Close()
-
-
-
 
 	def show(self,song):
 		self.title.SetLabel(song.format('%title% - %artist% %length%'))
