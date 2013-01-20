@@ -54,6 +54,7 @@ class Toolbar(object):
 		self.connection.bind(self.connection.CONNECT,self.update_connection)
 		self.connection.bind(self.connection.CLOSE,self.update_connection)
 		self.connection.bind(self.connection.CLOSE_UNEXPECT,self.update_connection)
+		self.parent.bind(self.parent.VIEW,self.update_selector)
 		self.update_playback()
 		self.update_connection()
 
@@ -86,7 +87,6 @@ class Toolbar(object):
 			for label,icon,id,button_type in self.__buttons:
 				if updates.count(label):
 					self.__tool.EnableTool(id,enable)
-			self.update_selector()
 		wx.CallAfter(__update)
 
 	def update_selector(self):
@@ -109,13 +109,10 @@ class Toolbar(object):
 			obj.SetLabel(u'play')
 		elif func_name == 'playlist':
 			self.parent.show_playlist()
-			self.update_selector()
 		elif func_name == 'library':
 			self.parent.show_library()
-			self.update_selector()
 		elif func_name == 'lyric':
 			self.parent.show_lyric()
-			self.update_selector()
 		elif hasattr(self.playback,func_name):
 			getattr(self.playback,func_name)()
 
