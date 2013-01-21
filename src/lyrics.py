@@ -148,6 +148,9 @@ class DatabaseWithConfig(Database):
 			pass
 
 class Lyric(wx.Panel):
+	"""
+	Draw lyric.
+	"""
 	def __init__(self,parent,client):
 		self.client = client
 		self.parent = parent
