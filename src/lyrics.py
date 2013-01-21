@@ -23,7 +23,7 @@ class Database(client.Object):
 		self.download_auto = False
 		self.download_background = False
 		self.downloaders = dict(
-			geci_me = self.download_from_geci_me
+			geci_me = True
 			)
 
 		""" init database.
@@ -79,7 +79,7 @@ class Database(client.Object):
 		else:
 			return lyric[0]
 		
-	def download(self,song,index=0):
+	def download(self,song):
 		sql_write = '''
 		INSERT OR REPLACE INTO lyrics
 		(artist,title,album,lyric)
@@ -87,13 +87,17 @@ class Database(client.Object):
 		'''
 		self.call(self.UPDATING)
 		lyric = u''
-		for k,downloader in self.downloaders.iteritems():
-			try:
-				lyric = downloader(song)
-			except socket.error:
+		for label,is_download in self.downloaders.iteritems():
+			if is_download:
+				downloader = getattr(self,'download_from_'+label)
+				try:
+					lyric = downloader(song)
+				except socket.error:
+					pass
+				if lyric:
+					break
+			else:
 				pass
-			if lyric:
-				break
 		connection = self.__get_connection()
 		cursor = connection.cursor()
 		cursor.execute(sql_write,
@@ -115,13 +119,33 @@ class Database(client.Object):
 		json_text = urllib.urlopen('http://geci.me/api/lyric/'+query).read()
 		json_parsed = json.loads(json_text.decode('utf8'))
 		if u'result' in json_parsed and json_parsed[u'result']:
-			print json_text
 			lyric_page = urllib.urlopen(json_parsed[u'result'][0][u'lrc'])
 			lyric_encode = lyric_page.info()
 			lyric = lyric_page.read().decode('utf8')
 			return lyric
 		return None
 
+class DatabaseWithConfig(Database):
+	""" extends Database class with config."""
+	def __init__(self,client):
+		self.client = client
+		Database.__init__(self)
+
+	def download(self,song):
+		""" download lyric.
+
+		if turn off by config ,
+		does not download or does not use some api.
+		"""
+		if self.client.config.lyrics_download:
+			downloaders = {}
+			for label,isd in self.downloaders.iteritems():
+				attr = u'lyrics_api_'+label
+				downloaders[label] = getattr(self.client.config,attr)
+			self.downloaders = downloaders
+			Database.download(self,song)
+		else:
+			pass
 
 class Lyric(wx.Panel):
 	def __init__(self,parent,client):
@@ -131,7 +155,7 @@ class Lyric(wx.Panel):
 		self.fg = wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWTEXT)
 		self.hbg = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT)
 		self.hfg = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT)
-		self.database = Database()
+		self.database = DatabaseWithConfig(client)
 		self.database.download_auto = True
 		self.database.download_background = True
 		self.__time = 0
