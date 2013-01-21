@@ -5,6 +5,7 @@ import environment
 class Toolbar(object):
 	TYPE_TOGGLE = 'toggle'
 	TYPE_NORMAL = 'normal'
+	TYPE_RADIO = 'radio'
 	def __init__(self,parent,client):
 		self.parent = parent
 		toolbar_style = wx.TB_TEXT
@@ -42,6 +43,8 @@ class Toolbar(object):
 			if environment.userinterface.toolbar_toggle:
 				if button_type == self.TYPE_TOGGLE:
 					self.__tool.AddCheckLabelTool(id,label,icon)
+				elif button_type == self.TYPE_RADIO:
+					self.__tool.AddRadioLabelTool(id,label,icon)
 				else:
 					self.__tool.AddLabelTool(id,label,icon)
 			else:

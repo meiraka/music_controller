@@ -34,8 +34,7 @@ class Frame(wx.Frame,Object):
 		self.library = library.Library(self,self.client.library,
 				self.client.playlist,debug)
 		self.info = info.Info(self,self.client,debug)
-		self.connection = preferences.Connection(self,
-				self.client.connection,self.client.config)
+		self.connection = preferences.Connection(self,self.client)
 		self.lyric = lyrics.Lyric(self,self.client)
 		self.sizer = wx.BoxSizer()
 		s = wx.BoxSizer()
