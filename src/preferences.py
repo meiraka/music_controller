@@ -69,7 +69,7 @@ class Lyrics(wx.BoxSizer):
 		self.client = client
 		wx.BoxSizer.__init__(self,wx.VERTICAL)
 		self.__downloads_api = [
-			u'geti.me'
+			u'geci.me'
 			]
 		self.__is_download = wx.CheckBox(parent,-1,u'Download lyric')
 		self.__is_download.Bind(wx.EVT_CHECKBOX,self.click_is_download)
