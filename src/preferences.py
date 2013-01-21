@@ -66,18 +66,47 @@ class App(wx.Frame):
 class Lyrics(wx.BoxSizer):
 	def __init__(self,parent,client):
 		self.parent = parent
+		self.client = client
 		wx.BoxSizer.__init__(self,wx.VERTICAL)
-	
-		self.download = wx.CheckBox(parent,-1,u'Download lyric')
 		self.__downloads_api = [
 			u'geti.me'
 			]
-		self.downloads = [
+		self.__is_download = wx.CheckBox(parent,-1,u'Download lyric')
+		self.__is_download.Bind(wx.EVT_CHECKBOX,self.click_is_download)
+		self.__is_downloads_api = [
 			wx.CheckBox(parent,-1,u'Download from '+api) for api in self.__downloads_api
 			]
-		self.Add(self.download)
-		for sizer in self.downloads:
-			self.Add(sizer)
+		sizer = wx.BoxSizer(wx.VERTICAL)
+		sizer.Add(self.__is_download,0,wx.ALL,border=3)
+		downloads_sizer = wx.BoxSizer(wx.VERTICAL)
+		for download_api in self.__is_downloads_api:
+			downloads_sizer.Add(download_api,0,wx.ALL,border=3)
+			download_api.Bind(wx.EVT_CHECKBOX,self.click_is_download_api)
+		sizer.Add(downloads_sizer,0,wx.LEFT|wx.RIGHT,border=15)
+		self.Add(sizer,0,wx.ALL,border=6)
+		self.load_config()
+
+	def load_config(self):
+		download = self.client.config.lyrics_download
+		self.__is_download.SetValue(download)
+		for download_api in self.__is_downloads_api:
+			download_api.Enable(download)
+		for index,api in enumerate(self.__downloads_api):
+			attr = 'lyrics_api_' + api.replace(u'.',u'_')
+			use_api = getattr(self.client.config,attr)
+			self.__is_downloads_api[index].SetValue(use_api)
+
+	def click_is_download(self,event):
+		download = self.__is_download.GetValue()
+		self.client.config.lyrics_download = download
+		self.load_config()
+
+	def click_is_download_api(self,event):
+		obj = event.GetEventObject()
+		index = self.__is_downloads_api.index(obj)
+		label = self.__downloads_api[index]
+		attr = 'lyrics_api_' + label.replace(u'.',u'_')
+		setattr(self.client.config,attr,obj.GetValue())
 
 	def Hide(self):
 		self.ShowItems(False)
