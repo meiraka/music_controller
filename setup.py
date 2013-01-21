@@ -13,7 +13,7 @@ from setuptools import setup
 
 def get_command_out(command):
 	try:
-		return subprocess.check_output(command)[:-1]
+		return subprocess.check_output(command.split(' '))[:-1]
 	except:
 		return ''
 
