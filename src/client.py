@@ -631,11 +631,11 @@ class Config(Object):
 
 	default_profile = property(__get_default_profile)
 
-	def __get_booL(key,default):
+	def __get_bool(key,default):
 		def _get(self):
 			if not key in self.__config:
 				self.__config[key] = True if default else False
-			self.__config[key]
+			return self.__config[key]
 		def _set(self,value):
 			self.__config[key] = True if value else False
 			self.save()
@@ -646,7 +646,7 @@ class Config(Object):
 		def _get(self):
 			if not key in self.__config:
 				self.__config[key] = unicode(default)
-			self.__config[key]
+			return self.__config[key]
 		def _set(self,value):
 			self.__config[key] = value
 			self.save()
@@ -654,5 +654,7 @@ class Config(Object):
 		return (_get,_set)
 
 
-	playlist_focus = property(*__get_booL(u'playlist_focus',True))
+	playlist_focus =     property(*__get_bool(u'playlist_focus',True))
+	lyrics_download =    property(*__get_bool(u'lyrics_download',False))
+	lyrics_api_geti_me = property(*__get_bool(u'lyrics_api_geti_me',False))
 	
