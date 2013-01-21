@@ -639,6 +639,7 @@ class Config(Object):
 		def _set(self,value):
 			self.__config[key] = True if value else False
 			self.save()
+			self.call(self.CONFIG_CHANGED)
 
 		return (_get,_set)
 
@@ -650,6 +651,7 @@ class Config(Object):
 		def _set(self,value):
 			self.__config[key] = value
 			self.save()
+			self.call(self.CONFIG_CHANGED)
 
 		return (_get,_set)
 
