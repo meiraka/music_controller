@@ -55,6 +55,19 @@ class Database(client.Object):
 		return db
 		
 	def __getitem__(self,song):
+		""" Returns lyric.
+
+		Arguments:
+			song - client.Song object.
+
+		Returns u'' if lyric is not found.
+		if not found and self.download_auto,
+		downloads and returns lyric.
+		if download_background is True,
+		run in another thread and raises UPDATING and UPDATE event.
+
+		check self.downloading param to downloading lyric list.
+		"""
 		sql_search = '''
 		SELECT lyric FROM lyrics WHERE
 			artist=? and
