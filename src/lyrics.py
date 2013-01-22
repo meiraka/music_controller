@@ -20,6 +20,8 @@ class Database(client.Object):
 	UPDATING = 'updating'
 	UPDATE = 'update'
 	def __init__(self):
+		""" init values and database."""
+		self.__downloading = []
 		self.download_auto = False
 		self.download_background = False
 		self.downloaders = dict(
@@ -75,7 +77,7 @@ class Database(client.Object):
 					thread.start_new_thread(self.download,(song,))
 				else:
 					return self.download(song)
-			return ''
+			return u''
 		else:
 			return lyric[0]
 		
@@ -85,6 +87,7 @@ class Database(client.Object):
 		(artist,title,album,lyric)
 		VALUES(?, ?, ?, ?)
 		'''
+		self.__downloading.append(song)
 		self.call(self.UPDATING)
 		lyric = u''
 		for label,is_download in self.downloaders.iteritems():
@@ -109,6 +112,7 @@ class Database(client.Object):
 				)
 			)
 		connection.commit()
+		del self.__downloading[self.__downloading.index(song)]
 		self.call(self.UPDATE,lyric)
 		return lyric
 
@@ -123,7 +127,9 @@ class Database(client.Object):
 			lyric_encode = lyric_page.info()
 			lyric = lyric_page.read().decode('utf8')
 			return lyric
-		return None
+		return u''
+
+	downloading = property(lambda self:self.__downloading)
 
 class DatabaseWithConfig(Database):
 	""" extends Database class with config."""
@@ -173,12 +179,13 @@ class Lyric(wx.Panel):
 		#self.SetBackgroundColour(self.bg)
 		self.font = environment.userinterface.font
 		self.timer = wx.Timer(self.parent,-1)
-		wx.EVT_TIMER(self.parent,-1,self.update)
+		wx.EVT_TIMER(self.parent,-1,self.__update)
 		self.timer.Start(self.__update_interval)
 		#self.parent.Bind(wx.EVT_ERASE_BACKGROUND,self.update)
 		self.client.playback.bind(self.client.playback.UPDATE_PLAYING,self.update_data)
+		self.database.bind(self.database.UPDATING,self.update)
 		self.database.bind(self.database.UPDATE,self.decode_raw_lyric)
-		self.update()
+		self.__update()
 
 	def update_time(self):
 		status = self.client.playback.status
@@ -190,6 +197,7 @@ class Lyric(wx.Panel):
 				self.__time_msec = 0.0
 
 	def update_data(self):
+		""" update lyric data."""
 		self.update_time()
 		status = self.client.playback.status
 		if status and u'song' in status:
@@ -201,6 +209,7 @@ class Lyric(wx.Panel):
 					self.decode_raw_lyric(self.database[song])
 
 	def decode_raw_lyric(self,lyric):
+		""" convert raw LRC lyric text to list."""
 		self.__offset = 0.0
 		self.__raw_lyric = lyric
 		self.__lyric = []
@@ -214,6 +223,7 @@ class Lyric(wx.Panel):
 		self.__lyric = result
 
 	def __decode_line(self,line):
+		""" convert raw LRC lyric line to tuple."""
 		def convert_sec(time):
 			sec = float(time[0])*60.0+float(time[1])
 			if len(time) > 2:
@@ -234,9 +244,14 @@ class Lyric(wx.Panel):
 		return []
 
 	def OnPaint(self,event):
-		self.update(event)
+		self.__update(event)
 
-	def update(self,event=None):
+	def update(self):
+		""" update lyric file at main thread."""
+		wx.CallAfter(self.__update)
+
+	def __update(self,event=None):
+		""" update lyric file"""
 		dc = wx.ClientDC(self)
 		if environment.userinterface.draw_double_buffered:
 			dc = wx.BufferedDC(dc)
@@ -251,7 +266,7 @@ class Lyric(wx.Panel):
 		if self.__lyric:
 			self.draw(dc,(x,y,w,h))
 		else:
-			if self.__raw_lyric is None:
+			if self.database.downloading.count(self.__song):
 				title = u'Searching lyric...'
 			else:
 				title = u'Lyrics not found.'
