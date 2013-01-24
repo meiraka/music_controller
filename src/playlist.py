@@ -175,6 +175,74 @@ class Menu(wx.Menu):
 		for song in self.parent.selected:
 			song.remove()
 
+class AlbumList(wx.ScrolledWindow):
+	def __init__(self,parent,playlist,playback,debug=False):
+		wx.ScrolledWindow.__init__(self,parent,style=wx.SB_HORIZONTAL)
+		self.playlist = playlist
+		self.albums = []
+		text_height = environment.userinterface.text_height
+		self.image_width = text_height * 12
+		self.box_size = (self.image_width,self.image_width)
+		self.SetMinSize((-1,self.image_width))
+		self.__update_album_list()
+		self.Bind(wx.EVT_PAINT,self.OnPaint)
+		self.artwork = artwork.Artwork()
+		self.artwork.size = (text_height*8,text_height*8)
+		self.artwork.bind(self.artwork.UPDATE,self.update)
+		self.playlist.bind(self.playlist.UPDATE,self.__update_album_list)
+		self.active_background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT )
+		self.background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX)
+		self.SetBackgroundColour(self.background_color)
+	
+
+	def __update_album_list(self):
+		last_album = None
+		albums = []
+		for song in self.playlist:
+			if not last_album == song.format('%album%'):
+				last_album = song.format('%album%')
+				albums.append(song)
+		self.albums = albums
+		self.__update_window_size()
+
+	def __update_window_size(self):
+		self.SetScrollbars(8,8,len(self.albums)*self.image_width/8,8)
+
+	def OnPaint(self,event):
+		dc = wx.BufferedPaintDC(self)
+		self.update_canvas(dc)
+
+	def update(self):
+		dc = wx.ClientDC(self)
+		dc = wx.BufferedDC(dc)
+		self.update_canvas(dc)
+
+	def update_canvas(self,dc):
+		w,h = self.box_size
+		size_w,size_h = self.GetSize()
+		for index,song in enumerate(self.albums):
+			x,y = self.CalcScrolledPosition(index*w,0)
+			if 0-w < x < size_w and 0-h < y < size_h:
+				rect = (x,y,w,h)
+				self.draw_background(index,song,dc,rect)
+				self.draw_album(index,song,dc,rect)
+
+	def draw_background(self,index,song,dc,rect):
+		color = self.background_color
+		dc.SetBrush(wx.Brush(color))
+		dc.SetPen(wx.Pen(color))
+		dc.DrawRectangle(*rect)
+
+	def draw_album(self,index,song,dc,rect):
+		x,y,w,h = rect
+		text_height = environment.userinterface.text_height
+		x = x + text_height*2
+		y = y + text_height*2
+		image = self.artwork[song]
+		if not image:
+			image = self.artwork.empty
+		dc.DrawBitmap(image,x,y)
+
 class View(ViewBase):
 	def __init__(self,parent,playlist,playback,debug=False):
 		text_height = environment.userinterface.text_height

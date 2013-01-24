@@ -33,15 +33,18 @@ class Frame(wx.Frame,Object):
 				self.client.playback,debug)
 		self.library = library.View(self,self.client.library,
 				self.client.playlist,debug)
+		self.albumlist = playlist.AlbumList(self,self.client.playlist,
+				self.client.playback,debug)
 		self.info = info.Info(self,self.client,debug)
 		self.connection = preferences.Connection(self,self.client)
 		self.lyric = lyrics.Lyric(self,self.client)
 		self.sizer = wx.BoxSizer()
-		s = wx.BoxSizer()
+		s = wx.BoxSizer(wx.VERTICAL)
 		s.Add(self.playlist,1,flag=wx.EXPAND)
 		s.Add(self.library,1,flag=wx.EXPAND)
 		s.Add(self.connection,1,flag=wx.EXPAND)
 		s.Add(self.lyric,1,flag=wx.EXPAND)
+		s.Add(self.albumlist,0,flag=wx.EXPAND)
 		self.sizer.Add(s,1,flag=wx.EXPAND)
 		self.sizer.Add(self.info,0,wx.EXPAND)
 		#self.sizer.Add(self.albumlist,0,flag=wx.EXPAND)
@@ -49,7 +52,7 @@ class Frame(wx.Frame,Object):
 		self.hide_children()
 		self.Layout()
 		h = environment.userinterface.text_height
-		self.SetSize((h*48,h*36))
+		self.SetSize((h*64,h*48))
 		self.preferences = None
 		self.change_title()
 		if self.client.connection.current:
@@ -61,6 +64,7 @@ class Frame(wx.Frame,Object):
 
 	def hide_children(self):
 		self.playlist.Hide()
+		self.albumlist.Hide()
 		self.library.Hide()
 		self.connection.Hide()
 		self.info.Hide()
@@ -70,6 +74,7 @@ class Frame(wx.Frame,Object):
 	def show_connection(self):
 		self.SetTitle(self.TITLE +' - '+ 'connection')
 		self.playlist.Hide()
+		self.albumlist.Hide()
 		self.library.Hide()
 		self.lyric.Hide()
 		self.info.Hide()
@@ -98,6 +103,7 @@ class Frame(wx.Frame,Object):
 		self.change_title()
 		self.connection.Hide()
 		self.playlist.Hide()
+		self.albumlist.Hide()
 		self.lyric.Hide()
 		self.Layout()
 		self.library.Show()
@@ -114,6 +120,7 @@ class Frame(wx.Frame,Object):
 		self.lyric.Hide()
 		self.Layout()
 		self.playlist.Show()
+		self.albumlist.Show()
 		self.info.Show()
 		self.Layout()
 		self.call(self.VIEW)
@@ -125,6 +132,7 @@ class Frame(wx.Frame,Object):
 		self.connection.Hide()
 		self.library.Hide()
 		self.playlist.Hide()
+		self.albumlist.Hide()
 		self.Layout()
 		self.lyric.Show()
 		self.info.Show()
