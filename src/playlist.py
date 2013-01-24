@@ -8,7 +8,7 @@ import artwork
 import environment
 import dialog
 
-class PlaylistBase(wx.VListBox):
+class ViewBase(wx.VListBox):
 	def __init__(self,parent,playlist,playback,
 			list_height,list_head_size,list_min_low,debug=False):
 		wx.VListBox.__init__(self,parent,-1,style=wx.LB_MULTIPLE)
@@ -175,10 +175,10 @@ class Menu(wx.Menu):
 		for song in self.parent.selected:
 			song.remove()
 
-class Playlist(PlaylistBase):
+class View(ViewBase):
 	def __init__(self,parent,playlist,playback,debug=False):
 		text_height = environment.userinterface.text_height
-		PlaylistBase.__init__(self,parent,playlist,playback,
+		ViewBase.__init__(self,parent,playlist,playback,
 			text_height*3/2,2,6,debug)
 		self.active_background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT )
 		self.background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX)

@@ -34,7 +34,7 @@ default_settings = [
 
 default_sorter = '%albumartist% %disc% %date% %album% %track_index% %title%'
 
-class LibraryBase(wx.VListBox):
+class ViewBase(wx.VListBox):
 	def __init__(self,parent,library,playlist,
 			criteria_default_height,criteria_root_height,
 			criteria_song_height,criteria_album_height,debug=False):
@@ -298,13 +298,13 @@ class Menu(wx.Menu):
 		self.parent.get_info(self.index)
 
 
-class Library(LibraryBase):
+class View(ViewBase):
 	def __init__(self,parent,library,playlist,debug=False):
 		text_height = environment.userinterface.text_height
 		self.active_background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT )
 		self.background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX)
 	
-		LibraryBase.__init__(self,parent,library,playlist,
+		ViewBase.__init__(self,parent,library,playlist,
 			text_height*3/2,text_height*3/2,text_height*3/2,text_height*4,debug)
 		self.text_height = text_height
 		self.diff = text_height/4
