@@ -398,7 +398,7 @@ class Playlist(Object):
 		self.__data = [Playlist.Song(song,self.__connection) for song in data]
 		if self.__config.playlist_focus:
 			self.focus_playing()
-		self.call(self.UPDATE,self.__data)
+		self.call(self.UPDATE)
 
 	def focus_playing(self):
 		""" set focus and select value to current playing song.
