@@ -29,8 +29,10 @@ class ViewBase(wx.VListBox):
 		self.playlist.bind(self.playlist.FOCUS,self.focus)
 		self.playback.bind(self.playback.UPDATE,self.refresh)
 		self.Bind(wx.EVT_LEFT_DCLICK,self.OnActivate)
-		self.Bind(wx.EVT_KEY_UP,self.OnKeys)
+		self.Bind(wx.EVT_LEFT_UP,self.OnFocus)
+		self.Bind(wx.EVT_KEY_DOWN,self.OnKeys)
 		self.Bind(wx.EVT_RIGHT_UP,self.OnRightClick)
+		self.Bind(wx.EVT_LISTBOX,self.OnFocus)
 
 	def refresh(self,*args):
 		wx.CallAfter(self.__refresh)
@@ -48,6 +50,21 @@ class ViewBase(wx.VListBox):
 		index,n = self.GetFirstSelected()
 		self.play(index)
 
+	def OnFocus(self,event):
+		""" detect focus song.
+
+		if focus song was changed, set new focused song.
+		"""
+		current = self.playlist.focused
+		index,n = self.GetFirstSelected()
+		if index > -1:
+			type,group_index,song = self.ui_songs[index]
+			if type == 'song' and not song == current:
+				self.playlist.focused = song
+				return
+		event.Skip()
+		
+
 	def play(self,index):
 		if len(self.ui_songs) > index:
 			type,index,song = self.ui_songs[index]
@@ -59,6 +76,8 @@ class ViewBase(wx.VListBox):
 
 	def __focus(self,song):
 		index,n = self.GetFirstSelected()
+		if index in self.ui_songs and song == self.ui_songs[index][2]:
+			return
 		if index > -1 and not self.IsVisible(index):
 			self.Select(0,True)
 		self.DeselectAll()
@@ -74,20 +93,21 @@ class ViewBase(wx.VListBox):
 	def __update_playlist(self):
 		head = u''
 		song_count = 0
-		self.ui_songs = []
+		ui_songs = []
 		old_song = None
 		for song in self.playlist:
 			new_head = self.head(song)
 			if not head == new_head:
 				head = new_head
-				if self.ui_songs and song_count < self.__list_min_row:
-					self.ui_songs.extend([('nop',i+song_count,old_song) for i in xrange(self.__list_min_row-song_count)])
+				if self.ui_songs and song_count < self.__list_min_row and old_song:
+					ui_songs.extend([('nop',i+song_count,old_song) for i in xrange(self.__list_min_row-song_count)])
 				song_count = 0
-				self.ui_songs.append(('head',0,song))
+				ui_songs.append(('head',0,song))
 			self.pos_line[song[u'pos']] = len(self.ui_songs)
-			self.ui_songs.append(('song',song_count,song))
+			ui_songs.append(('song',song_count,song))
 			old_song = song
 			song_count = song_count + 1
+		self.ui_songs = ui_songs
 		self.SetItemCount(len(self.ui_songs))
 		self.focus()
 
@@ -130,9 +150,33 @@ class ViewBase(wx.VListBox):
 		except:
 			pass
 	def OnKeys(self,event):
-		if event.GetUnicodeKey() == wx.WXK_RETURN:
-			index,n = self.GetFirstSelected()
+		index,n = self.GetFirstSelected()
+		key = event.GetKeyCode()
+		if key == wx.WXK_RETURN:
 			self.play(index)
+		elif key == wx.WXK_LEFT:
+			current_song = self.ui_songs[index][2]
+			uis = self.ui_songs[:index+1]
+			uis.reverse()
+			head_count = 0
+			for type,group_index,song in uis:
+				if type == 'head':
+					head_count = head_count + 1
+				if head_count == 2:
+					break
+			if song:
+				self.playlist.focused = song
+		elif key == wx.WXK_RIGHT:
+			current_song = self.ui_songs[index][2]
+			uis = self.ui_songs[index:]
+			head_count = 0
+			for type,group_index,song in uis:
+				if type == 'head':
+					head_count = head_count + 1
+				if head_count == 1:
+					break
+			if song:
+				self.playlist.focused = song
 		else:
 			event.Skip()
 
@@ -177,14 +221,14 @@ class Menu(wx.Menu):
 
 class AlbumList(wx.ScrolledWindow):
 	def __init__(self,parent,playlist,playback,debug=False):
-		wx.ScrolledWindow.__init__(self,parent,style=wx.SB_HORIZONTAL)
+		wx.ScrolledWindow.__init__(self,parent,style=wx.TAB_TRAVERSAL)
 		self.playlist = playlist
 		self.albums = []
+		self.__focused_index = -1
 		text_height = environment.userinterface.text_height
 		self.image_width = text_height * 12
 		self.box_size = (self.image_width,self.image_width)
 		self.SetMinSize((-1,self.image_width))
-		self.__update_album_list()
 		self.Bind(wx.EVT_PAINT,self.OnPaint)
 		self.artwork = artwork.Artwork()
 		self.artwork.size = (text_height*8,text_height*8)
@@ -193,6 +237,71 @@ class AlbumList(wx.ScrolledWindow):
 		self.active_background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT )
 		self.background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX)
 		self.SetBackgroundColour(self.background_color)
+		thread.start_new_thread(self.__update_album_list,())
+		self.playlist.bind(self.playlist.FOCUS,self.focus)
+		self.Bind(wx.EVT_LEFT_UP,self.OnClick)
+		self.Bind(wx.EVT_KEY_DOWN,self.OnKeys)
+
+	def OnClick(self,event):
+		mouse = event.GetPosition()
+		x,y = self.CalcUnscrolledPosition(mouse)
+		w,h = self.box_size
+		index = x/w
+		if not self.__focused_index == index:
+			self.playlist.focused = self.albums[index]
+
+	def OnKeys(self,event):
+		key = event.GetKeyCode()
+		if key == wx.WXK_LEFT:
+			if 0 < self.__focused_index < len(self.albums):
+				self.__focused_index = self.__focused_index -1
+				self.playlist.focused = self.albums[self.__focused_index]
+		elif key == wx.WXK_RIGHT:
+			if 0 < self.__focused_index+1 < len(self.albums):
+				self.__focused_index = self.__focused_index + 1
+				self.playlist.focused = self.albums[self.__focused_index]
+		elif key == wx.WXK_UP:
+			song = self.playlist.focused
+			pos = int(song[u'pos'])
+			if 0 < pos < len(self.playlist):
+				self.playlist.focused = self.playlist[pos-1]
+		elif key == wx.WXK_DOWN:
+			song = self.playlist.focused
+			pos = int(song[u'pos'])
+			if 0 < pos+1 < len(self.playlist):
+				self.playlist.focused = self.playlist[pos+1]
+	
+				
+		else:
+			event.Skip()
+		
+		
+
+	def focus(self):
+		def __focus(self,index):
+			x,y = self.GetViewStart()
+			wu,hu = self.GetScrollPixelsPerUnit()
+			w,h = self.GetSize()
+			goto = index*12*environment.userinterface.text_height
+			if x*wu < goto < x*wu + w:
+				pass
+			else:
+				self.Scroll((goto/wu,-1))
+		focused = self.playlist.focused
+		last_album = None
+		index = -1
+		for song in self.playlist:
+			if not last_album == song.format('%album%'):
+				last_album = song.format('%album%')
+				index = index + 1
+			if song == focused:
+				break
+		else:
+			index = -1
+		self.__focused_index = index
+		wx.CallAfter(self.update)
+		if index > -1:
+			wx.CallAfter(__focus,self,index)
 	
 
 	def __update_album_list(self):
@@ -203,7 +312,8 @@ class AlbumList(wx.ScrolledWindow):
 				last_album = song.format('%album%')
 				albums.append(song)
 		self.albums = albums
-		self.__update_window_size()
+		wx.CallAfter(self.__update_window_size)
+		wx.CallAfter(self.focus)
 
 	def __update_window_size(self):
 		self.SetScrollbars(8,8,len(self.albums)*self.image_width/8,8)
@@ -228,7 +338,10 @@ class AlbumList(wx.ScrolledWindow):
 				self.draw_album(index,song,dc,rect)
 
 	def draw_background(self,index,song,dc,rect):
-		color = self.background_color
+		if index == self.__focused_index:
+			color = self.active_background_color
+		else:
+			color = self.background_color
 		dc.SetBrush(wx.Brush(color))
 		dc.SetPen(wx.Pen(color))
 		dc.DrawRectangle(*rect)

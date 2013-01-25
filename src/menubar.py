@@ -190,6 +190,7 @@ class MenuBar(wx.MenuBar):
 					break
 	def focus_song(self):
 		self.parent.playlist.focus()
+		self.parent.albumlist.focus()
 
 	def OnMenu(self,event):
 		label = self.__ids[event.GetId()]
