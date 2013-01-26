@@ -278,15 +278,21 @@ class AlbumList(wx.ScrolledWindow):
 		
 
 	def focus(self):
-		def __focus(self,index):
+		def __scroll(self,index):
+			""" scroll to given index."""
 			x,y = self.GetViewStart()
 			wu,hu = self.GetScrollPixelsPerUnit()
 			w,h = self.GetSize()
-			goto = index*12*environment.userinterface.text_height
+			item_w,item_h = self.box_size
+			goto = index*item_w
 			if x*wu < goto < x*wu + w:
-				pass
+				return -1
 			else:
+				# new pos is greater than current pos
+				if x*wu < goto:
+					goto = goto - w + item_w
 				self.Scroll((goto/wu,-1))
+				return goto
 		focused = self.playlist.focused
 		last_album = None
 		index = -1
@@ -301,7 +307,7 @@ class AlbumList(wx.ScrolledWindow):
 		self.__focused_index = index
 		wx.CallAfter(self.update)
 		if index > -1:
-			wx.CallAfter(__focus,self,index)
+			wx.CallAfter(__scroll,self,index)
 	
 
 	def __update_album_list(self):
