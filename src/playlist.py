@@ -423,8 +423,8 @@ class View(ViewBase):
 		dc.DrawRectangle(*list(rect.GetPosition())+ list(rect.GetSize()))
 
 	def draw_head(self,dc,rect,index,song):
-		left_text = song[u'album']
-		right_text = song[u'genre'] if song.has_key(u'genre') else u''
+		left_text = song.format(u'%album%')
+		right_text = song.format(u'%genre%')
 		size = dc.GetTextExtent(left_text+right_text)
 		w,h = rect.GetSize()
 		margin = 10
@@ -440,7 +440,7 @@ class View(ViewBase):
 		dc.DrawText(right_text,*right_pos)
 
 	def draw_song(self,dc,rect,index,song,group_index):
-		left_text = song[u'title']
+		left_text = song.format(u'%title%')
 		time = int(song[u'time'])
 		right_text = u'%i:%s' % (time/60, str(time%60).zfill(2))
 		pad = (rect.GetSize()[1] - dc.GetTextExtent('A-glFf')[1]) / 2
@@ -457,7 +457,7 @@ class View(ViewBase):
 		dc.DrawText(right_text,*right_pos)
 
 	def draw_current_song(self,dc,rect,index,song,group_index):
-		left_text = u'>>>' + song[u'title']
+		left_text = u'>>>' + song.format(u'%title%')
 		time = int(song[u'time'])
 		status = self.playback.status
 		if status and status.has_key(u'time'):
