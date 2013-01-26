@@ -291,7 +291,7 @@ class AlbumList(wx.ScrolledWindow):
 				# new pos is greater than current pos
 				if x*wu < goto:
 					goto = goto - w + item_w
-				self.Scroll((goto/wu,-1))
+				self.Scroll(goto/wu,-1)
 				return goto
 		focused = self.playlist.focused
 		last_album = None
