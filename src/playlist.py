@@ -103,7 +103,7 @@ class ViewBase(wx.VListBox):
 					ui_songs.extend([('nop',i+song_count,old_song) for i in xrange(self.__list_min_row-song_count)])
 				song_count = 0
 				ui_songs.append(('head',0,song))
-			self.pos_line[song[u'pos']] = len(self.ui_songs)
+			self.pos_line[song[u'pos']] = len(ui_songs)
 			ui_songs.append(('song',song_count,song))
 			old_song = song
 			song_count = song_count + 1
