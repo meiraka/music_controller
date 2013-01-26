@@ -657,6 +657,8 @@ class Config(Object):
 
 
 	playlist_focus =     property(*__get_bool(u'playlist_focus',True))
+	playlist_albumlist = property(*__get_bool(u'playlist_albumlist',True))
+	info =               property(*__get_bool(u'info',True))
 	lyrics_download =    property(*__get_bool(u'lyrics_download',False))
 	lyrics_api_geci_me = property(*__get_bool(u'lyrics_api_geci_me',False))
 	

@@ -38,6 +38,9 @@ class MenuBar(wx.MenuBar):
 				(wx.NewId(),u'Library',self.SELECT),
 				(wx.NewId(),u'Lyric',self.SELECT),
 				(wx.NewId(),u'splitter',self.SPLITTER),
+				(wx.NewId(),u'Albumlist',self.TOGGLE),
+				(wx.NewId(),u'Info',self.TOGGLE),
+				(wx.NewId(),u'splitter',self.SPLITTER),
 				(wx.NewId(),u'Focus current',self.NORMAL)
 				]),
 			('Help',[
@@ -59,6 +62,8 @@ class MenuBar(wx.MenuBar):
 				u'View_Playlist':self.parent.show_playlist,
 				u'View_Library':self.parent.show_library,
 				u'View_Lyric':self.parent.show_lyric,
+				u'View_Albumlist':self.toggle_config_value('playlist_albumlist',self.parent.show_not_connection),
+				u'View_Info':self.toggle_config_value('info',self.parent.show_not_connection),
 				u'View_Focus current':self.focus_song,
 				u'Help_About':AboutDialog
 				}
@@ -166,6 +171,15 @@ class MenuBar(wx.MenuBar):
 		if status and u'state' in status:
 			playback.pause() if status[u'state'] == u'play' else playback.play()
 
+	def toggle_config_value(self,attr,callback=None):
+		def set():
+			value = getattr(self.client.config,attr)
+			setattr(self.client.config,attr,not(value))
+			if callback:
+				callback()
+			self.update_by_config()
+		return set
+
 	def set_shuffle(self):
 		for index,(head,items) in enumerate(self.menu_list):
 			for id,label,menu_type in items:
@@ -199,10 +213,22 @@ class MenuBar(wx.MenuBar):
 
 	def OnUpdate(self,*args,**kwargs):
 		self.update_by_status()
-		self.update_by_config()
 
 	def update_by_config(self):
-		focus = self.client.config.playlist_focus
+		for index,(head,items) in enumerate(self.menu_list):
+			for id,label,menu_type in items:
+				menu = self.GetMenu(index)
+				if label == u'Albumlist':
+					current = menu.IsChecked(id)
+					new = self.client.config.playlist_albumlist
+					if not current == new:
+						menu.Check(id,new)
+				if label == u'Info':
+					current = menu.IsChecked(id)
+					new = self.client.config.info
+					if not current == new:
+						menu.Check(id,new)
+					
 		
 
 	def update_by_status(self):

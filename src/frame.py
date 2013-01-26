@@ -107,7 +107,10 @@ class Frame(wx.Frame,Object):
 		self.lyric.Hide()
 		self.Layout()
 		self.library.Show()
-		self.info.Show()
+		if self.client.config.info:
+			self.info.Show()
+		else:
+			self.info.Hide()
 		self.Layout()
 		self.call(self.VIEW)
 	
@@ -120,8 +123,14 @@ class Frame(wx.Frame,Object):
 		self.lyric.Hide()
 		self.Layout()
 		self.playlist.Show()
-		self.albumlist.Show()
-		self.info.Show()
+		if self.client.config.playlist_albumlist:
+			self.albumlist.Show()
+		else:
+			self.albumlist.Hide()
+		if self.client.config.info:
+			self.info.Show()
+		else:
+			self.info.Hide()
 		self.Layout()
 		self.call(self.VIEW)
 
@@ -135,7 +144,10 @@ class Frame(wx.Frame,Object):
 		self.albumlist.Hide()
 		self.Layout()
 		self.lyric.Show()
-		self.info.Show()
+		if self.client.config.info:
+			self.info.Show()
+		else:
+			self.info.Hide()
 		self.Layout()
 		self.call(self.VIEW)
 

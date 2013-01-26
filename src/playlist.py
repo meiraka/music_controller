@@ -235,11 +235,12 @@ class AlbumList(wx.ScrolledWindow):
 		self.albums = []
 		self.__focused_index = -1
 		text_height = environment.userinterface.text_height
-		self.image_width = text_height * 12
+		self.image_width = text_height * 10
 		self.box_size = (self.image_width,self.image_width)
 		self.SetMinSize((-1,self.image_width))
 		self.Bind(wx.EVT_PAINT,self.OnPaint)
 		self.artwork = artwork.Artwork()
+		self.scroll_block = text_height
 		self.artwork.size = (text_height*8,text_height*8)
 		self.artwork.bind(self.artwork.UPDATE,self.update)
 		self.active_background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT )
@@ -354,7 +355,8 @@ class AlbumList(wx.ScrolledWindow):
 		wx.CallAfter(self.focus)
 
 	def __update_window_size(self):
-		self.SetScrollbars(8,8,len(self.albums)*self.image_width/8,8)
+		self.SetScrollbars(self.scroll_block,self.scroll_block,
+			len(self.albums)*self.image_width/self.scroll_block,1)
 
 	def OnPaint(self,event):
 		dc = wx.BufferedPaintDC(self)
@@ -387,8 +389,8 @@ class AlbumList(wx.ScrolledWindow):
 	def draw_album(self,index,song,dc,rect):
 		x,y,w,h = rect
 		text_height = environment.userinterface.text_height
-		x = x + text_height*2
-		y = y + text_height*2
+		x = x + text_height*1
+		y = y + text_height*1
 		image = self.artwork[song]
 		if not image:
 			image = self.artwork.empty
