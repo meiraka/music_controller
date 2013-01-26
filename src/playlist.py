@@ -163,7 +163,19 @@ class ViewBase(wx.VListBox):
 		""" key down event. change focused item in playlist."""
 		index,n = self.GetFirstSelected()
 		key = event.GetKeyCode()
-		if key == wx.WXK_LEFT:
+		if key == wx.WXK_UP:
+			current_song = self.ui_songs[index][2]
+			pos = int(current_song[u'pos'])
+			if 0 < pos <= len(self.playlist)-1:
+				song = self.playlist[pos-1]
+				self.playlist.focused = song
+		elif key == wx.WXK_DOWN:
+			current_song = self.ui_songs[index][2]
+			pos = int(current_song[u'pos'])
+			if 0 <= pos < len(self.playlist)-1:
+				song = self.playlist[pos+1]
+				self.playlist.focused = song
+		elif key == wx.WXK_LEFT:
 			current_song = self.ui_songs[index][2]
 			uis = self.ui_songs[:index+1]
 			uis.reverse()
@@ -288,22 +300,22 @@ class AlbumList(wx.ScrolledWindow):
 		"""
 		key = event.GetKeyCode()
 		if key == wx.WXK_LEFT:
-			if 0 < self.__focused_index < len(self.albums):
+			if 0 < self.__focused_index <= len(self.albums)-1:
 				self.__focused_index = self.__focused_index -1
 				self.playlist.focused = self.albums[self.__focused_index]
 		elif key == wx.WXK_RIGHT:
-			if 0 < self.__focused_index+1 < len(self.albums):
+			if 0 <= self.__focused_index < len(self.albums)-1:
 				self.__focused_index = self.__focused_index + 1
 				self.playlist.focused = self.albums[self.__focused_index]
 		elif key == wx.WXK_UP:
 			song = self.playlist.focused
 			pos = int(song[u'pos'])
-			if 0 < pos < len(self.playlist):
+			if 0 < pos <= len(self.playlist)-1:
 				self.playlist.focused = self.playlist[pos-1]
 		elif key == wx.WXK_DOWN:
 			song = self.playlist.focused
 			pos = int(song[u'pos'])
-			if 0 < pos+1 < len(self.playlist):
+			if 0 <= pos < len(self.playlist)-1:
 				self.playlist.focused = self.playlist[pos+1]
 		else:
 			event.Skip()
