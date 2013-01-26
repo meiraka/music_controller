@@ -96,6 +96,7 @@ class App(wx.App):
 		
 		
 def run(**params):
+	wx.Log_EnableLogging(False)
 	app = App(**params)
 	app.MainLoop()
 	
