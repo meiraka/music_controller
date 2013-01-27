@@ -9,20 +9,25 @@ import environment
 import dialog
 
 class ViewBase(wx.VListBox):
-	def __init__(self,parent,playlist,playback,
+	def __init__(self,parent,playlist,playback,head_format,
 			list_height,list_head_size,list_min_low,debug=False):
 		wx.VListBox.__init__(self,parent,-1,style=wx.LB_MULTIPLE)
+		# set client objects.
 		self.playlist = playlist
 		self.playback = playback
-		self.__debug = debug
-		self.ui_songs = []
+		# generates by this ui.
+		self.songs = []       # playlist struct
+		self.__line_song = {} # key=line index value=song
+		# sets by this ui and another playlist ui.
 		self.__focused = None
 		self.__selected = []
-		self.albums = {}
-		self.pos_line = {}
+		# set __init__ args to private values.
+		self.__head_format = head_format
 		self.__list_head_size = list_head_size
 		self.__list_height = list_height
 		self.__list_min_row = list_min_low
+		self.__debug = debug
+
 		self.font = environment.userinterface.font
 		self.font_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOXTEXT)
 		self.playlist.bind(self.playlist.UPDATE,self.update_playlist)
@@ -33,42 +38,26 @@ class ViewBase(wx.VListBox):
 		self.Bind(wx.EVT_KEY_DOWN,self.OnKeysDown)
 		self.Bind(wx.EVT_KEY_UP,self.OnKeysUp)
 		self.Bind(wx.EVT_RIGHT_UP,self.OnRightClick)
-		self.Bind(wx.EVT_LISTBOX,self.OnFocus)
 
 	def refresh(self,*args):
+		""" Refreashes current playing song pos in main thread."""
 		wx.CallAfter(self.__refresh)
 
 	def __refresh(self):
+		""" Refreashes current playing song pos."""
 		status = self.playback.status
 		if status and status.has_key(u'song'):
 			song_id = status[u'song']
 		else:
 			return
-		if self.pos_line.has_key(song_id):
-			self.RefreshLine(self.pos_line[song_id])
+		if self.__line_song.has_key(song_id):
+			self.RefreshLine(self.__line_song[song_id])
 
-	def OnActivate(self,event):
-		index,n = self.GetFirstSelected()
-		self.play(index)
-
-	def OnFocus(self,event):
-		""" detect focus song.
-
-		if focus song was changed, set new focused song.
-		"""
-		current = self.playlist.focused
-		index,n = self.GetFirstSelected()
-		if index > -1:
-			type,group_index,song = self.ui_songs[index]
-			if type == 'song' and not song == current:
-				self.playlist.focused = song
-				return
-		event.Skip()
 		
 
 	def play(self,index):
-		if len(self.ui_songs) > index:
-			type,index,song = self.ui_songs[index]
+		if len(self.songs) > index:
+			type,index,song = self.songs[index]
 			if song:
 				song.play()
 
@@ -77,49 +66,69 @@ class ViewBase(wx.VListBox):
 
 	def __focus(self,song):
 		index,n = self.GetFirstSelected()
-		if index in self.ui_songs and song == self.ui_songs[index][2]:
+		if index in self.songs and song == self.songs[index][2]:
 			return
 		if index > -1 and not self.IsVisible(index):
 			self.Select(0,True)
 		self.DeselectAll()
-		for index,(t,i,s) in enumerate(self.ui_songs):
+		for index,(t,i,s) in enumerate(self.songs):
 			if t == 'song' and s == song:
 				self.Select(index,True)
 				if not self.IsVisible(index):
 					self.ScrollLines(index)
 				break
 	def update_playlist(self,*args,**kwargs):
+		""" Updates playlist view in main thread.
+		"""
 		wx.CallAfter(self.__update_playlist)
 
 	def __update_playlist(self):
-		head = u''
+		""" Updates playlist view.
+
+		generates new playlist struct
+		and focuses current song.
+		"""
+		self.songs,self.__line_song = self.__generate_playlist_struct()
+		self.SetItemCount(len(self.songs))
+		self.focus()
+
+	def __generate_playlist_struct(self):
+		""" Generates list struct for this playlist ui.
+
+		returns:
+			(playlist struct, playlist index-song dict)
+
+		playlist struct is:
+		[
+			(
+				string line type,
+				int index starts at 'head' type,
+				client.Playlist.Song object
+			)
+		]
+		"""
+		head = u''        #group key
 		song_count = 0
 		ui_songs = []
+		pos_line = {}
 		old_song = None
 		for song in self.playlist:
-			new_head = self.head(song)
+			new_head = song.format(self.__head_format)
 			if not head == new_head:
 				head = new_head
-				if self.ui_songs and song_count < self.__list_min_row and old_song:
+				if ui_songs and song_count < self.__list_min_row and old_song:
 					ui_songs.extend([('nop',i+song_count,old_song) for i in xrange(self.__list_min_row-song_count)])
 				song_count = 0
 				ui_songs.append(('head',0,song))
-			self.pos_line[song[u'pos']] = len(ui_songs)
+			pos_line[song[u'pos']] = len(ui_songs)
 			ui_songs.append(('song',song_count,song))
 			old_song = song
 			song_count = song_count + 1
-		self.ui_songs = ui_songs
-		self.SetItemCount(len(self.ui_songs))
-		self.focus()
+		return (ui_songs,pos_line)
 
-	def head(self,song):
-		if song.has_key(u'album'):
-			return song[u'album']
-		else:
-			return '?'
 
 	def OnMeasureItem(self, index):
-		if len(self.ui_songs) > index and self.ui_songs[index][0] == 'head':
+		if len(self.songs) > index and self.songs[index][0] == 'head':
 			return self.__list_height * self.__list_head_size
 		else:
 			return self.__list_height
@@ -128,11 +137,11 @@ class ViewBase(wx.VListBox):
 		self.draw_background(dc,rect,index)
 
 	def OnDrawItem(self,dc,rect,index):
-		if not len(self.ui_songs) > index:
+		if not len(self.songs) > index:
 			return
 		dc.SetTextForeground(self.font_color)
 		dc.SetFont(self.font)
-		type,group_index,song = self.ui_songs[index]
+		type,group_index,song = self.songs[index]
 		songs_pos = rect.GetPosition()
 		songs_pos[1] = songs_pos[1] - self.OnMeasureItem(index) * group_index
 		songs_rect = wx.Rect(*(list(songs_pos)+list(rect.GetSize())))
@@ -151,6 +160,25 @@ class ViewBase(wx.VListBox):
 		except:
 			pass
 
+	def OnActivate(self,event):
+		""" catch double-click event. play the clicked song."""
+		index,n = self.GetFirstSelected()
+		self.play(index)
+
+	def OnClick(self,event):
+		""" detect focus song.
+
+		if focus song was changed, set new focused song.
+		"""
+		current = self.playlist.focused
+		index,n = self.GetFirstSelected()
+		if index > -1:
+			type,group_index,song = self.songs[index]
+			if type == 'song' and not song == current:
+				self.playlist.focused = song
+				return
+		event.Skip()
+
 	def OnKeysUp(self,event):
 		index,n = self.GetFirstSelected()
 		key = event.GetKeyCode()
@@ -164,20 +192,20 @@ class ViewBase(wx.VListBox):
 		index,n = self.GetFirstSelected()
 		key = event.GetKeyCode()
 		if key == wx.WXK_UP:
-			current_song = self.ui_songs[index][2]
+			current_song = self.songs[index][2]
 			pos = int(current_song[u'pos'])
 			if 0 < pos <= len(self.playlist)-1:
 				song = self.playlist[pos-1]
 				self.playlist.focused = song
 		elif key == wx.WXK_DOWN:
-			current_song = self.ui_songs[index][2]
+			current_song = self.songs[index][2]
 			pos = int(current_song[u'pos'])
 			if 0 <= pos < len(self.playlist)-1:
 				song = self.playlist[pos+1]
 				self.playlist.focused = song
 		elif key == wx.WXK_LEFT:
-			current_song = self.ui_songs[index][2]
-			uis = self.ui_songs[:index+1]
+			current_song = self.songs[index][2]
+			uis = self.songs[:index+1]
 			uis.reverse()
 			head_count = 0
 			for type,group_index,song in uis:
@@ -188,8 +216,8 @@ class ViewBase(wx.VListBox):
 			if song:
 				self.playlist.focused = song
 		elif key == wx.WXK_RIGHT:
-			current_song = self.ui_songs[index][2]
-			uis = self.ui_songs[index:]
+			current_song = self.songs[index][2]
+			uis = self.songs[index:]
 			head_count = 0
 			for type,group_index,song in uis:
 				if type == 'head':
@@ -210,6 +238,7 @@ class ViewBase(wx.VListBox):
 		self.PopupMenu(Menu(self))
 
 	def __selected_indexes(self):
+		"""Returns selected indexes in Playlist."""
 		index,n = self.GetFirstSelected()
 		items = []
 		while not index == wx.NOT_FOUND:
@@ -218,7 +247,8 @@ class ViewBase(wx.VListBox):
 		return items	
 	
 	def __selected(self):
-		songs = [self.ui_songs[index][2] for index in self.__selected_indexes()]
+		"""Returns selected songs in Playlist."""
+		songs = [self.songs[index][2] for index in self.__selected_indexes()]
 		return songs
 	selected = property(__selected)
 
@@ -411,19 +441,13 @@ class AlbumList(wx.ScrolledWindow):
 class View(ViewBase):
 	def __init__(self,parent,playlist,playback,debug=False):
 		text_height = environment.userinterface.text_height
-		ViewBase.__init__(self,parent,playlist,playback,
+		ViewBase.__init__(self,parent,playlist,playback,u'%album%',
 			text_height*3/2,2,6,debug)
 		self.active_background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT )
 		self.background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX)
 		self.artwork = artwork.Artwork()
 		self.artwork.size = (text_height*8,text_height*8)
 		self.artwork.bind(self.artwork.UPDATE,self.RefreshAll)
-
-	def head(self,song):
-		if song.has_key(u'album'):
-			return song[u'album']
-		else:
-			return '?'
 
 	def draw_background(self,dc,rect,index):
 		if self.IsSelected(index):
