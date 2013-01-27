@@ -34,7 +34,7 @@ class ViewBase(wx.VListBox):
 		self.playlist.bind(self.playlist.FOCUS,self.focus)
 		self.playback.bind(self.playback.UPDATE,self.refresh)
 		self.Bind(wx.EVT_LEFT_DCLICK,self.OnActivate)
-		self.Bind(wx.EVT_LEFT_UP,self.OnFocus)
+		self.Bind(wx.EVT_LEFT_UP,self.OnClick)
 		self.Bind(wx.EVT_KEY_DOWN,self.OnKeysDown)
 		self.Bind(wx.EVT_KEY_UP,self.OnKeysUp)
 		self.Bind(wx.EVT_RIGHT_UP,self.OnRightClick)
@@ -53,18 +53,25 @@ class ViewBase(wx.VListBox):
 		if self.__line_song.has_key(song_id):
 			self.RefreshLine(self.__line_song[song_id])
 
-		
-
 	def play(self,index):
+		""" play the given pos song.
+		"""
 		if len(self.songs) > index:
 			type,index,song = self.songs[index]
 			if song:
 				song.play()
 
 	def focus(self,*args,**kwargs):
+		""" Focuses and selects a given song pos in main thread.
+		"""
 		wx.CallAfter(self.__focus,self.playlist.focused)
 
 	def __focus(self,song):
+		""" Focuses and selects a given song pos.
+
+		Arguments:
+			song - client.Playlist.Song object.
+		"""
 		index,n = self.GetFirstSelected()
 		if index in self.songs and song == self.songs[index][2]:
 			return
@@ -126,8 +133,22 @@ class ViewBase(wx.VListBox):
 			song_count = song_count + 1
 		return (ui_songs,pos_line)
 
+	def __selected_indexes(self):
+		"""Returns selected indexes in Playlist."""
+		index,n = self.GetFirstSelected()
+		items = []
+		while not index == wx.NOT_FOUND:
+			items.append(index)
+			index,n = self.GetNextSelected(n)
+		return items	
+	
+	def __selected(self):
+		"""Returns selected songs in Playlist."""
+		songs = [self.songs[index][2] for index in self.__selected_indexes()]
+		return songs
 
 	def OnMeasureItem(self, index):
+		""" Returns ui row height."""
 		if len(self.songs) > index and self.songs[index][0] == 'head':
 			return self.__list_height * self.__list_head_size
 		else:
@@ -166,10 +187,7 @@ class ViewBase(wx.VListBox):
 		self.play(index)
 
 	def OnClick(self,event):
-		""" detect focus song.
-
-		if focus song was changed, set new focused song.
-		"""
+		""" catch click event. selects and focuses the clicked song."""
 		current = self.playlist.focused
 		index,n = self.GetFirstSelected()
 		if index > -1:
@@ -180,6 +198,7 @@ class ViewBase(wx.VListBox):
 		event.Skip()
 
 	def OnKeysUp(self,event):
+		""" catch key up event. return key to play the focused song."""
 		index,n = self.GetFirstSelected()
 		key = event.GetKeyCode()
 		if key == wx.WXK_RETURN:
@@ -188,7 +207,7 @@ class ViewBase(wx.VListBox):
 			event.Skip()
 
 	def OnKeysDown(self,event):
-		""" key down event. change focused item in playlist."""
+		""" catch key down event. change focused item in playlist."""
 		index,n = self.GetFirstSelected()
 		key = event.GetKeyCode()
 		if key == wx.WXK_UP:
@@ -230,6 +249,7 @@ class ViewBase(wx.VListBox):
 			event.Skip()
 
 	def OnRightClick(self,event):
+		""" catch right-click event. show menu for selected songs."""
 		index = self.HitTest(event.GetPosition())
 		selected = self.__selected_indexes()
 		if not index in selected:
@@ -237,19 +257,7 @@ class ViewBase(wx.VListBox):
 			self.SetSelection(index)
 		self.PopupMenu(Menu(self))
 
-	def __selected_indexes(self):
-		"""Returns selected indexes in Playlist."""
-		index,n = self.GetFirstSelected()
-		items = []
-		while not index == wx.NOT_FOUND:
-			items.append(index)
-			index,n = self.GetNextSelected(n)
-		return items	
-	
-	def __selected(self):
-		"""Returns selected songs in Playlist."""
-		songs = [self.songs[index][2] for index in self.__selected_indexes()]
-		return songs
+
 	selected = property(__selected)
 
 class Menu(wx.Menu):
