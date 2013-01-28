@@ -317,12 +317,12 @@ class View(ViewBase):
 	def draw_default(self,dc,rect,label,songs,index,depth):
 		diff = depth*self.text_height*2
 		left_pos = rect.GetPosition()
-		left_pos = [i+self.diff for i in left_pos]
+		left_pos = [left_pos[0]+self.text_height,left_pos[1]+self.diff]
 		left_pos = (left_pos[0]+diff,left_pos[1])
 		right_label = u'%i songs' % len(songs)
 		diff_right = rect.GetSize()[0] - dc.GetTextExtent(right_label)[0]
 		right_pos = rect.GetPosition()
-		right_pos = (right_pos[0]+diff_right-self.diff,right_pos[1]+self.diff)
+		right_pos = (right_pos[0]+diff_right-self.text_height,right_pos[1]+self.diff)
 		try:
 			dc.DrawText(label,*left_pos)
 			dc.DrawText(right_label,*right_pos)
@@ -333,7 +333,7 @@ class View(ViewBase):
 		if len(songs) == 0:
 			return
 		left,top = rect.GetPosition()
-		left = left + depth*self.text_height*2 + self.diff
+		left = left + depth*self.text_height*2 + self.text_height
 		top = top + self.diff
 		song = songs[0]
 		bmp = self.artwork[song]
@@ -358,7 +358,7 @@ class View(ViewBase):
 		song = songs[0]
 		diff = depth*self.text_height*2
 		left_pos = rect.GetPosition()
-		left_pos = (left_pos[0]+diff+self.diff,left_pos[1]+self.diff)
+		left_pos = (left_pos[0]+diff+self.text_height,left_pos[1]+self.diff)
 		left_label = song.format('%track_index% %title%')
 		right_label = song.format('%artist% %length%')
 		diff_right = rect.GetSize()[0] - dc.GetTextExtent(right_label)[0]
@@ -377,7 +377,7 @@ class View(ViewBase):
 		diff = depth*self.text_height*2
 		left_pos = rect.GetPosition()
 		diff = depth*self.text_height*2
-		left_pos = (left_pos[0]+diff+self.diff,left_pos[1]+self.diff)
+		left_pos = (left_pos[0]+diff+self.text_height,left_pos[1]+self.diff)
 		left_label = label
 		right_label = u''
 		diff_right = rect.GetSize()[0] - dc.GetTextExtent(right_label)[0]
