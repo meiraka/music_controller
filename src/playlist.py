@@ -260,24 +260,10 @@ class ViewBase(wx.VListBox):
 
 	selected = property(__selected)
 
-class Menu(wx.Menu):
-	def __init__(self,parent):
-		wx.Menu.__init__(self)
-		self.parent = parent
-		items = [u'get_info',u'remove']
-		self.__items = dict([(item,wx.NewId()) for item in items])
-		for item in items:
-			label = item.replace(u'_',' ')
-			self.Append(self.__items[item],label,label)
-			self.Bind(wx.EVT_MENU,getattr(self,item+'_item'),id=self.__items[item])
 
-	def get_info_item(self,event):
-		dialog.SongInfo(self.parent,self.parent.selected)
-
-	def remove_item(self,event):
-		for song in self.parent.selected:
-			song.remove()
-
+"""
+Show Playlist item by groups as image.
+"""
 class AlbumList(wx.ScrolledWindow):
 	def __init__(self,parent,playlist,playback,debug=False):
 		wx.ScrolledWindow.__init__(self,parent,style=wx.TAB_TRAVERSAL)
@@ -285,13 +271,12 @@ class AlbumList(wx.ScrolledWindow):
 		self.albums = []
 		self.__focused_index = -1
 		text_height = environment.userinterface.text_height
-		self.image_width = text_height * 10
-		self.box_size = (self.image_width,self.image_width)
-		self.SetMinSize((-1,self.image_width))
+		self.box_size = (text_height*10,text_height*11)    # item box size
+		self.scroll_block = text_height                    # 1 scroll width
+		self.SetMinSize((-1,self.box_size[1]))
 		self.Bind(wx.EVT_PAINT,self.OnPaint)
 		self.artwork = artwork.Artwork()
-		self.scroll_block = text_height
-		self.artwork.size = (text_height*8,text_height*8)
+		self.artwork.size = (text_height*8,text_height*8)  # image size
 		self.artwork.bind(self.artwork.UPDATE,self.update)
 		self.active_background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT )
 		self.background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX)
@@ -406,7 +391,7 @@ class AlbumList(wx.ScrolledWindow):
 
 	def __update_window_size(self):
 		self.SetScrollbars(self.scroll_block,self.scroll_block,
-			len(self.albums)*self.image_width/self.scroll_block,1)
+			len(self.albums)*self.box_size[0]/self.scroll_block,1)
 
 	def OnPaint(self,event):
 		dc = wx.BufferedPaintDC(self)
@@ -445,6 +430,27 @@ class AlbumList(wx.ScrolledWindow):
 		if not image:
 			image = self.artwork.empty
 		dc.DrawBitmap(image,x,y)
+
+"""
+Show menu for Song in Playlist.
+"""
+class Menu(wx.Menu):
+	def __init__(self,parent):
+		wx.Menu.__init__(self)
+		self.parent = parent
+		items = [u'get_info',u'remove']
+		self.__items = dict([(item,wx.NewId()) for item in items])
+		for item in items:
+			label = item.replace(u'_',' ')
+			self.Append(self.__items[item],label,label)
+			self.Bind(wx.EVT_MENU,getattr(self,item+'_item'),id=self.__items[item])
+
+	def get_info_item(self,event):
+		dialog.SongInfo(self.parent,self.parent.selected)
+
+	def remove_item(self,event):
+		for song in self.parent.selected:
+			song.remove()
 
 class View(ViewBase):
 	def __init__(self,parent,playlist,playback,debug=False):
