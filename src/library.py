@@ -100,6 +100,8 @@ class ViewBase(wx.VListBox):
 			self.__reset()
 			self.state = (row,0)
 		x,y = self.state
+		if not y+1 < len(self.settings[self.state[0]]):
+			return
 		key,key_y = self.items[y][row]
 		top = self.GetVisibleBegin()
 		songs = self.songs[y][key]
