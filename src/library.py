@@ -337,8 +337,14 @@ class View(ViewBase):
 		top = top + self.diff
 		song = songs[0]
 		bmp = self.artwork[song]
-		if bmp:
-			dc.DrawBitmap(bmp,left,top)
+		if not bmp:
+			bmp = self.artwork.empty
+		image_size = bmp.GetSize()
+		default_img_size = self.artwork.size
+		x,y = left,top
+		x = x + (default_img_size[0] - image_size[0]) / 2
+		y = y + (default_img_size[1] - image_size[1]) / 2
+		dc.DrawBitmap(bmp,x,y)
 		left = left + self.diff + self.artwork.size[0]
 		left_labels = []
 		left_labels.append(song.format(u'%album%'))
