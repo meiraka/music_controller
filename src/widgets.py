@@ -271,7 +271,7 @@ class AlbumList(wx.ScrolledWindow):
 		self.albums = []
 		self.__focused_index = -1
 		text_height = environment.userinterface.text_height
-		self.box_size = (text_height*10,text_height*11)    # item box size
+		self.box_size = (text_height*10,text_height*12)    # item box size
 		self.scroll_block = text_height                    # 1 scroll width
 		self.SetMinSize((-1,self.box_size[1]))
 		self.Bind(wx.EVT_PAINT,self.OnPaint)
@@ -419,7 +419,12 @@ class AlbumList(wx.ScrolledWindow):
 			color = self.background_color
 		dc.SetBrush(wx.Brush(color))
 		dc.SetPen(wx.Pen(color))
-		dc.DrawRectangle(*rect)
+		x,y,w,h = rect
+		color = self.background_color
+		dc.DrawRectangle(x,y,w,w)
+		dc.SetBrush(wx.Brush(color))
+		dc.SetPen(wx.Pen(color))
+		dc.DrawRectangle(x,y+w,w,h-w)
 
 	def draw_album(self,index,song,dc,rect):
 		x,y,w,h = rect
