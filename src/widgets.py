@@ -255,7 +255,7 @@ class SingleColumnPlaylist(wx.VListBox):
 		if not index in selected:
 			self.DeselectAll()
 			self.SetSelection(index)
-		self.PopupMenu(Menu(self))
+		self.PopupMenu(PlaylistMenu(self))
 
 
 	selected = property(__selected)
@@ -439,7 +439,7 @@ class AlbumList(wx.ScrolledWindow):
 """
 Show menu for Song in Playlist.
 """
-class Menu(wx.Menu):
+class PlaylistMenu(wx.Menu):
 	def __init__(self,parent):
 		wx.Menu.__init__(self)
 		self.parent = parent
