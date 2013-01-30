@@ -90,12 +90,18 @@ class SingleColumnPlaylist(widgets.SingleColumnPlaylist):
 
 	def draw_songs(self,dc,rect,song):
 		bmp = self.artwork[song]
+		if not bmp:
+			bmp = self.artwork.empty
 		if bmp:
 			image_size = bmp.GetSize()
 			default_img_size = self.artwork.size
 			image_pos = rect.GetPosition()
 			image_pos = [i+environment.userinterface.text_height/2 for i in image_pos]
 			x,y = image_pos
+			x = x + (default_img_size[0] - image_size[0]) / 2
+			y = y + (default_img_size[1] - image_size[1]) / 2
+			dc.DrawBitmap(bmp,x,y)
+
 
 class AlbumList(widgets.AlbumList):
 	pass

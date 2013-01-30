@@ -184,8 +184,8 @@ class SingleColumnPlaylist(wx.VListBox):
 					self.draw_song(dc,rect,index,song,group_index)
 			else:
 				self.draw_head(dc,rect,index,song)
-		except:
-			pass
+		except Exception,err:
+			print err
 
 	def OnActivate(self,event):
 		""" catch double-click event. play the clicked song."""
@@ -309,7 +309,8 @@ class AlbumList(wx.ScrolledWindow):
 		index = x/w
 		if not self.__focused_index == index:
 			self.playlist.focused = self.albums[index]
-			self.selected = self.group_songs[index]
+		if -1 < self.__focused_index < len(self.group_songs):
+			self.selected = self.group_songs[self.__focused_index]
 		self.PopupMenu(PlaylistMenu(self))
 
 
