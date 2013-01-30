@@ -18,6 +18,7 @@ class SingleColumnPlaylist(wx.VListBox):
 		# generates by this ui.
 		self.songs = []       # playlist struct
 		self.__line_song = {} # key=line index value=song
+		self.groups = []
 		# sets by this ui and another playlist ui.
 		self.__focused = None
 		self.__selected = []
@@ -57,7 +58,7 @@ class SingleColumnPlaylist(wx.VListBox):
 		""" play the given pos song.
 		"""
 		if len(self.songs) > index:
-			type,index,song = self.songs[index]
+			song = self.songs[index][3]
 			if song:
 				song.play()
 
@@ -73,12 +74,12 @@ class SingleColumnPlaylist(wx.VListBox):
 			song - client.Playlist.Song object.
 		"""
 		index,n = self.GetFirstSelected()
-		if index in self.songs and song == self.songs[index][2]:
+		if index in self.songs and song == self.songs[index][3]:
 			return
 		if index > -1 and not self.IsVisible(index):
 			self.Select(0,True)
 		self.DeselectAll()
-		for index,(t,i,s) in enumerate(self.songs):
+		for index,(t,g,i,s) in enumerate(self.songs):
 			if t == 'song' and s == song:
 				self.Select(index,True)
 				if not self.IsVisible(index):
@@ -95,7 +96,7 @@ class SingleColumnPlaylist(wx.VListBox):
 		generates new playlist struct
 		and focuses current song.
 		"""
-		self.songs,self.__line_song = self.__generate_playlist_struct()
+		self.songs,self.__line_song,self.groups = self.__generate_playlist_struct()
 		self.SetItemCount(len(self.songs))
 		self.focus()
 
@@ -103,35 +104,40 @@ class SingleColumnPlaylist(wx.VListBox):
 		""" Generates list struct for this playlist ui.
 
 		returns:
-			(playlist struct, playlist index-song dict)
+			(playlist struct, playlist index-song dict,playlist groups)
 
 		playlist struct is:
 		[
 			(
 				string line type,
-				int index starts at 'head' type,
+				int group_pos count of 'head'
+				int group_index starts at 'head' type
 				client.Playlist.Song object
 			)
 		]
 		"""
 		head = u''        #group key
 		song_count = 0
+		group_count = 0
 		ui_songs = []
 		pos_line = {}
+		groups = []
 		old_song = None
 		for song in self.playlist:
 			new_head = song.format(self.__head_format)
 			if not head == new_head:
 				head = new_head
+				groups.append(song)
+				group_count = len(groups)-1
 				if ui_songs and song_count < self.__list_min_row and old_song:
-					ui_songs.extend([('nop',i+song_count,old_song) for i in xrange(self.__list_min_row-song_count)])
+					ui_songs.extend([('nop',group_count,i+song_count,old_song) for i in xrange(self.__list_min_row-song_count)])
 				song_count = 0
-				ui_songs.append(('head',0,song))
+				ui_songs.append(('head',group_count,0,song))
 			pos_line[song[u'pos']] = len(ui_songs)
-			ui_songs.append(('song',song_count,song))
+			ui_songs.append(('song',group_count,song_count,song))
 			old_song = song
 			song_count = song_count + 1
-		return (ui_songs,pos_line)
+		return (ui_songs,pos_line,groups)
 
 	def __selected_indexes(self):
 		"""Returns selected indexes in Playlist."""
@@ -144,7 +150,7 @@ class SingleColumnPlaylist(wx.VListBox):
 	
 	def __selected(self):
 		"""Returns selected songs in Playlist."""
-		songs = [self.songs[index][2] for index in self.__selected_indexes()]
+		songs = [self.songs[index][3] for index in self.__selected_indexes()]
 		return songs
 
 	def OnMeasureItem(self, index):
@@ -162,7 +168,7 @@ class SingleColumnPlaylist(wx.VListBox):
 			return
 		dc.SetTextForeground(self.font_color)
 		dc.SetFont(self.font)
-		type,group_index,song = self.songs[index]
+		type,group_pos,group_index,song = self.songs[index]
 		songs_pos = rect.GetPosition()
 		songs_pos[1] = songs_pos[1] - self.OnMeasureItem(index) * group_index
 		songs_rect = wx.Rect(*(list(songs_pos)+list(rect.GetSize())))
@@ -191,7 +197,7 @@ class SingleColumnPlaylist(wx.VListBox):
 		current = self.playlist.focused
 		index,n = self.GetFirstSelected()
 		if index > -1:
-			type,group_index,song = self.songs[index]
+			type,group_pos,group_index,song = self.songs[index]
 			if type == 'song' and not song == current:
 				self.playlist.focused = song
 				return
@@ -211,39 +217,26 @@ class SingleColumnPlaylist(wx.VListBox):
 		index,n = self.GetFirstSelected()
 		key = event.GetKeyCode()
 		if key == wx.WXK_UP:
-			current_song = self.songs[index][2]
+			current_song = self.songs[index][3]
 			pos = int(current_song[u'pos'])
 			if 0 < pos <= len(self.playlist)-1:
 				song = self.playlist[pos-1]
 				self.playlist.focused = song
 		elif key == wx.WXK_DOWN:
-			current_song = self.songs[index][2]
+			current_song = self.songs[index][3]
 			pos = int(current_song[u'pos'])
 			if 0 <= pos < len(self.playlist)-1:
 				song = self.playlist[pos+1]
 				self.playlist.focused = song
 		elif key == wx.WXK_LEFT:
-			current_song = self.songs[index][2]
-			uis = self.songs[:index+1]
-			uis.reverse()
-			head_count = 0
-			for type,group_index,song in uis:
-				if type == 'head':
-					head_count = head_count + 1
-				if head_count == 2:
-					break
-			if song:
+			type,group_pos,group_index,song = self.songs[index]
+			if 0 < group_pos <= len(self.groups)-1:
+				song = self.groups[group_pos-1]
 				self.playlist.focused = song
 		elif key == wx.WXK_RIGHT:
-			current_song = self.songs[index][2]
-			uis = self.songs[index:]
-			head_count = 0
-			for type,group_index,song in uis:
-				if type == 'head':
-					head_count = head_count + 1
-				if head_count == 1:
-					break
-			if song:
+			type,group_pos,group_index,song = self.songs[index]
+			if 0 <= group_pos < len(self.groups)-1:
+				song = self.groups[group_pos+1]
 				self.playlist.focused = song
 		else:
 			event.Skip()
@@ -269,6 +262,8 @@ class AlbumList(wx.ScrolledWindow):
 		wx.ScrolledWindow.__init__(self,parent,style=wx.TAB_TRAVERSAL)
 		self.playlist = playlist
 		self.albums = []
+		self.group_songs = []
+		self.selected = []
 		self.__focused_index = -1
 		text_height = environment.userinterface.text_height
 		self.box_size = (text_height*10,text_height*12)    # item box size
@@ -286,6 +281,7 @@ class AlbumList(wx.ScrolledWindow):
 		self.playlist.bind(self.playlist.FOCUS, self.focus)
 		self.Bind(wx.EVT_LEFT_DCLICK,self.OnActivate)
 		self.Bind(wx.EVT_LEFT_UP,    self.OnClick)
+		self.Bind(wx.EVT_RIGHT_UP,   self.OnRightClick)
 		self.Bind(wx.EVT_KEY_UP,     self.OnKeysUp)
 		self.Bind(wx.EVT_KEY_DOWN,   self.OnKeysDown)
 
@@ -304,6 +300,19 @@ class AlbumList(wx.ScrolledWindow):
 		index = x/w
 		if not self.__focused_index == index:
 			self.playlist.focused = self.albums[index]
+
+	def OnRightClick(self,event):
+		""" catch right-click event. show menu for selected songs."""
+		mouse = event.GetPosition()
+		x,y = self.CalcUnscrolledPosition(mouse)
+		w,h = self.box_size
+		index = x/w
+		if not self.__focused_index == index:
+			self.playlist.focused = self.albums[index]
+			self.selected = self.group_songs[index]
+		self.PopupMenu(PlaylistMenu(self))
+
+
 
 	def OnKeysUp(self,event):
 		""" Key up event. 
@@ -325,20 +334,24 @@ class AlbumList(wx.ScrolledWindow):
 		if key == wx.WXK_LEFT:
 			if 0 < self.__focused_index <= len(self.albums)-1:
 				self.__focused_index = self.__focused_index -1
+				self.selected = self.group_songs[self.__focused_index]
 				self.playlist.focused = self.albums[self.__focused_index]
 		elif key == wx.WXK_RIGHT:
 			if 0 <= self.__focused_index < len(self.albums)-1:
 				self.__focused_index = self.__focused_index + 1
+				self.selected = self.group_songs[self.__focused_index]
 				self.playlist.focused = self.albums[self.__focused_index]
 		elif key == wx.WXK_UP:
 			song = self.playlist.focused
 			pos = int(song[u'pos'])
 			if 0 < pos <= len(self.playlist)-1:
+				self.selected = self.group_songs[self.__focused_index]
 				self.playlist.focused = self.playlist[pos-1]
 		elif key == wx.WXK_DOWN:
 			song = self.playlist.focused
 			pos = int(song[u'pos'])
 			if 0 <= pos < len(self.playlist)-1:
+				self.selected = self.group_songs[self.__focused_index]
 				self.playlist.focused = self.playlist[pos+1]
 		else:
 			event.Skip()
@@ -381,11 +394,15 @@ class AlbumList(wx.ScrolledWindow):
 	def __update_album_list(self):
 		last_album = None
 		albums = []
+		group_songs = []
 		for song in self.playlist:
 			if not last_album == song.format('%album%'):
 				last_album = song.format('%album%')
 				albums.append(song)
+				group_songs.append([])
+			group_songs[-1].append(song)
 		self.albums = albums
+		self.group_songs = group_songs
 		wx.CallAfter(self.__update_window_size)
 		wx.CallAfter(self.focus)
 
