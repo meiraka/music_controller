@@ -1,7 +1,6 @@
 import wx
 
 import toolbar
-import playlist
 import library
 import info
 import lyrics
