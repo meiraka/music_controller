@@ -1,13 +1,13 @@
 import wx
 
 import toolbar
+import playlist
 import library
 import info
 import lyrics
 import menubar
 import preferences
 import environment
-import view
 from client import Object 
 
 class Frame(wx.Frame,Object):
@@ -29,11 +29,11 @@ class Frame(wx.Frame,Object):
 		self.SetMenuBar(self.menubar)
 		self.toolbar = toolbar.Toolbar(self,self.client)
 
-		self.playlist = view.SingleColumnPlaylist(self,self.client.playlist,
+		self.playlist = playlist.HeaderPlaylist(self,self.client.playlist,
 				self.client.playback,debug)
 		self.library = library.View(self,self.client.library,
 				self.client.playlist,debug)
-		self.albumlist = view.AlbumList(self,self.client.playlist,
+		self.albumlist = playlist.AlbumList(self,self.client.playlist,
 				self.client.playback,debug)
 		self.info = info.Info(self,self.client,debug)
 		self.connection = preferences.Connection(self,self.client)
