@@ -12,7 +12,7 @@ Architecture: all
 XB-Python-Version: ${python:Versions}
 Depends: ${python:Depends}, ${misc:Depends}, python-wxgtk2.8, python-rsvg, python-mpd
 Description: Pretty client for MusicPlayerDaemon.
- MusicController is a client for MusicPlayerDaemon.
+ MusicController controls MusicPlayerDaemon.
  Features:
   * Artwork
   * Timetag lyric (LRC)
