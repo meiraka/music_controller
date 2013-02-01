@@ -11,8 +11,9 @@ Package: music-controller
 Architecture: all
 XB-Python-Version: ${python:Versions}
 Depends: ${python:Depends}, ${misc:Depends}, python-wxgtk2.8, python-rsvg, python-mpd
-Description: MPD client which written in wxPython
+Description: Pretty client for MusicPlayerDaemon.
  MusicController is a client for MusicPlayerDaemon.
  Features:
   * Artwork
-  * timetag lyric (LRC)
+  * Timetag lyric (LRC)
+  * Auto reconnection.
