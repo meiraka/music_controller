@@ -9,6 +9,9 @@ import environment
 import dialog
 
 class HeaderPlaylistBase(wx.VListBox):
+	"""
+	Show playlist with album header.
+	"""
 	def __init__(self,parent,playlist,playback,head_format,
 			list_height,list_head_size,list_min_low,debug=False):
 		wx.VListBox.__init__(self,parent,-1,style=wx.LB_MULTIPLE)
@@ -29,16 +32,17 @@ class HeaderPlaylistBase(wx.VListBox):
 		self.__list_min_row = list_min_low
 		self.__debug = debug
 
-		self.font = environment.userinterface.font
-		self.font_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOXTEXT)
-		self.playlist.bind(self.playlist.UPDATE,self.update_playlist)
-		self.playlist.bind(self.playlist.FOCUS,self.focus)
-		self.playback.bind(self.playback.UPDATE,self.refresh)
+		self.__font = environment.userinterface.font
+		self.__font_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOXTEXT)
+
+		self.playlist.bind(self.playlist.UPDATE, self.update_playlist)
+		self.playlist.bind(self.playlist.FOCUS,  self.focus)
+		self.playback.bind(self.playback.UPDATE, self.refresh)
 		self.Bind(wx.EVT_LEFT_DCLICK,self.OnActivate)
-		self.Bind(wx.EVT_LEFT_UP,self.OnClick)
-		self.Bind(wx.EVT_KEY_DOWN,self.OnKeysDown)
-		self.Bind(wx.EVT_KEY_UP,self.OnKeysUp)
-		self.Bind(wx.EVT_RIGHT_UP,self.OnRightClick)
+		self.Bind(wx.EVT_LEFT_UP,    self.OnClick)
+		self.Bind(wx.EVT_RIGHT_UP,   self.OnRightClick)
+		self.Bind(wx.EVT_KEY_DOWN,   self.OnKeysDown)
+		self.Bind(wx.EVT_KEY_UP,     self.OnKeysUp)
 
 	def refresh(self,*args):
 		""" Refreashes current playing song pos in main thread."""
@@ -56,6 +60,9 @@ class HeaderPlaylistBase(wx.VListBox):
 
 	def play(self,index):
 		""" play the given pos song.
+
+		Arguments:
+			index - playlist song pos.
 		"""
 		if len(self.songs) > index:
 			song = self.songs[index][3]
@@ -85,6 +92,7 @@ class HeaderPlaylistBase(wx.VListBox):
 				if not self.IsVisible(index):
 					self.ScrollLines(index)
 				break
+
 	def update_playlist(self,*args,**kwargs):
 		""" Updates playlist view in main thread.
 		"""
@@ -164,10 +172,16 @@ class HeaderPlaylistBase(wx.VListBox):
 		self.draw_background(dc,rect,index)
 
 	def OnDrawItem(self,dc,rect,index):
+		""" Draws given line index.
+
+		calls draw_head if line type is head
+		calls draw_song and draw_songs if line type is song
+		calls draw_nothing draw_songs if line type is nop
+		"""
 		if not len(self.songs) > index:
 			return
-		dc.SetTextForeground(self.font_color)
-		dc.SetFont(self.font)
+		dc.SetTextForeground(self.__font_color)
+		dc.SetFont(self.__font)
 		type,group_pos,group_index,song = self.songs[index]
 		songs_pos = rect.GetPosition()
 		songs_pos[1] = songs_pos[1] - self.OnMeasureItem(index) * group_index
@@ -188,12 +202,16 @@ class HeaderPlaylistBase(wx.VListBox):
 			print err
 
 	def OnActivate(self,event):
-		""" catch double-click event. play the clicked song."""
+		""" catch double-click event.
+		play the clicked song.
+		"""
 		index,n = self.GetFirstSelected()
 		self.play(index)
 
 	def OnClick(self,event):
-		""" catch click event. selects and focuses the clicked song."""
+		""" catch click event.
+		selects and focuses the clicked song.
+		"""
 		current = self.playlist.focused
 		index,n = self.GetFirstSelected()
 		if index > -1:
@@ -203,8 +221,21 @@ class HeaderPlaylistBase(wx.VListBox):
 				return
 		event.Skip()
 
+	def OnRightClick(self,event):
+		""" catch right-click event. 
+		show menu for selected songs.
+		"""
+		index = self.HitTest(event.GetPosition())
+		selected = self.__selected_indexes()
+		if not index in selected:
+			self.DeselectAll()
+			self.SetSelection(index)
+		self.PopupMenu(PlaylistMenu(self))
+
 	def OnKeysUp(self,event):
-		""" catch key up event. return key to play the focused song."""
+		""" catch key up event.
+		return key to play the focused song.
+		"""
 		index,n = self.GetFirstSelected()
 		key = event.GetKeyCode()
 		if key == wx.WXK_RETURN:
@@ -213,7 +244,9 @@ class HeaderPlaylistBase(wx.VListBox):
 			event.Skip()
 
 	def OnKeysDown(self,event):
-		""" catch key down event. change focused item in playlist."""
+		""" catch key down event.
+		change focused item in playlist.
+		"""
 		index,n = self.GetFirstSelected()
 		key = event.GetKeyCode()
 		if key == wx.WXK_UP:
@@ -241,41 +274,26 @@ class HeaderPlaylistBase(wx.VListBox):
 		else:
 			event.Skip()
 
-	def OnRightClick(self,event):
-		""" catch right-click event. show menu for selected songs."""
-		index = self.HitTest(event.GetPosition())
-		selected = self.__selected_indexes()
-		if not index in selected:
-			self.DeselectAll()
-			self.SetSelection(index)
-		self.PopupMenu(PlaylistMenu(self))
-
-
 	selected = property(__selected)
 
 
-"""
-Show Playlist item by groups as image.
-"""
 class AlbumListBase(wx.ScrolledWindow):
-	def __init__(self,parent,playlist,playback,debug=False):
+	"""
+	Show Playlist item by groups as image.
+
+	Overrides draw_background and draw_album to show items.
+	"""
+	def __init__(self,parent,playlist,playback,box_size,scroll_block,debug=False):
 		wx.ScrolledWindow.__init__(self,parent,style=wx.TAB_TRAVERSAL)
 		self.playlist = playlist
 		self.albums = []
 		self.group_songs = []
 		self.selected = []
 		self.__focused_index = -1
-		text_height = environment.userinterface.text_height
-		self.box_size = (text_height*10,text_height*12)    # item box size
-		self.scroll_block = text_height                    # 1 scroll width
+		self.box_size = box_size    # item box size
+		self.scroll_block = scroll_block                    # 1 scroll width
 		self.SetMinSize((-1,self.box_size[1]))
 		self.Bind(wx.EVT_PAINT,self.OnPaint)
-		self.artwork = artwork.Artwork()
-		self.artwork.size = (text_height*8,text_height*8)  # image size
-		self.artwork.bind(self.artwork.UPDATE,self.update)
-		self.active_background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT )
-		self.background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX)
-		self.SetBackgroundColour(self.background_color)
 		thread.start_new_thread(self.__update_album_list,())
 		self.playlist.bind(self.playlist.UPDATE,self.__update_album_list)
 		self.playlist.bind(self.playlist.FOCUS, self.focus)
@@ -285,79 +303,42 @@ class AlbumListBase(wx.ScrolledWindow):
 		self.Bind(wx.EVT_KEY_UP,     self.OnKeysUp)
 		self.Bind(wx.EVT_KEY_DOWN,   self.OnKeysDown)
 
-	def OnActivate(self,event):
-		mouse = event.GetPosition()
-		x,y = self.CalcUnscrolledPosition(mouse)
+	def is_selected(self,index):
+		return self.__focused_index == index
+
+	def update(self):
+		dc = wx.ClientDC(self)
+		dc = wx.BufferedDC(dc)
+		self.update_canvas(dc)
+
+	def update_canvas(self,dc):
 		w,h = self.box_size
-		index = x/w
-		song = self.albums[index]
-		song.play()
-	
-	def OnClick(self,event):
-		mouse = event.GetPosition()
-		x,y = self.CalcUnscrolledPosition(mouse)
-		w,h = self.box_size
-		index = x/w
-		if not self.__focused_index == index:
-			self.playlist.focused = self.albums[index]
+		size_w,size_h = self.GetSize()
+		for index,song in enumerate(self.albums):
+			x,y = self.CalcScrolledPosition(index*w,0)
+			if 0-w < x < size_w and 0-h < y < size_h:
+				rect = (x,y,w,h)
+				self.draw_background(index,song,dc,rect)
+				self.draw_album(index,song,dc,rect)
 
-	def OnRightClick(self,event):
-		""" catch right-click event. show menu for selected songs."""
-		mouse = event.GetPosition()
-		x,y = self.CalcUnscrolledPosition(mouse)
-		w,h = self.box_size
-		index = x/w
-		if not self.__focused_index == index:
-			self.playlist.focused = self.albums[index]
-		if -1 < self.__focused_index < len(self.group_songs):
-			self.selected = self.group_songs[self.__focused_index]
-		self.PopupMenu(PlaylistMenu(self))
+	def __update_album_list(self):
+		last_album = None
+		albums = []
+		group_songs = []
+		for song in self.playlist:
+			if not last_album == song.format('%album%'):
+				last_album = song.format('%album%')
+				albums.append(song)
+				group_songs.append([])
+			group_songs[-1].append(song)
+		self.albums = albums
+		self.group_songs = group_songs
+		wx.CallAfter(self.__update_window_size)
+		wx.CallAfter(self.focus)
 
-
-
-	def OnKeysUp(self,event):
-		""" Key up event. 
-		press return key to play the focused album's song.
-		"""
-		key = event.GetKeyCode()
-		if key == wx.WXK_RETURN:
-			song = self.albums[self.__focused_index]
-			song.play()
-		else:
-			event.Skip()
-
-
-	def OnKeysDown(self,event):
-		""" Key down event.
-		change song forcus.
-		"""
-		key = event.GetKeyCode()
-		if key == wx.WXK_LEFT:
-			if 0 < self.__focused_index <= len(self.albums)-1:
-				self.__focused_index = self.__focused_index -1
-				self.selected = self.group_songs[self.__focused_index]
-				self.playlist.focused = self.albums[self.__focused_index]
-		elif key == wx.WXK_RIGHT:
-			if 0 <= self.__focused_index < len(self.albums)-1:
-				self.__focused_index = self.__focused_index + 1
-				self.selected = self.group_songs[self.__focused_index]
-				self.playlist.focused = self.albums[self.__focused_index]
-		elif key == wx.WXK_UP:
-			song = self.playlist.focused
-			pos = int(song[u'pos'])
-			if 0 < pos <= len(self.playlist)-1:
-				self.selected = self.group_songs[self.__focused_index]
-				self.playlist.focused = self.playlist[pos-1]
-		elif key == wx.WXK_DOWN:
-			song = self.playlist.focused
-			pos = int(song[u'pos'])
-			if 0 <= pos < len(self.playlist)-1:
-				self.selected = self.group_songs[self.__focused_index]
-				self.playlist.focused = self.playlist[pos+1]
-		else:
-			event.Skip()
-		
-		
+	def __update_window_size(self):
+		self.SetScrollbars(self.scroll_block,self.scroll_block,
+			len(self.albums)*self.box_size[0]/self.scroll_block,1)
 
 	def focus(self):
 		def __scroll(self,index):
@@ -390,73 +371,87 @@ class AlbumListBase(wx.ScrolledWindow):
 		wx.CallAfter(self.update)
 		if index > -1:
 			wx.CallAfter(__scroll,self,index)
-	
-
-	def __update_album_list(self):
-		last_album = None
-		albums = []
-		group_songs = []
-		for song in self.playlist:
-			if not last_album == song.format('%album%'):
-				last_album = song.format('%album%')
-				albums.append(song)
-				group_songs.append([])
-			group_songs[-1].append(song)
-		self.albums = albums
-		self.group_songs = group_songs
-		wx.CallAfter(self.__update_window_size)
-		wx.CallAfter(self.focus)
-
-	def __update_window_size(self):
-		self.SetScrollbars(self.scroll_block,self.scroll_block,
-			len(self.albums)*self.box_size[0]/self.scroll_block,1)
 
 	def OnPaint(self,event):
 		dc = wx.BufferedPaintDC(self)
 		self.update_canvas(dc)
 
-	def update(self):
-		dc = wx.ClientDC(self)
-		dc = wx.BufferedDC(dc)
-		self.update_canvas(dc)
-
-	def update_canvas(self,dc):
+	def OnActivate(self,event):
+		""" catch double-click event.
+		play the clicked song.
+		"""
+		mouse = event.GetPosition()
+		x,y = self.CalcUnscrolledPosition(mouse)
 		w,h = self.box_size
-		size_w,size_h = self.GetSize()
-		for index,song in enumerate(self.albums):
-			x,y = self.CalcScrolledPosition(index*w,0)
-			if 0-w < x < size_w and 0-h < y < size_h:
-				rect = (x,y,w,h)
-				self.draw_background(index,song,dc,rect)
-				self.draw_album(index,song,dc,rect)
+		index = x/w
+		song = self.albums[index]
+		song.play()
+	
+	def OnClick(self,event):
+		""" catch click event.
+		selects and focuses the clicked song.
+		"""
+		mouse = event.GetPosition()
+		x,y = self.CalcUnscrolledPosition(mouse)
+		w,h = self.box_size
+		index = x/w
+		if not self.__focused_index == index:
+			self.playlist.focused = self.albums[index]
 
-	def draw_background(self,index,song,dc,rect):
-		if index == self.__focused_index:
-			color = self.active_background_color
+	def OnRightClick(self,event):
+		""" catch right-click event. 
+		show menu for selected songs.
+		"""
+		mouse = event.GetPosition()
+		x,y = self.CalcUnscrolledPosition(mouse)
+		w,h = self.box_size
+		index = x/w
+		if not self.__focused_index == index:
+			self.playlist.focused = self.albums[index]
+		if -1 < self.__focused_index < len(self.group_songs):
+			self.selected = self.group_songs[self.__focused_index]
+		self.PopupMenu(PlaylistMenu(self))
+
+	def OnKeysUp(self,event):
+		""" Key up event. 
+		press return key to play the focused album's song.
+		"""
+		key = event.GetKeyCode()
+		if key == wx.WXK_RETURN:
+			song = self.albums[self.__focused_index]
+			song.play()
 		else:
-			color = self.background_color
-		dc.SetBrush(wx.Brush(color))
-		dc.SetPen(wx.Pen(color))
-		x,y,w,h = rect
-		color = self.background_color
-		dc.DrawRectangle(x,y,w,w)
-		dc.SetBrush(wx.Brush(color))
-		dc.SetPen(wx.Pen(color))
-		dc.DrawRectangle(x,y+w,w,h-w)
+			event.Skip()
 
-	def draw_album(self,index,song,dc,rect):
-		x,y,w,h = rect
-		text_height = environment.userinterface.text_height
-		x = x + text_height*1
-		y = y + text_height*1
-		image = self.artwork[song]
-		if not image:
-			image = self.artwork.empty
-		image_size = image.GetSize()
-		default_img_size = self.artwork.size
-		x = x + (default_img_size[0] - image_size[0]) / 2
-		y = y + (default_img_size[1] - image_size[1]) / 2
-		dc.DrawBitmap(image,x,y)
+	def OnKeysDown(self,event):
+		""" Key down event.
+		change song forcus.
+		"""
+		key = event.GetKeyCode()
+		if key == wx.WXK_LEFT:
+			if 0 < self.__focused_index <= len(self.albums)-1:
+				self.__focused_index = self.__focused_index -1
+				self.selected = self.group_songs[self.__focused_index]
+				self.playlist.focused = self.albums[self.__focused_index]
+		elif key == wx.WXK_RIGHT:
+			if 0 <= self.__focused_index < len(self.albums)-1:
+				self.__focused_index = self.__focused_index + 1
+				self.selected = self.group_songs[self.__focused_index]
+				self.playlist.focused = self.albums[self.__focused_index]
+		elif key == wx.WXK_UP:
+			song = self.playlist.focused
+			pos = int(song[u'pos'])
+			if 0 < pos <= len(self.playlist)-1:
+				self.selected = self.group_songs[self.__focused_index]
+				self.playlist.focused = self.playlist[pos-1]
+		elif key == wx.WXK_DOWN:
+			song = self.playlist.focused
+			pos = int(song[u'pos'])
+			if 0 <= pos < len(self.playlist)-1:
+				self.selected = self.group_songs[self.__focused_index]
+				self.playlist.focused = self.playlist[pos+1]
+		else:
+			event.Skip()
 
 
 class PlaylistMenu(wx.Menu):
@@ -575,4 +570,46 @@ class HeaderPlaylist(HeaderPlaylistBase):
 
 
 class AlbumList(AlbumListBase):
-	pass
+	def __init__(self,parent,playlist,playback,debug=False):
+		text_height = environment.userinterface.text_height
+		box_size = (text_height*10,text_height*12)
+		scroll_block = text_height
+		self.artwork = artwork.Artwork()
+		self.artwork.size = (text_height*8,text_height*8)  # image size
+		self.artwork.bind(self.artwork.UPDATE,self.update)
+		self.active_background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT )
+		self.background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX)
+		AlbumListBase.__init__(self,parent,playlist,
+				playback,box_size,scroll_block,debug)
+		self.SetBackgroundColour(self.background_color)
+
+
+	def draw_background(self,index,song,dc,rect):
+		if self.is_selected(index):
+			color = self.active_background_color
+		else:
+			color = self.background_color
+		dc.SetBrush(wx.Brush(color))
+		dc.SetPen(wx.Pen(color))
+		x,y,w,h = rect
+		color = self.background_color
+		dc.DrawRectangle(x,y,w,w)
+		dc.SetBrush(wx.Brush(color))
+		dc.SetPen(wx.Pen(color))
+		dc.DrawRectangle(x,y+w,w,h-w)
+
+	def draw_album(self,index,song,dc,rect):
+		x,y,w,h = rect
+		text_height = environment.userinterface.text_height
+		x = x + text_height*1
+		y = y + text_height*1
+		image = self.artwork[song]
+		if not image:
+			image = self.artwork.empty
+		image_size = image.GetSize()
+		default_img_size = self.artwork.size
+		x = x + (default_img_size[0] - image_size[0]) / 2
+		y = y + (default_img_size[1] - image_size[1]) / 2
+		dc.DrawBitmap(image,x,y)
+	
+
