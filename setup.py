@@ -8,29 +8,14 @@ import os
 import sys
 import glob
 import subprocess
-from setuptools import setup
-
+import setuptools
+import src.version as version
 
 def get_command_out(command):
 	try:
 		return subprocess.check_output(command.split(' '))[:-1]
 	except:
 		return ''
-
-def generate_build_info():
-	""" Returns Builder information."""
-	data = dict(
-		user = get_command_out('whoami'),
-		host = get_command_out('hostname'),
-		revision = get_rev()
-		)
-	build_info = '\n'.join(['%s = "%s"' % (k,v) for k,v in data.iteritems()])
-	print build_info
-	f = open('src/buildinfo.py','w')
-	f.write(build_info)
-
-def delete_build_info():
-	os.remove('src/buildinfo.py')
 
 def get_rev():
 	""" Returns Mercurial CVS rev."""
@@ -43,59 +28,7 @@ def get_rev():
 	else:
 		return ''
 
-def get_options():
-	""" Returns Mac app options."""
-	returns = {}
-	from plistlib import Plist
-	PLIST = Plist.fromFile('osx/Info.plist')
-	PLIST.update ( dict(
-			CFBundleShortVersionString = version.__version__+':'+get_rev(),
-			NSHumanReadableCopyright = u"Copyright 2012 mei raka",
-			))
-	
-	app_option = dict(
-			plist=PLIST
-			#iconfile='resources/osx/icon.icns'
-			)
-	returns['py2app'] = app_option
-	
-	return returns
-
-import src.version as version
-
-
-def get_pair(pair,base):
-	lis = []
-	for filename in os.listdir(base):
-		if os.path.isdir(base+'/'+filename):
-			get_pair(pair,base+'/'+filename)
-		else:
-			lis.append(base+'/'+filename)
-	pair.append((base,lis))
-	pair.reverse()
-	return pair
-
-generate_build_info()
-resources_pair = []
-locale_pair = []
-
-setup_args = {}
-setup_args['packages'] = ['MusicController']
-setup_args['package_dir'] = {'MusicController':'src'}
-setup_args['data_files'] = [('bin',['music-controller'])]
-setup_args['setup_requires'] = ['python-mpd']
-
-if sys.argv.count('py2app'):
-	setup_args['app'] = ['src/__main__.py']
-	setup_args['setup_requires'].append('py2app')
-	setup_args['options'] = get_options()
-
-if not sys.argv.count('test'):
-	setup(name='MusicController',
-		version=version.__version__,
-		author='mei raka',
-		**setup_args)
-else:
+def test():
 	sys.path.append(os.path.abspath('src'))
 	sys.path.append(os.path.abspath('tests'))
 	import unittest
@@ -105,4 +38,106 @@ else:
 		s = unittest.makeSuite(i)
 		unittest.TextTestRunner(verbosity=2).run(s)
 
-delete_build_info()
+class BuildInfo(object):
+	def __enter__(self):
+		try:
+			self.generate_build_info()
+		except:
+			pass
+
+	def __exit__(self,*args):
+		try:
+			self.delete_build_info()
+		except:
+			pass
+
+	def generate_build_info(self):
+		""" save Builder information."""
+		data = dict(
+			user = get_command_out('whoami'),
+			host = get_command_out('hostname'),
+			revision = get_rev()
+			)
+		build_info = '\n'.join(['%s = "%s"' % (k,v) for k,v in data.iteritems()])
+		print build_info
+		f = open('src/buildinfo.py','w')
+		f.write(build_info)
+
+	def delete_build_info(self):
+		os.remove('src/buildinfo.py')
+		return False
+
+class Setup(object):
+	def __init__(self):
+		self.setup_args = {}
+		self.setup_args['packages'] = ['MusicController']
+		self.setup_args['package_dir'] = {'MusicController':'src'}
+		self.setup_args['data_files'] = [('bin',['music-controller'])]
+		self.setup_args['setup_requires'] = ['python-mpd']
+
+	def generate_documents(self):
+
+		# man pages
+		filename = 'music-controller.rst'
+		docs = ['man/'+filename]
+		docs = docs + glob.glob('man/*/'+filename)
+		section = '1'
+		from docutils.core import publish_string
+		from docutils.writers import manpage
+		import gzip
+		for rstfile in docs:
+			f = open(rstfile)
+			rst = f.read()
+			f.close()
+			man = publish_string(rst,writer=manpage.Writer())
+			manfile = rstfile.replace('rst',section+'.gz')
+			print manfile
+			with gzip.open(manfile,'wb') as f:
+				f.write(man)
+			lang_dir = rstfile.replace('man/','').replace(filename,'')
+			mandir = 'share/man/'+lang_dir+'man1'
+			self.setup_args['data_files'].append(
+					(mandir,[manfile])
+					)
+		
+		
+
+	def py2app(self):
+		""" set values for py2app.
+
+		set app execute file, plist file and app icon.
+		"""
+		from plistlib import Plist
+		self.setup_args['app'] = ['src/__main__.py']
+		self.setup_args['setup_requires'].append('py2app')
+		plist = Plist.fromFile('osx/Info.plist')
+		plist.update ( dict(
+				CFBundleShortVersionString = version.__version__+':'+get_rev(),
+				NSHumanReadableCopyright = u"Copyright 2012 mei raka",
+				))
+		returns['py2app'] = app_option
+		if not 'options' in self.setup_args:
+			self.setup_args['options'] = {}
+		if not 'py2app' in setup_args['options']:
+			self.setup_args['py2app'] = {}
+		self.setup_args['options']['py2app'] = dict(
+				plist=plist
+				)
+
+	def build(self):
+		with BuildInfo():
+			try:
+				self.generate_documents()
+			except:
+				pass
+			if 'py2app' in sys.argv:
+				self.py2app()
+			setuptools.setup(name='MusicController',
+				version=version.__version__,
+				author='mei raka',
+				**self.setup_args)
+
+
+if __name__ == '__main__':
+	builder = Setup()
+	builder.build()
