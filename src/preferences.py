@@ -10,7 +10,7 @@ class App(wx.Frame):
 		self.client = client
 		self.__windows = [
 			(u'Connection',Connection,wx.ART_GO_FORWARD),
-			(u'Lyrics',Lyrics,wx.ART_GO_FORWARD)
+			(u'Lyrics',Lyrics,wx.ART_PASTE)
 			]
 
 		self.__ids = {}
@@ -130,6 +130,8 @@ class Connection(wx.BoxSizer):
 		self.delete = wx.Button(parent,-1,'-',style=wx.BU_EXACTFIT)
 		
 		self.mpd = wx.StaticText(parent,-1,u'mpd')
+		self.profile_label = wx.StaticText(parent,-1,u'profile:')
+		self.profile = wx.TextCtrl(parent,-1)
 		self.host_label = wx.StaticText(parent,-1,u'host:')
 		self.host = wx.TextCtrl(parent,-1)
 		self.host.SetFocus()
@@ -146,12 +148,14 @@ class Connection(wx.BoxSizer):
 		sizer.Add(self.add,(6,0),**params)
 		sizer.Add(self.delete,(6,1),**params)
 		sizer.Add(self.mpd,(0,3),**params)
-		sizer.Add(self.host_label,(1,3),**params_label)
-		sizer.Add(self.host,(1,4),(1,2),**params_expand)
-		sizer.Add(self.port_label,(2,3),**params_label)
-		sizer.Add(self.port,(2,4),(1,2),**params_expand)
-		sizer.Add(self.use_password,(3,3),**params_label)
-		sizer.Add(self.password,(3,4),(1,2),**params_expand)
+		sizer.Add(self.profile_label,(1,3),**params_label)
+		sizer.Add(self.profile,(1,4),(1,2),**params_expand)
+		sizer.Add(self.host_label,(2,3),**params_label)
+		sizer.Add(self.host,(2,4),(1,2),**params_expand)
+		sizer.Add(self.port_label,(3,3),**params_label)
+		sizer.Add(self.port,(3,4),(1,2),**params_expand)
+		sizer.Add(self.use_password,(4,3),**params_label)
+		sizer.Add(self.password,(4,4),(1,2),**params_expand)
 		
 		sizer.Add(self.connect,(6,5),**params)
 		sizer.AddGrowableCol(4)
@@ -166,7 +170,7 @@ class Connection(wx.BoxSizer):
 		self.connect.Bind(wx.EVT_BUTTON,self.OnConnect)
 		self.add.Bind(wx.EVT_BUTTON,self.OnNew)
 		self.delete.Bind(wx.EVT_BUTTON,self.OnDel)
-		texts = [self.host,self.port,self.password]
+		texts = [self.profile,self.host,self.port,self.password]
 		for text in texts:
 			text.Bind(wx.EVT_TEXT,self.OnText)
 		self.Layout()
@@ -183,11 +187,12 @@ class Connection(wx.BoxSizer):
 		wx.CallAfter(self.__update)
 
 	def __set_text(self):
-		self.host.SetValue(self.selected[1])
-		self.port.SetValue(self.selected[2])
+		self.profile.ChangeValue(self.selected[0])
+		self.host.ChangeValue(self.selected[1])
+		self.port.ChangeValue(self.selected[2])
 		self.use_password.SetValue(self.selected[3])
 		self.password.Enable(self.selected[3])
-		self.password.SetValue(self.selected[4])
+		self.password.ChangeValue(self.selected[4])
 
 	def __update(self):
 		profiles = self.config.profiles
@@ -196,8 +201,10 @@ class Connection(wx.BoxSizer):
 		if not self.host.GetValue():
 			self.selected = self.connection.current
 			if self.selected:
-				self.selected_index = labels.index(self.selected[0])
-		if len(labels) <= self.selected_index:
+				selected_index = labels.index(self.selected[0])
+				if selected_index > -1:
+					self.selected_index = selected_index
+		if 0 < len(labels) <= self.selected_index:
 			self.selected_index = len(labels) - 1
 			self.selected = profiles[self.selected_index]
 		if not len(labels) == 0 and not self.selected_index == -1:
@@ -212,8 +219,9 @@ class Connection(wx.BoxSizer):
 		if labels.count(new_label):
 			index = 1
 			while True:
-				if not labels.count(new_label+ ' (%i)' % index):
-					new_label = new_label+ ' (%i)' % index
+				temp_label = new_label+ ' (%i)' % index
+				if not labels.count(temp_label):
+					new_label = temp_label
 					break
 				else:
 					index = index + 1
@@ -235,18 +243,23 @@ class Connection(wx.BoxSizer):
 
 	def OnBox(self,event):
 		index = self.box.GetSelection()
-		if not index == self.selected_index:
+		if -1 < index and not index == self.selected_index:
 			self.selected = self.profiles[index]
 			self.selected_index = index
 			self.__set_text()
 
 	def OnText(self,event):
 		obj = event.GetEventObject()
-		index = {self.host:1,self.port:2,self.password:4}
+		index = {self.profile:0,self.host:1,self.port:2,self.password:4}
 		profiles = self.config.profiles
-		profiles[self.selected_index][index[obj]] = obj.GetValue()
-		self.selected = profiles[self.selected_index]
-		self.config.profiles = profiles
+		current = profiles[self.selected_index][index[obj]]
+		new = obj.GetValue()
+		if new and not new == current:
+			profiles[self.selected_index][index[obj]] = new
+			self.selected = profiles[self.selected_index]
+			self.config.profiles = profiles
+			if index[obj] == 0:
+				self.box.SetString(self.selected_index,obj.GetValue())
 
 	def OnConnect(self,event):
 		self.connection.close()

@@ -596,7 +596,7 @@ class Config(Object):
 	def __get_profiles(self):
 		if not self.__config.has_key(u'profiles'):
 			self.__config[u'profiles'] = [[u'default',u'localhost',u'6600',False,u'']]
-		return copy.copy(self.__config[u'profiles'])
+		return copy.deepcopy(self.__config[u'profiles'])
 
 	def __set_profiles(self,profiles):
 		if not type(profiles) == list:
