@@ -24,7 +24,6 @@ class Frame(wx.Frame,Object):
 		wx.Frame.__init__(self,parent,-1)
 		Object.__init__(self)
 		self.SetTitle(self.TITLE)
-		self.SetSize((640,480))
 		self.menubar = menubar.MenuBar(self,client,accele=False if environment.userinterface.style == 'mac' else True)
 		self.SetMenuBar(self.menubar)
 		self.toolbar = toolbar.Toolbar(self,self.client)
@@ -51,12 +50,22 @@ class Frame(wx.Frame,Object):
 		self.SetSizer(self.sizer)
 		self.hide_children()
 		self.Layout()
-		h = environment.userinterface.text_height
-		self.SetSize((h*64,h*48))
+		window_size = self.client.config.window_size
+		if window_size == (-1,-1):
+			h = environment.userinterface.text_height
+			self.SetSize((h*64,h*48))
+		else:
+			w,h = window_size
+			if w < 100:
+				w = 100
+			if h < 100:
+				h = 100
+			self.SetSize((w,h))
 		self.preferences = None
 		self.change_title()
 		if self.client.connection.current:
 			self.show_not_connection()
+		self.Bind(wx.EVT_SIZE,self.OnSize)
 		self.Show()
 		if debug: print 'sized.'
 		self.client.playback.bind(self.client.playback.UPDATE_PLAYING,self.change_title)
@@ -151,8 +160,6 @@ class Frame(wx.Frame,Object):
 		self.Layout()
 		self.call(self.VIEW)
 
-
-
 	def change_title(self):
 		wx.CallAfter(self.__change_title)
 
@@ -170,4 +177,8 @@ class Frame(wx.Frame,Object):
 		if not self.preferences:
 			self.preferences = preferences.App(None,self.client)
 		self.preferences.Show()
+
+	def OnSize(self,event):
+		self.client.config.window_size =  self.GetSize()
+		event.Skip()
 

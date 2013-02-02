@@ -655,10 +655,23 @@ class Config(Object):
 
 		return (_get,_set)
 
+	def __get_tuple(key,default):
+		def _get(self):
+			if not key in self.__config:
+				self.__config[key] = list(default)
+			return tuple(self.__config[key])
+		def _set(self,value):
+			if len(value) == len(self.window_size):
+				self.__config[key] = list(value)
+				self.save()
+				self.call(self.CONFIG_CHANGED)
+		return (_get,_set)
+
 
 	playlist_focus =     property(*__get_bool(u'playlist_focus',True))
 	playlist_albumlist = property(*__get_bool(u'playlist_albumlist',True))
 	info =               property(*__get_bool(u'info',True))
 	lyrics_download =    property(*__get_bool(u'lyrics_download',False))
 	lyrics_api_geci_me = property(*__get_bool(u'lyrics_api_geci_me',False))
+	window_size =        property(*__get_tuple(u'window_size',(-1,-1)))
 	
