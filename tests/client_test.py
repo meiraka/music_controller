@@ -3,6 +3,13 @@ import time
 import random
 import client
 
+"""
+test for client.py
+
+requires mpd process on localhost:6600
+and some songs in mpd library dir.
+"""
+
 class TestClientConfig(unittest.TestCase):
 	def setUp(self):
 		self.mpd = client.Client()
@@ -43,10 +50,24 @@ class TestClientLibrary(unittest.TestCase):
 	def setUp(self):
 		self.mpd = client.Client()
 		self.mpd.connect()
+		self.__updated = False
+		self.mpd.library.bind(self.mpd.library.UPDATE,self.updated)
 	
 	def test_library(self):
 		value = list(self.mpd.library)
 		self.assertEqual(type(value),list)
+
+	def test_update(self):
+		self.__updated = False
+		self.mpd.library.update()
+		limit = 10
+		while not self.__updated and limit > 0:
+			self.mpd.playback.update()
+			time.sleep(1)
+			limit = limit -1
+
+	def updated(self):
+		self.__updated = True
 
 
 class TestClientPlaylist(unittest.TestCase):
@@ -86,8 +107,8 @@ class TestClientPlaylist(unittest.TestCase):
 		self.assertNotIn(song,self.mpd.playlist)
 
 	def test_delete_slice(self):
-		rand1 = int((len(self.mpd.library)-1)*random.random())
-		rand2 = int(len(self.mpd.library)*random.random())
+		rand1 = int((len(self.mpd.playlist)-1)*random.random())
+		rand2 = int(len(self.mpd.playlist)*random.random())
 		length = len(self.mpd.playlist)
 		song1 = self.mpd.playlist[rand1]
 		song2 = self.mpd.playlist[rand2]

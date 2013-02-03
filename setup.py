@@ -162,5 +162,8 @@ class Setup(object):
 
 
 if __name__ == '__main__':
-	builder = Setup()
-	builder.run()
+	if not 'test' in sys.argv:
+		builder = Setup()
+		builder.run()
+	else:
+		test()
