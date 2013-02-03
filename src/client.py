@@ -532,9 +532,9 @@ class Library(Object):
 	def __update_cache(self):
 		""" update library songs cache.
 		"""
-		self.__data = self.__connection.execute('listallinfo')
+		data = self.__connection.execute('listallinfo')
 		# remove invalid songs.
-		self.__data = [Song(data) for data in self.__data if data.has_key(u'file')]
+		self.__data = [Song(songinfo) for songinfo in data if songinfo.has_key(u'file')]
 		self.call(self.UPDATE)
 
 
