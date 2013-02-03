@@ -9,7 +9,7 @@ Pretty client for MusicPlayerDaemon.
 :Author: mei raka
 :Date: 2013-2-1
 :Copyright: mei raka
-:Version: 3.0.0
+:Version: `setup.py will set this.`
 :Manual section: 1
 :Manual group: MusicController
 

@@ -12,6 +12,7 @@ import sys
 import glob
 import subprocess
 import setuptools
+import re
 import src.version as version
 
 def get_command_out(command):
@@ -95,10 +96,16 @@ class Setup(object):
 		from docutils.core import publish_string
 		from docutils.writers import manpage
 		import gzip
+		re_version  = re.compile(':Version:[^\n]+')
+		app_version = version.__version__
+		rev = get_rev()
+		if rev:
+			app_version + '.' + rev
 		for rstfile in docs:
 			f = open(rstfile)
 			rst = f.read()
 			f.close()
+			rst = re_version.sub(':Version: '+app_version,rst)
 			man = publish_string(rst,writer=manpage.Writer())
 			manfile = rstfile.replace('rst',section+'.gz')
 			with gzip.open(manfile,'wb') as f:
