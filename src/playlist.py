@@ -418,8 +418,9 @@ class AlbumListBase(wx.ScrolledWindow):
 		"""
 		key = event.GetKeyCode()
 		if key == wx.WXK_RETURN:
-			song = self.albums[self.__focused_index]
-			song.play()
+			song = self.playlist.focused
+			if song:
+				song.play()
 		else:
 			event.Skip()
 
