@@ -20,6 +20,7 @@ class Toolbar(object):
 			view =     'gtk-media-play-ltr' if gtk else wx.ART_GO_DOWN,
 			previous = 'gtk-media-next-rtl' if gtk else wx.ART_GOTO_FIRST,
 			play =     'gtk-media-play-ltr' if gtk else wx.ART_GO_FORWARD,
+			stop =     'gtk-media-play-ltr' if gtk else wx.ART_GO_UP,
 			next =     'gtk-media-next-ltr' if gtk else wx.ART_GOTO_LAST,
 			playlist = wx.ART_NORMAL_FILE,
 			library =  wx.ART_HARDDISK,
@@ -28,6 +29,7 @@ class Toolbar(object):
 		labels = [
 			(u'previous',self.TYPE_NORMAL),
                         (u'play',    self.TYPE_TOGGLE),
+			(u'stop',    self.TYPE_NORMAL),
                         (u'next',    self.TYPE_NORMAL),
                         (u'playlist',self.TYPE_RADIO),
                         (u'library', self.TYPE_RADIO),
@@ -42,7 +44,7 @@ class Toolbar(object):
 		self.__ids[u'view'] = dropdown_id
 		self.__labels[dropdown_id] = u'view'
 		if environment.userinterface.toolbar_icon_dropdown:
-			self.__tool.AddLabelTool(dropdown_id,'',wx.ArtProvider.GetBitmap(icons[u'view']))
+			self.__tool.AddLabelTool(dropdown_id,u'view',wx.ArtProvider.GetBitmap(icons[u'view']))
 		if environment.userinterface.toolbar_icon_centre:
 			self.__tool.AddStretchableSpace()
 		for label,icon,id,button_type in self.__buttons:
@@ -101,9 +103,6 @@ class Toolbar(object):
 		wx.CallAfter(__update)
 
 	def update_selector(self):
-		if environment.userinterface.toolbar_icon_dropdown:
-			obj = self.__tool.FindById(self.__ids[u'view'])
-			obj.SetLabel(self.parent.current_view)
 		if not environment.userinterface.toolbar_toggle or environment.userinterface.toolbar_icon_dropdown:
 			return
 		updates = [u'playlist',u'library',u'lyric']
