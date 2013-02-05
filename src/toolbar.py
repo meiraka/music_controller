@@ -5,7 +5,7 @@ import environment
 def get_nonnull_bitmap(stock_labels):
 	for label in stock_labels:
 		bmp = wx.ArtProvider.GetBitmap(label)
-		if not bmp.GetSize() == (-1,-1):
+		if bmp.IsOk() and not bmp.GetSize() == (-1,-1):
 			return bmp
 	return None
 
