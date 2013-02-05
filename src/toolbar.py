@@ -12,6 +12,7 @@ class Toolbar(object):
 		if environment.userinterface.toolbar_icon_horizontal:
 			toolbar_style = wx.TB_HORZ_TEXT
 		self.__tool = parent.CreateToolBar(toolbar_style)
+		self.client = client
 		self.playback = client.playback
 		self.connection = client.connection
 		size = None
@@ -24,7 +25,8 @@ class Toolbar(object):
 			next =     'gtk-media-next-ltr' if gtk else wx.ART_GOTO_LAST,
 			playlist = wx.ART_NORMAL_FILE,
 			library =  wx.ART_HARDDISK,
-			lyric =    wx.ART_PASTE
+			lyric =    wx.ART_PASTE,
+			info =     wx.ART_GOTO_LAST,
 			)
 		labels = [
 			(u'previous',self.TYPE_NORMAL),
@@ -61,6 +63,12 @@ class Toolbar(object):
 				self.__tool.AddLabelTool(id,label,icon)
 		if environment.userinterface.toolbar_icon_centre:
 			self.__tool.AddStretchableSpace()
+		if environment.userinterface.toolbar_icon_info:
+			info_id = wx.NewId()
+			self.__ids[u'info'] = info_id
+			self.__labels[info_id] = u'info'
+			self.__tool.AddLabelTool(info_id,u'info',wx.ArtProvider.GetBitmap(icons[u'info']))
+	
 		self.__tool.Bind(wx.EVT_TOOL,self.OnTool)
 		self.__tool.Realize()
 		self.playback.bind(self.playback.UPDATE,self.update_playback)
@@ -128,6 +136,10 @@ class Toolbar(object):
 			self.parent.show_library()
 		elif func_name == 'lyric':
 			self.parent.show_lyric()
+		elif func_name == 'info':
+			current = self.client.config.info
+			self.client.config.info = not(current)
+			self.parent.show_not_connection()
 		elif hasattr(self.playback,func_name):
 			getattr(self.playback,func_name)()
 
