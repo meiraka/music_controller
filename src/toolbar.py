@@ -2,10 +2,18 @@
 import wx
 import environment
 
+def get_nonnull_bitmap(stock_labels):
+	for label in stock_labels:
+		bmp = wx.ArtProvider.GetBitmap(label)
+		if not bmp.GetSize() == (-1,-1):
+			return bmp
+	return None
+
 class Toolbar(object):
 	TYPE_TOGGLE = 'toggle'
 	TYPE_NORMAL = 'normal'
 	TYPE_RADIO = 'radio'
+	TYPE_STRETCH = 'stretch'
 	def __init__(self,parent,client):
 		self.parent = parent
 		toolbar_style = wx.TB_TEXT
@@ -16,41 +24,46 @@ class Toolbar(object):
 		self.playback = client.playback
 		self.connection = client.connection
 		size = None
-		gtk = True if environment.userinterface.style == 'gtk' else False
 		icons = dict(
-			view =     'gtk-media-play-ltr' if gtk else wx.ART_GO_DOWN,
-			previous = 'gtk-media-next-rtl' if gtk else wx.ART_GOTO_FIRST,
-			play =     'gtk-media-play-ltr' if gtk else wx.ART_GO_FORWARD,
-			stop =     'gtk-media-play-ltr' if gtk else wx.ART_GO_UP,
-			next =     'gtk-media-next-ltr' if gtk else wx.ART_GOTO_LAST,
-			playlist = wx.ART_NORMAL_FILE,
-			library =  wx.ART_HARDDISK,
-			lyric =    wx.ART_PASTE,
-			info =     wx.ART_GOTO_LAST,
+			view =     ['gtk-media-play-ltr',wx.ART_GO_DOWN],
+			previous = ['gtk-media-next-rtl',wx.ART_GO_BACK],
+			play =     ['gtk-media-play-ltr',wx.ART_GO_FORWARD],
+			stop =     ['gtk-media-stop',wx.ART_GO_UP],
+			next =     ['gtk-media-next-ltr',wx.ART_GO_FORWARD],
+			playlist = ['media-tape',wx.ART_NORMAL_FILE],
+			library =  ['folder-music',wx.ART_HARDDISK],
+			lyric =    ['applications-office',wx.ART_PASTE],
+			info =     [wx.ART_GO_FORWARD],
 			)
 		labels = [
+			(u'view',    self.TYPE_NORMAL),
+			(u'',        self.TYPE_STRETCH),
 			(u'previous',self.TYPE_NORMAL),
                         (u'play',    self.TYPE_TOGGLE),
 			(u'stop',    self.TYPE_NORMAL),
                         (u'next',    self.TYPE_NORMAL),
                         (u'playlist',self.TYPE_RADIO),
                         (u'library', self.TYPE_RADIO),
-                        (u'lyric',   self.TYPE_RADIO)
+                        (u'lyric',   self.TYPE_RADIO),
+			(u'',        self.TYPE_STRETCH),
+			(u'info',    self.TYPE_NORMAL)
 			]
 		self.__buttons = [
-			(label,wx.ArtProvider.GetBitmap(icons[label]),wx.NewId(),button_type) for (label,button_type) in labels
+			(label,get_nonnull_bitmap(icons[label]) if label in icons else None,wx.NewId(),button_type) for (label,button_type) in labels
 			]
 		self.__ids = dict([(label,id) for label,bmp,id,button_type in self.__buttons])
 		self.__labels = dict([(id,label) for label,bmp,id,button_type in self.__buttons])
-		dropdown_id = wx.NewId()
-		self.__ids[u'view'] = dropdown_id
-		self.__labels[dropdown_id] = u'view'
-		if environment.userinterface.toolbar_icon_dropdown:
-			self.__tool.AddLabelTool(dropdown_id,u'view',wx.ArtProvider.GetBitmap(icons[u'view']))
-		if environment.userinterface.toolbar_icon_centre:
-			self.__tool.AddStretchableSpace()
 		for label,icon,id,button_type in self.__buttons:
-			if environment.userinterface.toolbar_toggle:
+			if button_type == self.TYPE_STRETCH:
+				if environment.userinterface.toolbar_icon_centre:
+					self.__tool.AddStretchableSpace()
+			elif label == u'view':
+				if environment.userinterface.toolbar_icon_dropdown:
+					self.__tool.AddLabelTool(id,label,icon)
+			elif label == u'info':
+				if environment.userinterface.toolbar_icon_info:
+					self.__tool.AddLabelTool(id,label,icon)
+			elif environment.userinterface.toolbar_toggle:
 				if button_type == self.TYPE_TOGGLE:
 					self.__tool.AddCheckLabelTool(id,label,icon)
 				elif button_type == self.TYPE_RADIO and not environment.userinterface.toolbar_icon_dropdown:
@@ -61,13 +74,6 @@ class Toolbar(object):
 					self.__tool.AddLabelTool(id,label,icon)
 			elif not(button_type == self.TYPE_RADIO and environment.userinterface.toolbar_icon_dropdown):
 				self.__tool.AddLabelTool(id,label,icon)
-		if environment.userinterface.toolbar_icon_centre:
-			self.__tool.AddStretchableSpace()
-		if environment.userinterface.toolbar_icon_info:
-			info_id = wx.NewId()
-			self.__ids[u'info'] = info_id
-			self.__labels[info_id] = u'info'
-			self.__tool.AddLabelTool(info_id,u'info',wx.ArtProvider.GetBitmap(icons[u'info']))
 	
 		self.__tool.Bind(wx.EVT_TOOL,self.OnTool)
 		self.__tool.Realize()
