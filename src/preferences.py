@@ -9,8 +9,8 @@ class App(wx.Frame):
 		wx.Frame.__init__(self,parent,-1)
 		self.client = client
 		self.__windows = [
-			(u'Connection',Connection,[wx.ART_GO_HOME]),
-			(u'Lyrics',Lyrics,[wx.ART_PASTE])
+			(u'Connection',Connection,['server',wx.ART_GO_HOME]),
+			(u'Lyrics',Lyrics,['applications-office',wx.ART_PASTE])
 			]
 
 		self.__ids = {}
