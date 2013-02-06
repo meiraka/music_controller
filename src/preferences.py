@@ -9,8 +9,8 @@ class App(wx.Frame):
 		wx.Frame.__init__(self,parent,-1)
 		self.client = client
 		self.__windows = [
-			(u'Connection',Connection,wx.ART_GO_FORWARD),
-			(u'Lyrics',Lyrics,wx.ART_PASTE)
+			(u'Connection',Connection,[wx.ART_GO_HOME]),
+			(u'Lyrics',Lyrics,[wx.ART_PASTE])
 			]
 
 		self.__ids = {}
@@ -21,11 +21,15 @@ class App(wx.Frame):
 		if environment.userinterface.toolbar_icon_horizontal:
 			toolbar_style = wx.TB_HORZ_TEXT
 		self.__tool = self.CreateToolBar(toolbar_style)
-		for label,c,icon in self.__windows:
+		for label,c,icons in self.__windows:
 			id = wx.NewId()
 			self.__ids[label] = id
 			self.__indexes.append(id)
-			bmp = wx.ArtProvider.GetBitmap(icon)
+			bmp = None
+			for icon in icons:
+				bmp = wx.ArtProvider.GetBitmap(icon)
+				if bmp.IsOk() and not bmp.GetSize() == (-1,-1):
+					break
 			if environment.userinterface.toolbar_toggle:
 				self.__tool.AddRadioLabelTool(id,label,bmp)
 			else:
