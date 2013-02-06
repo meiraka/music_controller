@@ -3,6 +3,7 @@ import sys
 import wx
 import preferences
 import version
+import appinfo
 
 class MenuBar(wx.MenuBar):
 	NORMAL = 'normal'
@@ -266,12 +267,13 @@ class MenuBar(wx.MenuBar):
 		if not self.IsChecked(id):
 			self.Check(id,True)
 
+
 class AboutDialog(object):
 	def __init__(self):
 		info = wx.AboutDialogInfo()
-		info.SetName(u'MusicController')
+		info.SetName(appinfo.NAME)
 		info.SetVersion(version.__version__)
-		app_description = _('MPD client')
+		app_description = _(appinfo.DESCRIPTION)
 		python_version = _('Python %(python)s on %(system)s') % \
 			{u'python': sys.version.split()[0] ,u'system':sys.platform}
 		platform = list(wx.PlatformInfo[1:])
@@ -286,7 +288,8 @@ class AboutDialog(object):
 		except Exception,err:
 			pass
 		info.SetDescription(u'\n'.join([app_description,python_version,wx_info,build_info]))
-		info.SetCopyright('Copyright (C) 2012 mei raka')
+		info.SetLicence(appinfo.LICENCE_TEXT_FULL)
+		info.SetCopyright(appinfo.COPYRIGHT)
 		wx.AboutBox(info)
 
 

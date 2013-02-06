@@ -3,7 +3,7 @@ import wx
 import toolbar
 import playlist
 import library
-import info
+import songinfo
 import lyrics
 import menubar
 import preferences
@@ -34,7 +34,7 @@ class Frame(wx.Frame,Object):
 				self.client.playlist,debug)
 		self.albumlist = playlist.AlbumList(self,self.client.playlist,
 				self.client.playback,debug)
-		self.info = info.Info(self,self.client,debug)
+		self.info = songinfo.Info(self,self.client,debug)
 		self.connection = preferences.Connection(self,self.client)
 		self.lyric = lyrics.Lyric(self,self.client)
 		self.sizer = wx.BoxSizer()
