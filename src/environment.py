@@ -5,6 +5,47 @@ import wx
 
 config_dir = '%s/.config/MusicController' % os.environ['HOME']
 
+class __Common(object):
+	__cached = dict(
+		name = 'MusicController',
+		description = 'Pretty client for MusicPlayerDaemon.',
+		copyright = 'Copyright (C) 2012-2013  mei raka',
+		licence = """
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 3
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+"""
+		)
+
+	def __init__(self):
+		self.__cached['licence_full'] = """
+%s - %s
+%s
+%s""" % (self.name,self.description,self.copyright,self.licence)
+
+	def __get(key):
+		def get(self):
+			return self.__cached[key]
+		return get
+
+	name =              property(__get('name'))
+	description=        property(__get('description'))
+	copyright =         property(__get('copyright'))
+	licence =           property(__get('licence'))
+	licence_full = property(__get('licence_full'))
+
+
+
 class __UI(object):
 	"""
 	params for ui.*
@@ -108,3 +149,4 @@ class __UI(object):
 	text_height =              property(__get_text_height)
 
 userinterface = __UI()
+common = __Common()

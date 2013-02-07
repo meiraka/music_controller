@@ -3,7 +3,7 @@ import sys
 import wx
 import preferences
 import version
-import appinfo
+import environment
 
 class MenuBar(wx.MenuBar):
 	NORMAL = 'normal'
@@ -271,9 +271,9 @@ class MenuBar(wx.MenuBar):
 class AboutDialog(object):
 	def __init__(self):
 		info = wx.AboutDialogInfo()
-		info.SetName(appinfo.NAME)
+		info.SetName(environment.common.name)
 		info.SetVersion(version.__version__)
-		app_description = _(appinfo.DESCRIPTION)
+		app_description = _(environment.common.description)
 		python_version = _('Python %(python)s on %(system)s') % \
 			{u'python': sys.version.split()[0] ,u'system':sys.platform}
 		platform = list(wx.PlatformInfo[1:])
@@ -288,8 +288,8 @@ class AboutDialog(object):
 		except Exception,err:
 			pass
 		info.SetDescription(u'\n'.join([app_description,python_version,wx_info,build_info]))
-		info.SetLicence(appinfo.LICENCE_TEXT_FULL)
-		info.SetCopyright(appinfo.COPYRIGHT)
+		info.SetLicence(environment.common.licence_full)
+		info.SetCopyright(environment.common.copyright)
 		wx.AboutBox(info)
 
 
