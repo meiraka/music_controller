@@ -73,6 +73,7 @@ class __UI(object):
 		toolbar_icon_horizontal = True,
 		toolbar_icon_dropdown = False,
 		toolbar_icon_info = False,
+		about_licence = True,
 		)
 	def __init__(self):
 		if wx.PlatformInfo[1] == 'wxGTK':
@@ -88,6 +89,7 @@ class __UI(object):
 			self.__cached['toolbar_icon_horizontal'] = False
 			self.__cached['toolbar_icon_dropdown'] = True
 			self.__cached['toolbar_icon_info'] = True
+			self.__cached['about_licence'] = False
 	def __get_font(self):
 		key = u'font'
 		if self.__cached.has_key(key):
@@ -144,6 +146,7 @@ class __UI(object):
 	toolbar_icon_dropdown =    property(__get('toolbar_icon_dropdown'))
 	toolbar_icon_info =        property(__get('toolbar_icon_info'))
 	toolbar_icon_horizontal =  property(__get('toolbar_icon_horizontal'))
+	about_licence =            property(__get('about_licence'))
 	colors =                   property(__get_colors)
 	font =                     property(__get_font, __set(u'font'))
 	text_height =              property(__get_text_height)
