@@ -230,7 +230,7 @@ class HeaderPlaylistBase(wx.VListBox):
 		if not index in selected:
 			self.DeselectAll()
 			self.SetSelection(index)
-		self.PopupMenu(PlaylistMenu(self))
+		self.PopupMenu(Menu(self))
 
 	def OnKeysUp(self,event):
 		""" catch key up event.
@@ -410,7 +410,7 @@ class AlbumListBase(wx.ScrolledWindow):
 			self.playlist.focused = self.albums[index]
 		if -1 < self.__focused_index < len(self.group_songs):
 			self.selected = self.group_songs[self.__focused_index]
-		self.PopupMenu(PlaylistMenu(self))
+		self.PopupMenu(Menu(self))
 
 	def OnKeysUp(self,event):
 		""" Key up event. 
@@ -455,7 +455,7 @@ class AlbumListBase(wx.ScrolledWindow):
 			event.Skip()
 
 
-class PlaylistMenu(wx.Menu):
+class Menu(wx.Menu):
 	"""
 	Show menu for Song in Playlist.
 	"""

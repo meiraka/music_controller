@@ -166,7 +166,7 @@ class DatabaseWithConfig(Database):
 		else:
 			pass
 
-class Lyric(wx.Panel):
+class LyricView(wx.Panel):
 	"""
 	Draw lyric.
 	"""
@@ -333,5 +333,56 @@ class Lyric(wx.Panel):
 						dc.DrawText(line,12,draw_y)
 		except Exception,err:
 			print err
+
+class Menu(wx.Menu):
+	def __init__(self,parent,song):
+		wx.Menu.__init__(self)
+		self.parent = parent
+		self.song = song
+		items = [u'edit']
+		self.items = dict([(item,wx.NewId()) for item in items])
+		for item in items:
+			label = item.replace(u'_',' ')
+			self.Append(self.__items[item],label,label)
+			self.Bind(wx.EVT_MENU,getattr(self,item+'_item'),id=self.__items[item])
+
+	def edit_item(self,event):
+		editor = Editor(self.parent,self.parent.client,self.song)
+		editor.Show()
 		
-	
+class Editor(wx.Frame):
+	TOOLBAR_TOGGLE = 'toggle'
+	TOOLBAR_RADIO = 'radio'
+	TOOLBAR_NORMAL = 'normal'
+	def __init__(self,parent,client,song):
+		self.client = client
+		self.parent = parent
+		self.song = song
+		self.db = Database()
+		toolbar_item = [
+			(self.TOOLBAR_RADIO,'text',['',wx.ART_GO_HOME]),
+			(self.TOOLBAR_RADIO,'timetag',['',wx.ART_GO_HOME]),
+			(self.TOOLBAR_TOGGLE,'single',['',wx.ART_GO_HOME]),
+			]
+		self.toolbar_item = [(wx.NewId(),t,l,i) for t,l,i in toolbar_item]
+		wx.Frame.__init__(self,-1)
+		toolbar_style = wx.TB_TEXT
+		if environment.userinterface.toolbar_icon_horizontal:
+			toolbar_style = wx.TB_HORZ_TEXT
+		self.__tool = self.CreateToolBar(toolbar_style)
+		for id,button_type,label,icons in self.toolbar_item:
+			bmp = None
+			for icon in icons:
+				bmp = wx.ArtProvider.GetBitmap(icon)
+				if bmp.IsOk() and not bmp.GetSize() == (-1,-1):
+					break
+			if environment.userinterface.toolbar_toggle:
+				if button_type == self.TOOLBAR_TOGGLE:
+					self.__tool.AddCheckLabelTool(id,label,bmp)
+				elif button_type == slef.TOOLBAR_RADIO:
+					self.__tool.AddRadioLabelTool(id,label,bmp)
+				else:
+					self.__tool.AddLabelTool(id,label,bmp)
+			else:
+				self.__tool.AddLabelTool(id,label,bmp)
+		self.text = wx.TextCtrl(self,-1,self.db[song])

@@ -36,7 +36,7 @@ class Frame(wx.Frame,Object):
 				self.client.playback,debug)
 		self.info = songinfo.Info(self,self.client,debug)
 		self.connection = preferences.Connection(self,self.client)
-		self.lyric = lyrics.Lyric(self,self.client)
+		self.lyric = lyrics.LyricView(self,self.client)
 		self.sizer = wx.BoxSizer()
 		s = wx.BoxSizer(wx.VERTICAL)
 		s.Add(self.playlist,1,flag=wx.EXPAND)
