@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import os
 import urllib
 import sqlite3
 import thread
@@ -36,6 +37,8 @@ class Artwork(client.Object):
 		connection.execute(sql_init)
 		
 	def __get_connection(self):
+		if not os.path.exists(environment.config_dir):
+			os.makedirs(environment.config_dir)
 		db = sqlite3.connect(environment.config_dir+'/lastfm')
 		return db
 		
@@ -153,6 +156,9 @@ class Artwork(client.Object):
 			image_bin = urllib.urlopen(path).read()
 			filename = key.replace('/','_')
 			fullpath = environment.config_dir+'/artwork/'+filename
+			if not os.path.exists(environment.config_dir+'/artwork'):
+				os.makedirs(environment.config_dir+'/artwork')
+
 			f = open(fullpath,'w')
 			f.write(image_bin)
 			f.close()
