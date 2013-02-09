@@ -288,7 +288,8 @@ class AboutDialog(object):
 		except Exception,err:
 			pass
 		info.SetDescription(u'\n'.join([app_description,python_version,wx_info,build_info]))
-		info.SetLicence(environment.common.licence_full)
+		if environment.userinterface.about_licence:
+			info.SetLicence(environment.common.licence_full)
 		info.SetCopyright(environment.common.copyright)
 		wx.AboutBox(info)
 
