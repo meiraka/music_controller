@@ -198,6 +198,7 @@ class LyricView(wx.Panel):
 		self.client.playback.bind(self.client.playback.UPDATE_PLAYING,self.update_data)
 		self.database.bind(self.database.UPDATING,self.update)
 		self.database.bind(self.database.UPDATE,self.decode_raw_lyric)
+		self.Bind(wx.EVT_RIGHT_UP,self.OnRightClick)
 		self.__update()
 
 	def update_time(self):
@@ -334,13 +335,16 @@ class LyricView(wx.Panel):
 		except Exception,err:
 			print err
 
+	def OnRightClick(self,event):
+		self.PopupMenu(Menu(self,self.__song))
+
 class Menu(wx.Menu):
 	def __init__(self,parent,song):
 		wx.Menu.__init__(self)
 		self.parent = parent
 		self.song = song
 		items = [u'edit']
-		self.items = dict([(item,wx.NewId()) for item in items])
+		self.__items = dict([(item,wx.NewId()) for item in items])
 		for item in items:
 			label = item.replace(u'_',' ')
 			self.Append(self.__items[item],label,label)
@@ -365,7 +369,7 @@ class Editor(wx.Frame):
 			(self.TOOLBAR_TOGGLE,'single',['',wx.ART_GO_HOME]),
 			]
 		self.toolbar_item = [(wx.NewId(),t,l,i) for t,l,i in toolbar_item]
-		wx.Frame.__init__(self,-1)
+		wx.Frame.__init__(self,None,-1)
 		toolbar_style = wx.TB_TEXT
 		if environment.userinterface.toolbar_icon_horizontal:
 			toolbar_style = wx.TB_HORZ_TEXT
@@ -379,10 +383,10 @@ class Editor(wx.Frame):
 			if environment.userinterface.toolbar_toggle:
 				if button_type == self.TOOLBAR_TOGGLE:
 					self.__tool.AddCheckLabelTool(id,label,bmp)
-				elif button_type == slef.TOOLBAR_RADIO:
+				elif button_type == self.TOOLBAR_RADIO:
 					self.__tool.AddRadioLabelTool(id,label,bmp)
 				else:
 					self.__tool.AddLabelTool(id,label,bmp)
 			else:
 				self.__tool.AddLabelTool(id,label,bmp)
-		self.text = wx.TextCtrl(self,-1,self.db[song])
+		self.text = wx.TextCtrl(self,-1,self.db[song],style=wx.TE_MULTILINE)
