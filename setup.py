@@ -79,7 +79,10 @@ class Setup(object):
 		self.setup_args = {}
 		self.setup_args['packages'] = ['MusicController']
 		self.setup_args['package_dir'] = {'MusicController':'src'}
-		self.setup_args['data_files'] = [('bin',['music-controller'])]
+		self.setup_args['data_files'] = [
+						('bin',['music-controller']),
+						('share/applications',['unix/music-controller.desktop'])
+						]
 		self.setup_args['setup_requires'] = ['python-mpd']
 
 	def generate_documents(self):

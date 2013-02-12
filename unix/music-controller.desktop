@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=MusicController
+Comment=Pretty client for MusicPlayerDaemon.
+Exec=music-controller
+Type=Application
+Icon=gtk-media-stop
+Categories=Audio;
+StartupNotify=true
+
