@@ -28,11 +28,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 		)
 
 	def __init__(self):
-		self.__cached['licence_full'] = """
-%s - %s
-%s
-%s""" % (self.name,self.description,self.copyright,self.licence)
-
+		pass
 	def __get(key):
 		def get(self):
 			return self.__cached[key]
@@ -42,7 +38,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	description=        property(__get('description'))
 	copyright =         property(__get('copyright'))
 	licence =           property(__get('licence'))
-	licence_full = property(__get('licence_full'))
 
 
 
