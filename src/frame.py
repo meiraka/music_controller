@@ -24,6 +24,10 @@ class Frame(wx.Frame,Object):
 		wx.Frame.__init__(self,parent,-1)
 		Object.__init__(self)
 		self.SetTitle(self.TITLE)
+		icon = wx.ArtProvider.GetIcon('gtk-media-play-ltr',size=(128,128))
+		if icon.IsOk():
+			self.SetIcon(icon)
+	
 		self.menubar = menubar.MenuBar(self,client,accele=False if environment.userinterface.style == 'mac' else True)
 		self.SetMenuBar(self.menubar)
 		self.toolbar = toolbar.Toolbar(self,self.client)
