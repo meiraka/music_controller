@@ -38,7 +38,8 @@ class Database(client.Object):
 			artist TEXT,
 			title TEXT,
 			album TEXT,
-			lyric TEXT
+			lyric TEXT,
+			UNIQUE(artist,title,album)
 		);
 		'''
 		client.Object.__init__(self)
@@ -93,13 +94,34 @@ class Database(client.Object):
 			return u''
 		else:
 			return lyric[0]
-		
-	def download(self,song):
+
+	def __setitem__(self,song,lyric):
+		""" Saves lyric.
+
+		Arguments:
+			song - song object.
+			lyric - string lyric.
+		"""
+		lyric = unicode(lyric)
 		sql_write = '''
 		INSERT OR REPLACE INTO lyrics
 		(artist,title,album,lyric)
 		VALUES(?, ?, ?, ?)
 		'''
+		connection = self.__get_connection()
+		cursor = connection.cursor()
+		cursor.execute(sql_write,
+				(
+				song.format('%artist%'),
+				song.format('%title%'),
+				song.format('%album%'),
+				lyric
+				)
+			)
+		connection.commit()
+		self.call(self.UPDATE,song,lyric)
+		
+	def download(self,song):
 		self.__downloading.append(song)
 		self.call(self.UPDATING)
 		lyric = u''
@@ -114,24 +136,13 @@ class Database(client.Object):
 					break
 			else:
 				pass
-		connection = self.__get_connection()
-		cursor = connection.cursor()
-		cursor.execute(sql_write,
-				(
-				song.format('%artist%'),
-				song.format('%title%'),
-				song.format('%album%'),
-				lyric
-				)
-			)
-		connection.commit()
 		del self.__downloading[self.__downloading.index(song)]
-		self.call(self.UPDATE,lyric)
+		self.__setitem__(song,lyric)
 		return lyric
 
 	def download_from_geci_me(self,song):
-		title = song.format(u'%title%').replace(u'/',u' ').encode('utf8')
-		artist = song.format(u'%artist%').replace(u'/',u' ').encode('utf8')
+		title = song.format(u'%title%').replace(u'/',u'*').encode('utf8')
+		artist = song.format(u'%artist%').replace(u'/',u'*').encode('utf8')
 		query = urllib.quote(title+'/'+artist)
 		json_text = urllib.urlopen('http://geci.me/api/lyric/'+query).read()
 		json_parsed = json.loads(json_text.decode('utf8'))
@@ -189,12 +200,10 @@ class LyricView(wx.Panel):
 		self.__lyric = []
 		self.__update_interval = 100
 		wx.Panel.__init__(self,parent,-1)
-		#self.SetBackgroundColour(self.bg)
 		self.font = environment.userinterface.font
 		self.timer = wx.Timer(self.parent,-1)
 		wx.EVT_TIMER(self.parent,-1,self.__update)
 		self.timer.Start(self.__update_interval)
-		#self.parent.Bind(wx.EVT_ERASE_BACKGROUND,self.update)
 		self.client.playback.bind(self.client.playback.UPDATE_PLAYING,self.update_data)
 		self.database.bind(self.database.UPDATING,self.update)
 		self.database.bind(self.database.UPDATE,self.decode_raw_lyric)
@@ -202,6 +211,8 @@ class LyricView(wx.Panel):
 		self.__update()
 
 	def update_time(self):
+		""" Resets LyricView managed time.
+		"""
 		status = self.client.playback.status
 		if status and u'time' in status:
 			time = status[u'time']
@@ -211,7 +222,10 @@ class LyricView(wx.Panel):
 				self.__time_msec = 0.0
 
 	def update_data(self):
-		""" update lyric data."""
+		""" update lyric data.
+
+		call update_time(), set current song and decode song lyric.
+		"""
 		self.update_time()
 		status = self.client.playback.status
 		if status and u'song' in status:
@@ -220,11 +234,13 @@ class LyricView(wx.Panel):
 				song = self.client.playlist[song_id]
 				if not self.__song == song:
 					self.__song = song
-					self.decode_raw_lyric(self.database[song])
+					self.__offset = 0.0
+					self.decode_raw_lyric(song,self.database[song])
 
-	def decode_raw_lyric(self,lyric):
+	def decode_raw_lyric(self,song,lyric):
 		""" convert raw LRC lyric text to list."""
-		self.__offset = 0.0
+		if not self.__song == song:
+			return
 		self.__raw_lyric = lyric
 		self.__lyric = []
 		result = []
@@ -351,19 +367,20 @@ class Menu(wx.Menu):
 			self.Bind(wx.EVT_MENU,getattr(self,item+'_item'),id=self.__items[item])
 
 	def edit_item(self,event):
-		editor = Editor(self.parent,self.parent.client,self.song)
+		editor = Editor(self.parent,self.parent.client,self.parent.database,self.song)
 		editor.Show()
 		
 class Editor(wx.Frame):
 	TOOLBAR_TOGGLE = 'toggle'
 	TOOLBAR_RADIO = 'radio'
 	TOOLBAR_NORMAL = 'normal'
-	def __init__(self,parent,client,song):
+	def __init__(self,parent,client,database,song):
 		self.client = client
 		self.parent = parent
 		self.song = song
-		self.db = Database()
+		self.db = database
 		toolbar_item = [
+			(self.TOOLBAR_NORMAL,'Save',['',wx.ART_GO_HOME]),
 			(self.TOOLBAR_RADIO,'text',['',wx.ART_GO_HOME]),
 			(self.TOOLBAR_RADIO,'timetag',['',wx.ART_GO_HOME]),
 			(self.TOOLBAR_TOGGLE,'single',['',wx.ART_GO_HOME]),
@@ -389,4 +406,17 @@ class Editor(wx.Frame):
 					self.__tool.AddLabelTool(id,label,bmp)
 			else:
 				self.__tool.AddLabelTool(id,label,bmp)
+			self.__tool.Bind(wx.EVT_TOOL,getattr(self,'on_'+label.lower().replace(' ','_')),id=id)
 		self.text = wx.TextCtrl(self,-1,self.db[song],style=wx.TE_MULTILINE)
+
+	def on_save(self,event):
+		self.db[self.song] = self.text.GetValue()
+
+	def on_text(self,event):
+		pass
+
+	def on_timetag(self,event):
+		pass
+
+	def on_single(self,event):
+		pass
