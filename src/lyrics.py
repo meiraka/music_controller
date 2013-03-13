@@ -1,14 +1,17 @@
 #!/usr/bin/python
 
-import wx
-import environment
-import client
+
 import sqlite3
+import time
 import urllib
+import urllib2
 import json
 import thread
 import re
-import socket
+
+import wx
+import environment
+import client
 """
 Draw lyric 
 """
@@ -128,10 +131,7 @@ class Database(client.Object):
 		for label,is_download in self.downloaders.iteritems():
 			if is_download:
 				downloader = getattr(self,'download_from_'+label)
-				try:
-					lyric = downloader(song)
-				except socket.error:
-					pass
+				lyric = downloader(song)
 				if lyric:
 					break
 			else:
@@ -144,10 +144,20 @@ class Database(client.Object):
 		title = song.format(u'%title%').replace(u'/',u'*').encode('utf8')
 		artist = song.format(u'%artist%').replace(u'/',u'*').encode('utf8')
 		query = urllib.quote(title+'/'+artist)
-		json_text = urllib.urlopen('http://geci.me/api/lyric/'+query).read()
+		try:
+			json_text = urllib2.urlopen('http://geci.me/api/lyric/'+query).read()
+		except urllib2.URLError,err:
+			print 'can not access:','http://geci.me/api/lyric/'+query,err
+			return u''
 		json_parsed = json.loads(json_text.decode('utf8'))
 		if u'result' in json_parsed and json_parsed[u'result']:
-			lyric_page = urllib.urlopen(json_parsed[u'result'][0][u'lrc'])
+			time.sleep(1)
+			try:
+				lyric_page = urllib2.urlopen(json_parsed[u'result'][0][u'lrc'])
+			except urllib2.URLError,err:
+				print 'can not access:',json_parsed[u'result'][0][u'lrc'],err
+				return u''
+				
 			lyric_encode = lyric_page.info()
 			lyric = lyric_page.read().decode('utf8')
 			return lyric
