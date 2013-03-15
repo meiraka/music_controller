@@ -19,15 +19,25 @@ import environment
 
 class Downloader(object):
 	def list(self,**kwargs):
+		""" Returns list for format() or get() arg.
+
+		Normally returns lyric url.
+		"""
 		pass
 
 	def format(self,list_returns_line):
+		""" Convert given arg to readable string.
+		"""
 		return unicode(list_returns_line)
 
 	def get(self,list_returns_line):
+		""" Returns lyric from url in given arg data.
+		"""
 		pass
 
 	def download(self,song):
+		""" Returns lyric by given song data.
+		"""
 		items = self.list(title=song.format('%title%'),
 				artist=song.format('%artist%'),
 				album = song.format('%album%'))
@@ -35,13 +45,14 @@ class Downloader(object):
 			time.sleep(1)
 			return self.get(items[0])
 
+
 class DownloaderGeciMe(Downloader):
 	def list(self,**kwargs):
 		if not 'title' in kwargs:
 			return []
-		query_text = kwargs['title'].replace(u'/','*').encode('utf8')
+		query_text = kwargs['title'].replace(u'/',u'*').encode('utf8')
 		if 'artist' in kwargs:
-			artist = kwargs['artist'].replace(u'/','*'.encode('utf8'))
+			artist = kwargs['artist'].replace(u'/',u'*').encode('utf8')
 			query_text = query_text + '/' + artist
 		query = urllib.quote(query_text)
 		try:
