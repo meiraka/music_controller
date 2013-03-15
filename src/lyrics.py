@@ -201,8 +201,9 @@ class LyricView(wx.Panel):
 		self.database = DatabaseWithConfig(client)
 		self.database.download_auto = True
 		self.database.download_background = True
-		self.__time = 0
-		self.__time_msec = 0.0
+
+		self.time = 0
+		self.time_msec = 0.0
 		self.__index = 0
 		self.__offset = 0
 		self.__song = None
@@ -221,15 +222,21 @@ class LyricView(wx.Panel):
 		self.__update()
 
 	def update_time(self):
-		""" Resets LyricView managed time.
+		""" updates LyricView managed time.
 		"""
 		status = self.client.playback.status
 		if status and u'time' in status:
 			time = status[u'time']
 			time = int(time.split(u':')[0])
-			if not self.__time == time:
-				self.__time = time
-				self.__time_msec = 0.0
+			if not self.time == time:
+				self.time = time
+				self.time_msec = 0.0
+
+	def update_msec(self):
+		""" updates LyricView managed time(mseconds).
+		"""
+		interval = float(self.__update_interval)/1000.0
+		self.time_msec = self.time_msec + interval
 
 	def update_data(self):
 		""" update lyric data.
@@ -303,6 +310,7 @@ class LyricView(wx.Panel):
 		dc.DrawRectangle(0,0,*self.GetSize())
 		x,y = self.GetPosition()
 		w,h = self.GetSize()
+		self.update_time()
 		if self.__lyric:
 			self.draw(dc,(x,y,w,h))
 		else:
@@ -313,9 +321,9 @@ class LyricView(wx.Panel):
 			x = (w - dc.GetTextExtent(title)[0])/2
 			y = h / 2
 			dc.DrawText(title,x,y)
+		self.update_msec()
 
 	def draw(self,dc,rect):
-		self.update_time()
 
 		dc.SetPen(wx.Pen(self.hbg))
 		dc.SetBrush(wx.Brush(self.hbg))
@@ -326,12 +334,11 @@ class LyricView(wx.Panel):
 		last_time = 0.0
 		text_height = environment.userinterface.text_height
 		height = text_height * 3 / 2
-		interval = float(self.__update_interval)/1000.0
 		current_line = -1
 		for index,(time,line) in enumerate(self.__lyric):
-			if last_time < self.__time < time:
+			if last_time < self.time < time:
 				# we draw *guess_count* times to get next line pos
-				guess_count = (time-self.__time-self.__time_msec)/(float(self.__update_interval)/1000)
+				guess_count = (time-self.time-self.time_msec)/(float(self.__update_interval)/1000)
 				current_line = index-1
 				if guess_count>0:
 					add_offset = (index*height-self.__offset)/guess_count
@@ -343,7 +350,6 @@ class LyricView(wx.Panel):
 				break
 			else:
 				last_time = time
-		self.__time_msec = self.__time_msec + interval
 		try:
 			pos =  self.GetSize()[0] / height / 2
 			for index,(time,line) in enumerate(self.__lyric):
@@ -418,15 +424,72 @@ class Editor(wx.Frame):
 				self.__tool.AddLabelTool(id,label,bmp)
 			self.__tool.Bind(wx.EVT_TOOL,getattr(self,'on_'+label.lower().replace(' ','_')),id=id)
 		self.text = wx.TextCtrl(self,-1,self.db[song],style=wx.TE_MULTILINE)
+		self.text.Bind(wx.EVT_KEY_UP,self.on_keys)
+		self.text.SetFocus()
+		# set esc to close
+		id = wx.NewId()
+		self.Bind(wx.EVT_MENU,self.on_close,id=id)
+		table = [(wx.ACCEL_NORMAL,wx.WXK_ESCAPE,id)]
+		self.SetAcceleratorTable(wx.AcceleratorTable(table))
 
+	def on_close(self,event):
+		self.Close()
+
+	def get_current_time(self):
+		time = self.parent.time
+		msec = self.parent.time_msec
+		time_text = '[%02i:%02i.%02i]' % ( time/60,time%60,int(msec*100))
+		return time_text
+
+	def replace_current_time(self):
+		time = self.get_current_time()
+		# get current insertion point and line.
+		lines = self.text.GetValue().split('\n')
+		text_pos = self.text.GetInsertionPoint()
+		line_pos = self.text.GetValue()[0:text_pos].count('\n')
+		line = lines[line_pos]
+		# split old time and text.
+		if line.count(']') and line.startswith('['):
+			old_time,line = line.split(']',1)
+		# replace time
+		new_line = time + line
+		lines[line_pos] = new_line
+		# set time and move to next line.
+		self.text.SetValue('\n'.join(lines))
+		self.text.SetInsertionPoint(text_pos+len(lines[line_pos])+1)
+		
+	def back(self):
+		time = self.parent.time - 10
+		if time < 0:
+			time = 0
+		self.client.playback.seek(time)
+
+	def next(self):
+		time = self.parent.time + 10
+		self.client.playback.seek(time)
+
+		
+	def on_keys(self,event):
+		if not self.text.IsEditable():
+			code = event.GetKeyCode()
+			if code == wx.WXK_SPACE:
+				self.replace_current_time()	
+			elif code == ord('Z'):
+				self.back()
+			elif code == ord('X'):
+				self.next()
+			else:
+				print code
+			
+			
 	def on_save(self,event):
 		self.db[self.song] = self.text.GetValue()
 
 	def on_text(self,event):
-		pass
+		self.text.SetEditable(True)
 
 	def on_timetag(self,event):
-		pass
+		self.text.SetEditable(False)
 
 	def on_single(self,event):
 		pass
