@@ -387,6 +387,9 @@ class Menu(wx.Menu):
 		editor.Show()
 		
 class Editor(wx.Frame):
+	"""
+	Lyric editor.
+	"""
 	TOOLBAR_TOGGLE = 'toggle'
 	TOOLBAR_RADIO = 'radio'
 	TOOLBAR_NORMAL = 'normal'
@@ -399,7 +402,6 @@ class Editor(wx.Frame):
 			(self.TOOLBAR_NORMAL,'Save',['',wx.ART_GO_HOME]),
 			(self.TOOLBAR_RADIO,'text',['',wx.ART_GO_HOME]),
 			(self.TOOLBAR_RADIO,'timetag',['',wx.ART_GO_HOME]),
-			(self.TOOLBAR_TOGGLE,'single',['',wx.ART_GO_HOME]),
 			]
 		self.toolbar_item = [(wx.NewId(),t,l,i) for t,l,i in toolbar_item]
 		wx.Frame.__init__(self,None,-1)
@@ -433,15 +435,24 @@ class Editor(wx.Frame):
 		self.SetAcceleratorTable(wx.AcceleratorTable(table))
 
 	def on_close(self,event):
+		""" Close frame.
+		"""
 		self.Close()
 
 	def get_current_time(self):
+		""" Returns LRC formatted current time.
+
+		Returns:
+			string formatted current time.
+		"""
 		time = self.parent.time
 		msec = self.parent.time_msec
 		time_text = '[%02i:%02i.%02i]' % ( time/60,time%60,int(msec*100))
 		return time_text
 
 	def replace_current_time(self):
+		""" Replaces current focused line time.
+		"""
 		time = self.get_current_time()
 		# get current insertion point and line.
 		lines = self.text.GetValue().split('\n')
@@ -459,17 +470,31 @@ class Editor(wx.Frame):
 		self.text.SetInsertionPoint(text_pos+len(lines[line_pos])+1)
 		
 	def back(self):
+		""" seek back to 10 seconds.
+		"""
 		time = self.parent.time - 10
 		if time < 0:
 			time = 0
 		self.client.playback.seek(time)
+		# updates parent mtime
+		self.parent.update_time()
 
-	def next(self):
+	def forward(self):
+		""" seek forward to 10 seconds.
+		"""
 		time = self.parent.time + 10
 		self.client.playback.seek(time)
+		# updates parent mtime
+		self.parent.update_time()
 
 		
 	def on_keys(self,event):
+		""" catch key event.
+
+		space key -- replace focused line time.
+		z     key -- back to 10 seconds.
+		x     key -- forward to 10 seconds.
+		"""
 		if not self.text.IsEditable():
 			code = event.GetKeyCode()
 			if code == wx.WXK_SPACE:
@@ -477,19 +502,23 @@ class Editor(wx.Frame):
 			elif code == ord('Z'):
 				self.back()
 			elif code == ord('X'):
-				self.next()
+				self.forward()
 			else:
 				print code
 			
 			
 	def on_save(self,event):
+		""" save event - update lyrics db.
+		"""
 		self.db[self.song] = self.text.GetValue()
 
 	def on_text(self,event):
+		""" toolbar text button event - activates editable mode.
+		"""
 		self.text.SetEditable(True)
 
 	def on_timetag(self,event):
+		""" toolbar timatag button event - activates timetag mode.
+		"""
 		self.text.SetEditable(False)
 
-	def on_single(self,event):
-		pass

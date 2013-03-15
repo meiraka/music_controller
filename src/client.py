@@ -330,6 +330,7 @@ class Playback(Object,threading.Thread):
 			else:
 				return default
 		return get
+
 	status = property(lambda self:self.__get_status())
 	time = property(__get(u'time',int,0))
 	song = property(__get(u'song',int,None))
