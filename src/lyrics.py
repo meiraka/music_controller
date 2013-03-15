@@ -1,5 +1,8 @@
 #!/usr/bin/python
 
+"""
+Draw lyric 
+"""
 
 import sqlite3
 import time
@@ -10,11 +13,59 @@ import thread
 import re
 
 import wx
-import environment
 import client
-"""
-Draw lyric 
-"""
+import dialog
+import environment
+
+class Downloader(object):
+	def list(self,**kwargs):
+		pass
+
+	def format(self,list_returns_line):
+		return unicode(list_returns_line)
+
+	def get(self,list_returns_line):
+		pass
+
+	def download(self,song):
+		items = self.list(title=song.format('%title%'),
+				artist=song.format('%artist%'),
+				album = song.format('%album%'))
+		if items:
+			time.sleep(1)
+			return self.get(items[0])
+
+class DownloaderGeciMe(Downloader):
+	def list(self,**kwargs):
+		if not 'title' in kwargs:
+			return []
+		query_text = kwargs['title'].replace(u'/','*').encode('utf8')
+		if 'artist' in kwargs:
+			artist = kwargs['artist'].replace(u'/','*'.encode('utf8'))
+			query_text = query_text + '/' + artist
+		query = urllib.quote(query_text)
+		try:
+			json_text = urllib2.urlopen('http://geci.me/api/lyric/'+query).read()
+		except urllib2.URLError,err:
+			print 'can not access:','http://geci.me/api/lyric/'+query,err
+			return []
+		json_parsed = json.loads(json_text.decode('utf8'))
+		if u'result' in json_parsed:
+			return json_parsed[u'result']
+		else:
+			return []
+
+	def get(self,list_returns_line):
+		try:
+			lyric_page = urllib2.urlopen(list_returns_line[u'lrc'])
+		except urllib2.URLError,err:
+			print 'can not access:',list_returns_line[u'lrc'],err
+			return u''
+		lyric_encode = lyric_page.info()
+		lyric = lyric_page.read().decode('utf8')
+		return lyric
+
+
 
 class Database(client.Object):
 	"""
@@ -48,6 +99,14 @@ class Database(client.Object):
 		client.Object.__init__(self)
 		connection = self.__get_connection()
 		connection.execute(sql_init)
+
+	def clear_empty_lyrics(self):
+		""" Clears no lyrics data raw(fail to download or no lyrics found raw).
+		"""
+		sql_clear = 'delete from lyrics where lyric="None";'
+		connection = self.__get_connection()
+		connection.execute(sql_clear)
+		connection.commit()
 		
 	def __get_connection(self):
 		""" Returns database instance.
@@ -141,27 +200,8 @@ class Database(client.Object):
 		return lyric
 
 	def download_from_geci_me(self,song):
-		title = song.format(u'%title%').replace(u'/',u'*').encode('utf8')
-		artist = song.format(u'%artist%').replace(u'/',u'*').encode('utf8')
-		query = urllib.quote(title+'/'+artist)
-		try:
-			json_text = urllib2.urlopen('http://geci.me/api/lyric/'+query).read()
-		except urllib2.URLError,err:
-			print 'can not access:','http://geci.me/api/lyric/'+query,err
-			return u''
-		json_parsed = json.loads(json_text.decode('utf8'))
-		if u'result' in json_parsed and json_parsed[u'result']:
-			time.sleep(1)
-			try:
-				lyric_page = urllib2.urlopen(json_parsed[u'result'][0][u'lrc'])
-			except urllib2.URLError,err:
-				print 'can not access:',json_parsed[u'result'][0][u'lrc'],err
-				return u''
-				
-			lyric_encode = lyric_page.info()
-			lyric = lyric_page.read().decode('utf8')
-			return lyric
-		return u''
+		downloader = DownloaderGeciMe()
+		return downloader.download(song)
 
 	downloading = property(lambda self:self.__downloading)
 
@@ -199,6 +239,7 @@ class LyricView(wx.Panel):
 		self.hbg = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT)
 		self.hfg = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT)
 		self.database = DatabaseWithConfig(client)
+		self.database.clear_empty_lyrics()
 		self.database.download_auto = True
 		self.database.download_background = True
 
@@ -365,7 +406,7 @@ class LyricView(wx.Panel):
 					if -height < draw_y < self.GetSize()[1]:
 						dc.DrawText(line,12,draw_y)
 		except Exception,err:
-			print err
+			print 'LyricView Logic Error:',err
 
 	def OnRightClick(self,event):
 		self.PopupMenu(Menu(self,self.__song))
@@ -375,16 +416,19 @@ class Menu(wx.Menu):
 		wx.Menu.__init__(self)
 		self.parent = parent
 		self.song = song
-		items = [u'edit']
+		items = [u'edit',u'get info']
 		self.__items = dict([(item,wx.NewId()) for item in items])
 		for item in items:
-			label = item.replace(u'_',' ')
-			self.Append(self.__items[item],label,label)
-			self.Bind(wx.EVT_MENU,getattr(self,item+'_item'),id=self.__items[item])
+			self.Append(self.__items[item],item,item)
+			func_name = item.replace(' ','_')+'_item'
+			self.Bind(wx.EVT_MENU,getattr(self,func_name),id=self.__items[item])
 
 	def edit_item(self,event):
 		editor = Editor(self.parent,self.parent.client,self.parent.database,self.song)
 		editor.Show()
+
+	def get_info_item(self,event):
+		dialog.SongInfo(self.parent,[self.song])
 		
 class Editor(wx.Frame):
 	"""
@@ -503,8 +547,6 @@ class Editor(wx.Frame):
 				self.back()
 			elif code == ord('X'):
 				self.forward()
-			else:
-				print code
 			
 			
 	def on_save(self,event):
