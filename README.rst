@@ -12,10 +12,9 @@ FEATURES
 
 * Support for fetching and displaying artworks
 * Support for fetching and displaying lyrics with timetag.
+* Editting LRC format lyric text while listing songs.
 * Manage connection profiles.
 * Auto reconnection.
-* GTK support via wxGTK.
-* Mac OSX support via wxMac.
 
 
 REQUIREMENTS
