@@ -79,6 +79,7 @@ class Setup(object):
 		self.setup_args = {}
 		self.setup_args['packages'] = ['MusicController']
 		self.setup_args['package_dir'] = {'MusicController':'src'}
+		self.setup_args['package_data'] = {'MusicController':['common/*']}
 		self.setup_args['data_files'] = [
 						('bin',['music-controller']),
 						('share/applications',['unix/music-controller.desktop'])
