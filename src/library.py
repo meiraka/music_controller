@@ -2,9 +2,10 @@
 
 import thread
 import wx
-import artwork
-import thread
-import environment
+
+from common import artwork
+from common import environment
+
 import dialog
 
 CRITERIA_STYLE_ROOT = u'root'

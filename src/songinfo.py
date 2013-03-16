@@ -4,9 +4,9 @@ import thread
 
 import wx
 
-import artwork
-import environment
-from client import Song
+from common import artwork
+from common import environment
+from common.client import Song
 
 class Info(wx.BoxSizer):
 	def __init__(self,parent,client,debug=False):

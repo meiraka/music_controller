@@ -1,5 +1,7 @@
 import wx
 
+from common import Object
+from common import environment
 import toolbar
 import playlist
 import library
@@ -7,8 +9,6 @@ import songinfo
 import lyrics
 import menubar
 import preferences
-import environment
-from client import Object 
 
 class Frame(wx.Frame,Object):
 	TITLE = 'MusicController'

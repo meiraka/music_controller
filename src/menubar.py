@@ -1,9 +1,11 @@
 
 import sys
 import wx
+
+from common import environment
+
 import preferences
 import version
-import environment
 
 class MenuBar(wx.MenuBar):
 	NORMAL = 'normal'

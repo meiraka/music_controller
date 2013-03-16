@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import wx
-import environment
+from common import environment
 
 def get_nonnull_bitmap(stock_labels):
 	for label in stock_labels:

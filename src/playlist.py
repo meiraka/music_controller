@@ -1,11 +1,11 @@
 #!/usr/bin/python
 
 import thread
-
 import wx
 
-import artwork
-import environment
+from common import artwork
+from common import environment
+
 import dialog
 
 class HeaderPlaylistBase(wx.VListBox):

@@ -1,7 +1,7 @@
 
 import wx
-import environment
-import lyrics
+from common import environment
+from common import lyrics
 
 frame = wx.Frame
 if environment.userinterface.subwindow_small_frame:

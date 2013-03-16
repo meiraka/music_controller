@@ -1,5 +1,5 @@
 import wx
-import environment
+from common import environment
 
 class App(wx.Frame):
 	"""

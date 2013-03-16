@@ -1,8 +1,9 @@
 import wx
 
-import client
+from common import client
+from common import environment
+
 import frame
-import environment
 import thread
 import time
 import gettext

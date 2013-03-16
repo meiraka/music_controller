@@ -4,7 +4,7 @@ import thread
 
 import wx
 
-import artwork
+from common import artwork
 
 
 class AlbumList(wx.ListCtrl):
