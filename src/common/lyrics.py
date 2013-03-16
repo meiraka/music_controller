@@ -12,8 +12,8 @@ import json
 import thread
 import re
 
-from common import client
-from common import environment
+import client
+import environment
 
 class Downloader(object):
 	def list(self,**kwargs):
