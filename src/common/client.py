@@ -126,6 +126,8 @@ class Connection(Object):
 	
 			mpd.socket.setdefaulttimeout(2)
 			connection.connect(profile[1].encode('utf8'),int(profile[2]))
+			if profile[3]:
+				connection.password(profile[4])
 			self.__connection = connection
 			self.__current = copy.copy(profile)
 			self.connected = True

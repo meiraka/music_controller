@@ -177,6 +177,7 @@ class Connection(wx.BoxSizer):
 		texts = [self.profile,self.host,self.port,self.password]
 		for text in texts:
 			text.Bind(wx.EVT_TEXT,self.OnText)
+		self.use_password.Bind(wx.EVT_CHECKBOX,self.OnCheck)
 		self.Layout()
 
 	def Hide(self):
@@ -245,6 +246,14 @@ class Connection(wx.BoxSizer):
 		if len(profiles) <= 1:
 			self.delete.Disable()
 
+	def OnCheck(self,event):
+		profiles = self.config.profiles
+		current = profiles[self.selected_index][3]
+		new = self.use_password.GetValue()
+		profiles[self.selected_index][3] = new
+		self.config.profiles = profiles
+		self.password.Enable(new)
+
 	def OnBox(self,event):
 		index = self.box.GetSelection()
 		if -1 < index and not index == self.selected_index:
@@ -258,7 +267,7 @@ class Connection(wx.BoxSizer):
 		profiles = self.config.profiles
 		current = profiles[self.selected_index][index[obj]]
 		new = obj.GetValue()
-		if new and not new == current:
+		if not new == current:
 			profiles[self.selected_index][index[obj]] = new
 			self.selected = profiles[self.selected_index]
 			self.config.profiles = profiles

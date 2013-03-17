@@ -25,7 +25,10 @@ def get_rev():
 	""" Returns Mercurial CVS rev."""
 	import commands
 	import re
+	current_lang = os.environ['LANG']
+	os.environ['LANG'] = 'C'
 	out = get_command_out('hg summary')
+	os.environ['LANG'] = current_lang
 	match = re.search('parent:\s+([^\s]+)',out)
 	if match:
 		return match.groups()[0]
@@ -152,22 +155,25 @@ class Setup(object):
 
 		Before setup, generates buildinfo.py.
 		"""
-		with BuildInfo():
-			try:
-				self.generate_documents()
-			except:
-				pass
-			if 'py2app' in sys.argv:
-				self.py2app()
-			setuptools.setup(name='MusicController',
-				version=version.__version__,
-				author='mei raka',
-				**self.setup_args)
+		try:
+			self.generate_documents()
+		except:
+			pass
+		if 'py2app' in sys.argv:
+			self.py2app()
+		setuptools.setup(name='MusicController',
+			version=version.__version__,
+			author='mei raka',
+			**self.setup_args)
 
 
 if __name__ == '__main__':
-	if not 'test' in sys.argv:
-		builder = Setup()
-		builder.run()
+	if 'debian' in sys.argv:
+		with BuildInfo():
+			os.system('debuild -us -uc -I')
+	elif not 'test' in sys.argv:
+		with BuildInfo():
+			builder = Setup()
+			builder.run()
 	else:
 		test()
