@@ -484,7 +484,7 @@ class HeaderPlaylist(HeaderPlaylistBase):
 			text_height*3/2,2,6,debug)
 		self.active_background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT )
 		self.background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX)
-		self.artwork = artwork.Artwork()
+		self.artwork = artwork.Database()
 		self.artwork.size = (text_height*8,text_height*8)
 		self.artwork.bind(self.artwork.UPDATE,self.RefreshAll)
 
@@ -575,7 +575,7 @@ class AlbumList(AlbumListBase):
 		text_height = environment.userinterface.text_height
 		box_size = (text_height*10,text_height*12)
 		scroll_block = text_height
-		self.artwork = artwork.Artwork()
+		self.artwork = artwork.Database()
 		self.artwork.size = (text_height*8,text_height*8)  # image size
 		self.artwork.bind(self.artwork.UPDATE,self.update)
 		self.active_background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT )

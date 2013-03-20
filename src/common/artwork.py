@@ -26,7 +26,20 @@ class ArtworkFinder(client.Object):
 
 
 
-class Artwork(ArtworkFinder):
+class Database(ArtworkFinder):
+	"""
+	Artwork database.
+
+	to get song artwork and artwork mirror:
+
+	::
+
+		img = db[song]
+		mirror_img  = db.mirror[song]
+
+	Events:
+		UPDATE -- database is updated. raises with no arguments.
+	"""
 	UPDATE = 'update'
 	class Mirror(ArtworkFinder):
 		def __init__(self,parent,enable=False):
@@ -98,13 +111,19 @@ class Artwork(ArtworkFinder):
 		empty = property(__get_empty_image)
 			
 	def __init__(self,mirror=False):
+		""" Inits database interface.
+
+		Arguments:
+			mirror -- if True, generates mirrored image.
+
+		"""
 		ArtworkFinder.__init__(self)
 		self.__files = []
 		self.__images = {}
 		self.__empty = None
 		self.__callbacks = []
 		self.__size = (120,120)
-		self.mirror = Artwork.Mirror(self,mirror)
+		self.mirror = Database.Mirror(self,mirror)
 		self.bind(self.DOWNLOADED,self.__load_image)
 
 

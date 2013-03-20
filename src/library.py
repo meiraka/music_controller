@@ -311,7 +311,7 @@ class View(ViewBase):
 			text_height*3/2,text_height*3/2,text_height*3/2,text_height*4,debug)
 		self.text_height = text_height
 		self.diff = text_height/4
-		self.artwork = artwork.Artwork()
+		self.artwork = artwork.Database()
 		self.artwork.size = (text_height*7/2,text_height*7/2)
 		self.artwork.bind(self.artwork.UPDATE,self.RefreshAll)
 	

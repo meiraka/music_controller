@@ -37,6 +37,9 @@ class Downloader(object):
 			time.sleep(1)
 			return self.get(items[0])
 
+	def download_errmsg(self,url,err):
+		print 'cam not access: ',msg,err
+
 
 class GeciMe(Downloader):
 	def list(self,**kwargs):
@@ -70,3 +73,32 @@ class GeciMe(Downloader):
 
 
 
+class ArtworkLastfm(Downloader):
+	KEY = u'1f898a6986e69cd5a456d18e56051e0c'
+	SECRET = u'4c77ec44c856dc04bbc5b69a6068a8d9'
+	def list(self,**kwargs):
+		artist = kwargs['artist']
+		album = kwargs['album']
+		req = 'http://ws.audioscrobbler.com/2.0/?method=album.getinfo&api_key=%(key)s&artist=%(artist)s&album=%(album)s&format=json'
+		req = req * dict(key=self.KEY,
+				artist=urllib.quote(artist.encode('utf8')),
+				album=urllib.quote(album.encode('utf8')))
+		try:
+			json_text = urllib.urlopen(reqest).read().decode('utf8')
+		except urllib2.URLError,err:
+			self.download_errmsg(req,err)
+		json_parsed = json.loads(json_text)
+		if 'album' in json_parsed and 'image' in json_parsed['album']:
+			return [i for i in json_parsed['album']['image'] if '#text' in i]
+		else:
+			return []
+
+	def get(self,list_returns_line):
+		""" Returns image binary text. not image path.
+		"""
+		url = list_returns_line['#text']
+		try:
+			image_bin = urllib2.urlopen(path).read()
+		except urllib2.URLError,err:
+			self.download_errmsg(req,err)
+		return image_bin
