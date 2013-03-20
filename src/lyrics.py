@@ -414,6 +414,11 @@ class Downloader(wx.Frame):
 
 		self.search_button.Bind(wx.EVT_BUTTON,self.on_search_button)
 		self.listview.Bind(wx.EVT_LISTBOX_DCLICK,self.on_activate_item)
+		# set esc to close
+		id = wx.NewId()
+		self.Bind(wx.EVT_MENU,self.on_close,id=id)
+		table = [(wx.ACCEL_NORMAL,wx.WXK_ESCAPE,id)]
+		self.SetAcceleratorTable(wx.AcceleratorTable(table))
 
 	def on_search_button(self,event):
 		self.listview.Clear()
