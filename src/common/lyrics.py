@@ -32,6 +32,9 @@ class Database(client.Object):
 			geci_me = True
 			)
 
+		self.download_class = dict(
+			geci_me = rest.GeciMe
+			)
 		""" init database.
 
 		if not exists database, create table.
@@ -139,8 +142,8 @@ class Database(client.Object):
 		lyric = u''
 		for label,is_download in self.downloaders.iteritems():
 			if is_download:
-				downloader = getattr(self,'download_from_'+label)
-				lyric = downloader(song)
+				downloader = self.download_class[label]()
+				lyric = downloader.download(song)
 				if lyric:
 					break
 			else:
@@ -149,9 +152,45 @@ class Database(client.Object):
 		self.__setitem__(song,lyric)
 		return lyric
 
-	def download_from_geci_me(self,song):
-		downloader = rest.GeciMe()
-		return downloader.download(song)
+	def list(self,keywords,callback=None):
+		""" Returns candidate lyrics of given song.
+
+		Arguments:
+			keywords -- keyword dict like dict(artist=foo,title=bar)
+			callback -- if not None, callback(*each_list_item)
+
+		Returns list like:
+			[
+				( downloadfunc,urlinfo formatter func, urlinfo list),
+				...,
+			]
+
+		to get lyric list[0][0]:
+			returnslist = db.list(keywords)
+			func,formatter,urlinfo_list = returnslist[0]
+			lyric = func(urlinfo_list[0])
+			db[song] = lyric
+			
+
+		to show readable candidate lyric:
+			returnslist = db.list(keywords)
+			for func,formatter,urlinfo_list in returnslist:
+				for urlinfo in urlinfo_list:
+					print formatter(urlinfo)
+		"""
+
+		lists = []
+		for label,is_download in self.downloaders.iteritems():
+			if is_download:
+				downloader = self.download_class[label]()
+				urls = downloader.list(**keywords)
+				appends = (downloader.get,downloader.format,urls)
+				lists.append(appends)
+				if callback:
+					callback(*appends)
+			else:
+				pass
+		return lists
 
 	downloading = property(lambda self:self.__downloading)
 

@@ -230,7 +230,7 @@ class Menu(wx.Menu):
 		wx.Menu.__init__(self)
 		self.parent = parent
 		self.song = song
-		items = [u'edit',u'get info']
+		items = [u'edit',u'download',u'get info']
 		self.__items = dict([(item,wx.NewId()) for item in items])
 		for item in items:
 			self.Append(self.__items[item],item,item)
@@ -240,6 +240,10 @@ class Menu(wx.Menu):
 	def edit_item(self,event):
 		editor = Editor(self.parent,self.parent.client,self.parent.database,self.song)
 		editor.Show()
+
+	def download_item(self,event):
+		downloader = Downloader(self.parent,self.parent.client,self.parent.database,self.song)
+		downloader.Show()
 
 	def get_info_item(self,event):
 		dialog.SongInfo(self.parent,[self.song])
@@ -378,3 +382,51 @@ class Editor(wx.Frame):
 		"""
 		self.text.SetEditable(False)
 
+
+class Downloader(wx.Frame):
+	def __init__(self,parent,client,database,song):
+		self.parent = parent
+		self.client = client
+		self.database = database
+		self.song = song
+		self.items = []
+		wx.Frame.__init__(self,parent,-1)
+		sizer = wx.GridBagSizer()
+		sizer_flag = dict(flag=wx.ALL|wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT,border=3)
+		expand_sizer_flag = dict(flag=wx.ALL|wx.EXPAND|wx.ALIGN_CENTRE_VERTICAL,border=3)
+		labels = ['title','artist']
+		self.values = {}
+		index = 0
+		for index,label in enumerate(labels):
+			sizer.Add(wx.StaticText(self,-1,label),(index,0),**sizer_flag)
+			value = wx.TextCtrl(self,-1,getattr(self.song,label))
+			self.values[label] = value
+			sizer.Add(value,(index,1),(1,3),**expand_sizer_flag)
+		self.listview = wx.ListBox(self,-1)
+		index = index + 1
+		sizer.Add(self.listview,(index,0),(1,4),flag=wx.EXPAND)
+		sizer.AddGrowableRow(index)
+		sizer.AddGrowableCol(2)
+		index = index + 1
+		self.search_button = wx.Button(self,-1,'Search')
+		sizer.Add(self.search_button,(index,3),**sizer_flag)
+		self.SetSizer(sizer)
+
+		self.search_button.Bind(wx.EVT_BUTTON,self.on_search_button)
+		self.listview.Bind(wx.EVT_LISTBOX_DCLICK,self.on_activate_item)
+
+	def on_search_button(self,event):
+		self.listview.Clear()
+		keywords = dict((label,value.GetValue()) for label,value in self.values.iteritems())
+		def download_callback(get,format,list):
+			for i in list:
+				wx.CallAfter(self.listview.Append,format(i))
+				self.items.append((get,i))
+
+		thread.start_new_thread(self.database.list,(keywords,),dict(callback=download_callback))
+
+	def on_activate_item(self,event):
+		index = event.GetSelection()
+		get,urlinfo = self.items[index]
+		lyric = get(urlinfo)
+		self.database[self.song] = lyric
