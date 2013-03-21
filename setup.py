@@ -13,7 +13,8 @@ import glob
 import subprocess
 import setuptools
 import re
-import src.version as version
+sys.path.append(os.getcwdu()+'/src')
+import version
 
 def get_command_out(command):
 	try:
