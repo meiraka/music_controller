@@ -230,11 +230,11 @@ class Menu(wx.Menu):
 		wx.Menu.__init__(self)
 		self.parent = parent
 		self.song = song
-		items = [u'Edit',u'Download',u'Get Info']
+		items = [u'Edit...',u'Download...',u'Get Info']
 		self.__items = dict([(item,wx.NewId()) for item in items])
 		for item in items:
 			self.Append(self.__items[item],item,item)
-			func_name = item.lower().replace(' ','_')+'_item'
+			func_name = item.lower().replace(' ','_').replace('.','')+'_item'
 			self.Bind(wx.EVT_MENU,getattr(self,func_name),id=self.__items[item])
 
 	def edit_item(self,event):
