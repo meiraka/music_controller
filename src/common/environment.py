@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import os
+import sys
 import wx
 
 
@@ -85,6 +86,26 @@ class __UI(object):
 			self.__cached['toolbar_icon_dropdown'] = True
 			self.__cached['toolbar_icon_info'] = True
 			self.__cached['about_licence'] = False
+		self.argv_override()
+
+	def argv_override(self):
+		argv_override = True
+		for arg in sys.argv:
+			if arg.count('='):
+				key,value = arg.split('=',1)
+				if key in self.__cached:
+					bool_value = True if value == 'True' else False
+					if not self.__cached[key] == bool_value:
+						self.__cached[key] = bool_value
+						print 'override: %s to %s' % (key,str(bool_value))
+				else:
+					print 'no keys: ' + key
+					argv_override = False
+		if not argv_override:
+			for k,v in self.__cached.iteritems():
+				print '%s=%s' % (k,str(v))
+					
+					
 	def __get_font(self):
 		key = u'font'
 		if self.__cached.has_key(key):
