@@ -19,7 +19,7 @@ class MenuBar(wx.MenuBar):
 		self.client = client
 		self.menu_list = [
 			('File',[
-				(wx.NewId(),u'Rescan library',self.NORMAL),
+				(wx.NewId(),u'Rescan Library',self.NORMAL),
 				(wx.NewId(),u'',self.SPLITTER),
 				(wx.ID_EXIT,u'Quit',self.NORMAL)
 				]),
@@ -44,7 +44,7 @@ class MenuBar(wx.MenuBar):
 				(wx.NewId(),u'Albumlist',self.TOGGLE),
 				(wx.NewId(),u'Info',self.TOGGLE),
 				(wx.NewId(),u'splitter',self.SPLITTER),
-				(wx.NewId(),u'Focus current',self.NORMAL)
+				(wx.NewId(),u'Focus Current Song',self.NORMAL)
 				]),
 			('Help',[
 				(wx.ID_ABOUT,u'About',self.NORMAL)
@@ -52,7 +52,7 @@ class MenuBar(wx.MenuBar):
 			]
 
 		self.__functions = {
-				u'File_Rescan library':self.client.library.update,
+				u'File_Rescan Library':self.client.library.update,
 				u'File_Quit':sys.exit,
 				u'Edit_Preferences':self.parent.show_preferences,
 				u'Playback_Play':self.set_play,
@@ -67,7 +67,7 @@ class MenuBar(wx.MenuBar):
 				u'View_Lyric':self.parent.show_lyric,
 				u'View_Albumlist':self.toggle_config_value('playlist_albumlist',self.parent.show_not_connection),
 				u'View_Info':self.toggle_config_value('info',self.parent.show_not_connection),
-				u'View_Focus current':self.focus_song,
+				u'View_Focus Current Song':self.focus_song,
 				u'Help_About':AboutDialog
 				}
 		self.__keys = {

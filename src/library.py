@@ -282,11 +282,12 @@ class Menu(wx.Menu):
 		wx.Menu.__init__(self)
 		self.parent = parent
 		self.index=  index
-		items = [u'and',u'not',u'clear','get info']
+		items = [u'And',u'Not',u'Clear','Get Info']
 		self.__items = dict([(item,wx.NewId())for item in items])
 		for item in items:
 			self.Append(self.__items[item],item,item)
-			self.Bind(wx.EVT_MENU,getattr(self,item.replace(' ','_')+'_item'),id=self.__items[item])
+			func_name = item.lower().replace(' ','_')+'_item'
+			self.Bind(wx.EVT_MENU,getattr(self,),id=self.__items[item])
 	
 	def and_item(self,event):
 		self.parent.and_item(self.index)

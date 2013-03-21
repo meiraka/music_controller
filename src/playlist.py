@@ -462,12 +462,12 @@ class Menu(wx.Menu):
 	def __init__(self,parent):
 		wx.Menu.__init__(self)
 		self.parent = parent
-		items = [u'get_info',u'remove']
+		items = [u'Get Info',u'Remove']
 		self.__items = dict([(item,wx.NewId()) for item in items])
 		for item in items:
-			label = item.replace(u'_',' ')
-			self.Append(self.__items[item],label,label)
-			self.Bind(wx.EVT_MENU,getattr(self,item+'_item'),id=self.__items[item])
+			self.Append(self.__items[item],item,item)
+			func_name = item.lower().replace(' ','_')+'_item'
+			self.Bind(wx.EVT_MENU,getattr(self,func_name),id=self.__items[item])
 
 	def get_info_item(self,event):
 		dialog.SongInfo(self.parent,self.parent.selected)
