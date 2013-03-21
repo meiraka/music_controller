@@ -514,6 +514,18 @@ class HeaderPlaylist(HeaderPlaylistBase):
 		dc.DrawText(left_text,*left_pos)
 		dc.DrawText(right_text,*right_pos)
 
+	def ellipsetext(self,dc,text,max_width):
+		while True:
+			if not text:
+				return ''
+			width = dc.GetTextExtent(text)[0]
+			if width < max_width:
+				return text
+			elif len(text) > 3:
+				text = text[:-4] + '...'
+			else:
+				return ''
+
 	def draw_song(self,dc,rect,index,song,group_index):
 		left_text = song.format(u'%title%')
 		time = int(song[u'time'])
@@ -528,6 +540,10 @@ class HeaderPlaylist(HeaderPlaylistBase):
 		right_pos[0] = right_pos[0] - dc.GetTextExtent(right_text)[0] + rect.GetSize()[0] - margin
 		left_pos = [i+pad for i in left_pos]
 		right_pos = [i+pad for i in right_pos]
+		left_max_width = right_pos[0] - left_pos[0]
+		left_text = self.ellipsetext(dc,left_text,left_max_width)
+		if left_pos[0] > right_pos[0]:
+			right_pos = left_pos
 		dc.DrawText(left_text,*left_pos)
 		dc.DrawText(right_text,*right_pos)
 
@@ -549,6 +565,11 @@ class HeaderPlaylist(HeaderPlaylistBase):
 		right_pos[0] = right_pos[0] - dc.GetTextExtent(right_text)[0] + rect.GetSize()[0] - margin
 		left_pos = [i+pad for i in left_pos]
 		right_pos = [i+pad for i in right_pos]
+		left_max_width = right_pos[0] - left_pos[0]
+		left_text = self.ellipsetext(dc,left_text,left_max_width)
+		if left_pos[0] > right_pos[0]:
+			right_pos = left_pos
+
 		dc.DrawText(left_text,*left_pos)
 		dc.DrawText(right_text,*right_pos)
 

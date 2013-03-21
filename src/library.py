@@ -315,6 +315,18 @@ class View(ViewBase):
 		self.artwork = artwork.Database()
 		self.artwork.size = (text_height*7/2,text_height*7/2)
 		self.artwork.bind(self.artwork.UPDATE,self.RefreshAll)
+
+	def ellipsetext(self,dc,text,max_width):
+		while True:
+			if not text:
+				return ''
+			width = dc.GetTextExtent(text)[0]
+			if width < max_width:
+				return text
+			elif len(text) > 3:
+				text = text[:-4] + '...'
+			else:
+				return ''
 	
 	def draw_default(self,dc,rect,label,songs,index,depth):
 		diff = depth*self.text_height*2
@@ -325,6 +337,9 @@ class View(ViewBase):
 		diff_right = rect.GetSize()[0] - dc.GetTextExtent(right_label)[0]
 		right_pos = rect.GetPosition()
 		right_pos = (right_pos[0]+diff_right-self.text_height,right_pos[1]+self.diff)
+		label = self.ellipsetext(dc,label,right_pos[0]-left_pos[0])
+		if right_pos[0] < left_pos[0]:
+			right_pos = left_pos
 		try:
 			dc.DrawText(label,*left_pos)
 			dc.DrawText(right_label,*right_pos)
@@ -366,6 +381,9 @@ class View(ViewBase):
 		diff_right = rect.GetSize()[0] - dc.GetTextExtent(right_label)[0]
 		right_pos = rect.GetPosition()
 		right_pos = (right_pos[0]+diff_right-self.diff,right_pos[1]+self.diff)
+		left_label = self.ellipsetext(dc,left_label,right_pos[0]-left_pos[0])
+		if right_pos[0] < left_pos[0]:
+			right_pos = left_pos
 		try:
 			dc.DrawText(left_label,*left_pos)
 			dc.DrawText(right_label,*right_pos)
