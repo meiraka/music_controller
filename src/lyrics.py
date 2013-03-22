@@ -233,7 +233,7 @@ class Menu(wx.Menu):
 		items = [u'Edit...',u'Download...',u'Get Info']
 		self.__items = dict([(item,wx.NewId()) for item in items])
 		for item in items:
-			self.Append(self.__items[item],item,item)
+			self.Append(self.__items[item],_(item),_(item))
 			func_name = item.lower().replace(' ','_').replace('.','')+'_item'
 			self.Bind(wx.EVT_MENU,getattr(self,func_name),id=self.__items[item])
 
@@ -251,6 +251,8 @@ class Menu(wx.Menu):
 class Editor(wx.Frame):
 	"""
 	Lyric editor.
+
+	Supports normal text edit and timetag writer mode.
 	"""
 	TOOLBAR_TOGGLE = 'toggle'
 	TOOLBAR_RADIO = 'radio'
@@ -262,8 +264,8 @@ class Editor(wx.Frame):
 		self.db = database
 		toolbar_item = [
 			(self.TOOLBAR_NORMAL,'Save',['',wx.ART_GO_HOME]),
-			(self.TOOLBAR_RADIO,'text',['',wx.ART_GO_HOME]),
-			(self.TOOLBAR_RADIO,'timetag',['',wx.ART_GO_HOME]),
+			(self.TOOLBAR_RADIO,'Text',['',wx.ART_GO_HOME]),
+			(self.TOOLBAR_RADIO,'Timetag',['',wx.ART_GO_HOME]),
 			]
 		self.toolbar_item = [(wx.NewId(),t,l,i) for t,l,i in toolbar_item]
 		wx.Frame.__init__(self,None,-1)
@@ -279,13 +281,13 @@ class Editor(wx.Frame):
 					break
 			if environment.userinterface.toolbar_toggle:
 				if button_type == self.TOOLBAR_TOGGLE:
-					self.__tool.AddCheckLabelTool(id,label,bmp)
+					self.__tool.AddCheckLabelTool(id,_(label),bmp)
 				elif button_type == self.TOOLBAR_RADIO:
-					self.__tool.AddRadioLabelTool(id,label,bmp)
+					self.__tool.AddRadioLabelTool(id,_(label),bmp)
 				else:
-					self.__tool.AddLabelTool(id,label,bmp)
+					self.__tool.AddLabelTool(id,_(label),bmp)
 			else:
-				self.__tool.AddLabelTool(id,label,bmp)
+				self.__tool.AddLabelTool(id,_(label),bmp)
 			self.__tool.Bind(wx.EVT_TOOL,getattr(self,'on_'+label.lower().replace(' ','_')),id=id)
 		self.text = wx.TextCtrl(self,-1,self.db[song],style=wx.TE_MULTILINE)
 		self.text.Bind(wx.EVT_KEY_UP,self.on_keys)
@@ -398,7 +400,7 @@ class Downloader(wx.Frame):
 		self.values = {}
 		index = 0
 		for index,label in enumerate(labels):
-			sizer.Add(wx.StaticText(self,-1,label),(index,0),**sizer_flag)
+			sizer.Add(wx.StaticText(self,-1,_(label)+u':'),(index,0),**sizer_flag)
 			value = wx.TextCtrl(self,-1,getattr(self.song,label))
 			self.values[label] = value
 			sizer.Add(value,(index,1),(1,3),**expand_sizer_flag)
@@ -408,7 +410,7 @@ class Downloader(wx.Frame):
 		sizer.AddGrowableRow(index)
 		sizer.AddGrowableCol(2)
 		index = index + 1
-		self.search_button = wx.Button(self,-1,'Search')
+		self.search_button = wx.Button(self,-1,_('Search'))
 		sizer.Add(self.search_button,(index,3),**sizer_flag)
 		self.SetSizer(sizer)
 
@@ -419,6 +421,9 @@ class Downloader(wx.Frame):
 		self.Bind(wx.EVT_MENU,self.on_close,id=id)
 		table = [(wx.ACCEL_NORMAL,wx.WXK_ESCAPE,id)]
 		self.SetAcceleratorTable(wx.AcceleratorTable(table))
+
+	def on_close(self,event):
+		self.Close()
 
 	def on_search_button(self,event):
 		self.listview.Clear()

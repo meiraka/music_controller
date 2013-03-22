@@ -157,16 +157,19 @@ class MenuBar(wx.MenuBar):
 					if keys.has_key(head+u'_'+label):
 						key = keys[head+u'_'+label]
 						menu.SetLabel(id,self.menu_label(label,accele)+u'\t'+key)
+					else:
+						menu.SetLabel(id,self.menu_label(label))
+						
 
-	def menu_label(self,label,accele):
+	def menu_label(self,label,accele=None):
 		if accele:
-			i18n = label
+			i18n = _(label)
 			if i18n[0] == label[0]:
 				return u'&%s' % label[0] + i18n[1:]
 			else:
 				return i18n + u'(&%s)' % label[0]
 		else:
-			return label
+			return _(label)
 
 	def set_play(self):
 		playback = self.client.playback

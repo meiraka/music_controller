@@ -465,7 +465,7 @@ class Menu(wx.Menu):
 		items = [u'Get Info',u'Remove']
 		self.__items = dict([(item,wx.NewId()) for item in items])
 		for item in items:
-			self.Append(self.__items[item],item,item)
+			self.Append(self.__items[item],_(item),_(item))
 			func_name = item.lower().replace(' ','_')+'_item'
 			self.Bind(wx.EVT_MENU,getattr(self,func_name),id=self.__items[item])
 

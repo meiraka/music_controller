@@ -1,3 +1,4 @@
+import os
 import wx
 
 from common import client
@@ -9,6 +10,7 @@ import time
 import gettext
 
 NAME = 'MusicController'
+COMMAND_NAME = 'music-controller'
 
 """
 Main Application.
@@ -29,8 +31,26 @@ class App(wx.App):
 		if params.has_key('debug'):self.__debug = True
 		else:self.__debug = False
 		self.__connected = None
-		gettext.install('music-controller',unicode=1)
+		lang = dict(
+			domain=COMMAND_NAME,
+			fallback=False
+			)
+		if os.path.exists(os.getcwdu() + u'/locale'):
+			lang['localedir'] = os.getcwdu() + u'/locale'
+		elif os.path.exists(os.getcwdu() + u'/share/locale'):
+			lang['localedir'] = os.getcwdu() + u'/share/locale'
+		self.__lang = gettext.translation(**lang)
+		
+		
+		__builtins__['_']  = self.translate
 		wx.App.__init__(self)
+
+	def translate(self,text):
+		""" translate text to current system language.
+
+		bug? ugettext returns unicode by docs, but returns str in Ubuntu12.04.
+		"""
+		return self.__lang.ugettext(text).decode('utf8')
 
 	def connect_default(self):
 		""" Connects to default host and runs mpd monitor daemon in background."""

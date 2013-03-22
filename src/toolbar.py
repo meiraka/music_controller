@@ -59,21 +59,21 @@ class Toolbar(object):
 					self.__tool.AddStretchableSpace()
 			elif label == u'View':
 				if environment.userinterface.toolbar_icon_dropdown:
-					self.__tool.AddLabelTool(id,label,icon)
+					self.__tool.AddLabelTool(id,_(label),icon)
 			elif label == u'Info':
 				if environment.userinterface.toolbar_icon_info:
-					self.__tool.AddLabelTool(id,label,icon)
+					self.__tool.AddLabelTool(id,_(label),icon)
 			elif environment.userinterface.toolbar_toggle:
 				if button_type == self.TYPE_TOGGLE:
-					self.__tool.AddCheckLabelTool(id,label,icon)
+					self.__tool.AddCheckLabelTool(id,_(label),icon)
 				elif button_type == self.TYPE_RADIO and not environment.userinterface.toolbar_icon_dropdown:
-					self.__tool.AddRadioLabelTool(id,label,icon)
+					self.__tool.AddRadioLabelTool(id,_(label),icon)
 				elif button_type == self.TYPE_RADIO:
 					pass
 				else:
-					self.__tool.AddLabelTool(id,label,icon)
+					self.__tool.AddLabelTool(id,_(label),icon)
 			elif not(button_type == self.TYPE_RADIO and environment.userinterface.toolbar_icon_dropdown):
-				self.__tool.AddLabelTool(id,label,icon)
+				self.__tool.AddLabelTool(id,_(label),icon)
 	
 		self.__tool.Bind(wx.EVT_TOOL,self.OnTool)
 		self.__tool.Realize()
@@ -96,13 +96,13 @@ class Toolbar(object):
 			else:
 				return
 			if u'state' in self.playback.status and self.playback.status[u'state'] == u'play':
-				if obj.GetLabel() == u'Play':
-					obj.SetLabel(u'pause')
+				if obj.GetLabel() == _(u'Play'):
+					obj.SetLabel(_(u'pause'))
 					if environment.userinterface.toolbar_toggle:
 						self.__tool.ToggleTool(id,True)
 			else:
-				if not obj.GetLabel() == u'Play':
-					obj.SetLabel(u'Play')
+				if not obj.GetLabel() == _(u'Play'):
+					obj.SetLabel(_(u'Play'))
 					if environment.userinterface.toolbar_toggle:
 						self.__tool.ToggleTool(id,False)
 		wx.CallAfter(__update)
@@ -121,19 +121,19 @@ class Toolbar(object):
 			return
 		updates = [u'Playlist',u'Library',u'Lyric']
 		for view in updates:
-			self.__tool.ToggleTool(self.__ids[view],view==self.parent.current_view)
+			self.__tool.ToggleTool(self.__ids[view],view.lower()==self.parent.current_view)
 
 	def OnTool(self,event):
 		event_id = event.GetId()
 		obj = self.__tool.FindById(event_id)
 		func_name = self.__labels[event_id]
 		radio = ['Playlist','Library','Lyric']
-		if obj.GetLabel() == u'Play':
+		if obj.GetLabel() == _(u'Play'):
 			self.playback.play()
-			obj.SetLabel(u'Pause')
-		elif obj.GetLabel() == u'Pause':
+			obj.SetLabel(_(u'Pause'))
+		elif obj.GetLabel() == _(u'Pause'):
 			self.playback.pause()
-			obj.SetLabel(u'Play')
+			obj.SetLabel(_(u'Play'))
 		elif func_name == 'View':
 			self.parent.PopupMenu(ViewMenu(self))
 		elif func_name == 'Playlist':
@@ -157,7 +157,7 @@ class ViewMenu(wx.Menu):
 		items = [u'Playlist',u'Library',u'Lyric']
 		self.__items = dict([(item,wx.NewId()) for item in items])
 		for item in items:
-			self.Append(self.__items[item],item,item)
+			self.Append(self.__items[item],_(item),_(item))
 			func_name = 'show_'+item.lower()
 			self.Bind(wx.EVT_MENU,getattr(self,func_name),id=self.__items[item])
 

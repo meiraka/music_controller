@@ -27,9 +27,9 @@ class SongInfo(Frame):
 		self.songs = songs
 		self.lyrics_database = lyrics.Database()
 		self.must_tags = [u'artist',u'title',u'album']
-		must = wx.CollapsiblePane(self,-1,'General info:')
-		sub = wx.CollapsiblePane(self,-1,'Extra info:')
-		lyric = wx.CollapsiblePane(self,-1,'Lyric:')
+		must = wx.CollapsiblePane(self,-1,_('General Info')+':')
+		sub = wx.CollapsiblePane(self,-1,_('Extra Info')+':')
+		lyric = wx.CollapsiblePane(self,-1,_('Lyric')+':')
 		self.__mast_pane = must.GetPane()
 		self.__sub_pane = sub.GetPane()
 		self.__lyric_pane = lyric.GetPane()
@@ -42,7 +42,7 @@ class SongInfo(Frame):
 		self.title = wx.StaticText(self,-1,style=self.__text_style)
 		self.title.SetMinSize((environment.userinterface.text_height*20,-1))
 		self.description = wx.StaticText(self,-1,style=self.__text_style)
-		must_labels = [wx.StaticText(self.__mast_pane,-1,tag+':') for tag in self.must_tags]
+		must_labels = [wx.StaticText(self.__mast_pane,-1,_(tag)+':') for tag in self.must_tags]
 		self.must_values = [wx.TextCtrl(self.__mast_pane,-1,u'',style=self.__text_style) for tag in self.must_tags]
 		self.must_values[0].SetFocus()
 		self.lyric = wx.TextCtrl(self.__lyric_pane,-1,style=wx.TE_MULTILINE)
@@ -118,7 +118,7 @@ class SongInfo(Frame):
 				if index == 0:
 					self.s_sizer.AddGrowableCol(1)
 			label,value = self.sub_tags[index]
-			label.SetLabel(tag+':')
+			label.SetLabel(_(tag)+':')
 			value.SetValue(song[tag])
 		self.SetTitle(u'%s info' % song.format(u'%title% - %artist%'))
 		self.lyric.SetValue(self.lyrics_database[song])
