@@ -88,6 +88,14 @@ class Setup(object):
 						('share/applications',['unix/music-controller.desktop'])
 						]
 		self.setup_args['setup_requires'] = ['python-mpd']
+		self.add_locales()
+
+	def add_locales(self):
+		langs = glob.glob('locale/*')
+		for lang in langs:
+			self.setup_args['data_files'].append(
+				('share/'+lang+'/LC_MESSAGES',glob.glob(lang+'/LC_MESSAGES/*.mo'))
+				)
 
 	def generate_documents(self):
 		""" Generates man pages and sets value for setuptools.setup() arg.
