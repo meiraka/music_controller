@@ -33,7 +33,7 @@ class App(wx.App):
 		self.__connected = None
 		lang = dict(
 			domain=COMMAND_NAME,
-			fallback=False
+			fallback=True
 			)
 		if os.path.exists(os.getcwdu() + u'/locale'):
 			lang['localedir'] = os.getcwdu() + u'/locale'
