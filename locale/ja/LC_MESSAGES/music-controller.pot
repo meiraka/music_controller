@@ -7,91 +7,82 @@ msgstr ""
 
 msgid "File"
 msgstr "ファイル"
-
 msgid "Rescan Library"
 msgstr "ライブラリを再読み込み"
-
 msgid "Quit"
 msgstr "終了"
 
 msgid "Edit"
 msgstr "編集"
-
 msgid "Preferences"
 msgstr "設定"
 
-
 msgid "Playback"
 msgstr "再生"
-
 msgid "Play"
 msgstr "再生"
-
-
+msgid "Pause"
+msgstr "一時停止"
 msgid "Stop"
 msgstr "停止"
-
-
 msgid "Previous"
 msgstr "前のトラック"
-
-
 msgid "Next"
 msgstr "次のトラック"
-
-
 msgid "Shuffle"
 msgstr "シャッフル"
-
-
 msgid "Repeat"
 msgstr "リピート"
-
-
 msgid "Single"
 msgstr "シングルモード"
 
-
 msgid "View"
 msgstr "表示"
-
 msgid "Playlist"
 msgstr "プレイリスト"
-
 msgid "Library"
 msgstr "ライブラリ"
-
 msgid "Lyric"
 msgstr "歌詞"
-
 msgid "Albumlist"
 msgstr "アルバムリスト"
-
 msgid "Info"
 msgstr "情報パネル"
-
 msgid "Focus Current Song"
 msgstr "現在のトラックを表示"
 
-
 msgid "Help"
 msgstr "ヘルプ"
-
 msgid "About"
 msgstr "MusicControllerについて"
 
+msgid "Connection"
+msgstr "接続"
+msgid "Profile"
+msgstr "プロファイル"
+msgid "Host"
+msgstr "ホスト"
+msgid "Port"
+msgstr "ポート"
+msgid "Password"
+msgstr "パスワード"
+msgid "Connect"
+msgstr "接続する"
+msgid "Lyrics"
+msgstr "歌詞"
+msgid "Download Lyric"
+msgstr "歌詞をダウンロードする"
+msgid "Download from %s"
+msgstr "%s からダウンロードする"
+
 msgid "Get Info"
 msgstr "情報を見る"
-
 msgid "Remove"
 msgstr "削除"
-
 msgid "Edit..."
 msgstr "編集..."
-
 msgid "Download..."
 msgstr "ダウンロード..."
-
 msgid "Save"
 msgstr "保存"
 msgid "Text"
@@ -105,7 +96,6 @@ msgid "General Info"
 msgstr "一般情報"
 msgid "Extra Info"
 msgstr "詳細情報"
-
 
 msgid "artist"
 msgstr "アーティスト"

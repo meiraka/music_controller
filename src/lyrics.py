@@ -297,6 +297,7 @@ class Editor(wx.Frame):
 		self.Bind(wx.EVT_MENU,self.on_close,id=id)
 		table = [(wx.ACCEL_NORMAL,wx.WXK_ESCAPE,id)]
 		self.SetAcceleratorTable(wx.AcceleratorTable(table))
+		self.__tool.Realize()
 
 	def on_close(self,event):
 		""" Close frame.

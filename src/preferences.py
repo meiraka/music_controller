@@ -31,9 +31,9 @@ class App(wx.Frame):
 				if bmp.IsOk() and not bmp.GetSize() == (-1,-1):
 					break
 			if environment.userinterface.toolbar_toggle:
-				self.__tool.AddRadioLabelTool(id,label,bmp)
+				self.__tool.AddRadioLabelTool(id,_(label),bmp)
 			else:
-				self.__tool.AddLabelTool(id,label,bmp)
+				self.__tool.AddLabelTool(id,_(label),bmp)
 		self.__tool.Bind(wx.EVT_TOOL,self.OnTool)
 		self.__tool.Realize()
 
@@ -61,6 +61,8 @@ class App(wx.Frame):
 		for label,id in self.__ids.iteritems():
 			if environment.userinterface.toolbar_toggle:
 				self.__tool.ToggleTool(id,id==click_id)
+			if id == click_id:
+				self.SetTitle(_(label))
 		for index,sizer in enumerate(self.__sizers):
 			if index == click_index:
 				sizer.Show()
@@ -75,10 +77,10 @@ class Lyrics(wx.BoxSizer):
 		self.__downloads_api = [
 			u'geci.me'
 			]
-		self.__is_download = wx.CheckBox(parent,-1,u'Download lyric')
+		self.__is_download = wx.CheckBox(parent,-1,_(u'Download Lyric'))
 		self.__is_download.Bind(wx.EVT_CHECKBOX,self.click_is_download)
 		self.__is_downloads_api = [
-			wx.CheckBox(parent,-1,u'Download from '+api) for api in self.__downloads_api
+			wx.CheckBox(parent,-1,_(u'Download from %s') % api) for api in self.__downloads_api
 			]
 		sizer = wx.BoxSizer(wx.VERTICAL)
 		sizer.Add(self.__is_download,0,wx.ALL,border=3)
@@ -134,16 +136,16 @@ class Connection(wx.BoxSizer):
 		self.delete = wx.Button(parent,-1,'-',style=wx.BU_EXACTFIT)
 		
 		self.mpd = wx.StaticText(parent,-1,u'mpd')
-		self.profile_label = wx.StaticText(parent,-1,u'profile:')
+		self.profile_label = wx.StaticText(parent,-1,_(u'Profile')+':')
 		self.profile = wx.TextCtrl(parent,-1)
-		self.host_label = wx.StaticText(parent,-1,u'host:')
+		self.host_label = wx.StaticText(parent,-1,_(u'Host')+':')
 		self.host = wx.TextCtrl(parent,-1)
 		self.host.SetFocus()
-		self.port_label = wx.StaticText(parent,-1,u'port:')
+		self.port_label = wx.StaticText(parent,-1,_(u'Port')+':')
 		self.port = wx.TextCtrl(parent,-1)
-		self.use_password = wx.CheckBox(parent,-1,u'password:')
+		self.use_password = wx.CheckBox(parent,-1,_(u'Password')+':')
 		self.password = wx.TextCtrl(parent,-1)
-		self.connect = wx.Button(parent,-1,u'connect')
+		self.connect = wx.Button(parent,-1,_(u'Connect'))
 		sizer = wx.GridBagSizer()
 		params = dict(flag=wx.ALL|wx.ALIGN_CENTRE_VERTICAL,border=3)
 		params_label = dict(flag=wx.ALL|wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT,border=3)
