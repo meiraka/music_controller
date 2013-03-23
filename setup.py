@@ -159,6 +159,15 @@ class Setup(object):
 				plist=plist
 				)
 
+		# add lang
+		langs = glob.glob('osx/*.lproj')
+		for lang in langs:
+			self.setup_args['data_files'].append(
+				(os.path.basename(lang),glob.glob(lang+'/*'))
+				)
+
+
+
 	def run(self):
 		""" Builds or installs app.
 
