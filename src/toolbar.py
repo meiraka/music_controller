@@ -97,7 +97,7 @@ class Toolbar(object):
 				return
 			if u'state' in self.playback.status and self.playback.status[u'state'] == u'play':
 				if obj.GetLabel() == _(u'Play'):
-					obj.SetLabel(_(u'pause'))
+					obj.SetLabel(_(u'Pause'))
 					if environment.userinterface.toolbar_toggle:
 						self.__tool.ToggleTool(id,True)
 			else:
@@ -146,8 +146,8 @@ class Toolbar(object):
 			current = self.client.config.info
 			self.client.config.info = not(current)
 			self.parent.show_not_connection()
-		elif hasattr(self.playback,func_name):
-			getattr(self.playback,func_name)()
+		elif hasattr(self.playback,func_name.lower()):
+			getattr(self.playback,func_name.lower())()
 
 
 class ViewMenu(wx.Menu):
