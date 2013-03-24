@@ -4,10 +4,12 @@ import wx
 from common import client
 from common import environment
 
-import frame
 import thread
 import time
 import gettext
+
+import frame
+import notify
 
 NAME = 'MusicController'
 COMMAND_NAME = 'music-controller'
@@ -40,6 +42,7 @@ class App(wx.App):
 		elif os.path.exists(os.getcwdu() + u'/share/locale'):
 			lang['localedir'] = os.getcwdu() + u'/share/locale'
 		self.__lang = gettext.translation(**lang)
+		self.notifyosd = notify.NotifyOSD(self.client)
 		
 		
 		__builtins__['_']  = self.translate
