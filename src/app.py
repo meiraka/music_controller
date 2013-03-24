@@ -43,7 +43,7 @@ class App(wx.App):
 			lang['localedir'] = os.getcwdu() + u'/share/locale'
 		self.__lang = gettext.translation(**lang)
 		self.notifyosd = notify.NotifyOSD(self.client)
-		
+		self.growlnotify = notify.GrowlNotify(self.client)
 		
 		__builtins__['_']  = self.translate
 		wx.App.__init__(self)

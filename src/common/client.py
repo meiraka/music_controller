@@ -677,4 +677,8 @@ class Config(Object):
 	lyrics_download =    property(*__get_bool(u'lyrics_download',False))
 	lyrics_api_geci_me = property(*__get_bool(u'lyrics_api_geci_me',False))
 	window_size =        property(*__get_tuple(u'window_size',(-1,-1)))
+	notify_growl =       property(*__get_bool(u'notify_growl',True))
+	notify_growl_host =  property(*__get_unicode(u'notify_growl_host',u'localhost'))
+	notify_growl_pass =  property(*__get_unicode(u'notify_growl_pass',u''))
+	notify_osd =         property(*__get_bool(u'notify_osd',True))
 	

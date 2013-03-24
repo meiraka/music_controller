@@ -19,6 +19,19 @@ class NotifyBase(object):
 			send=False,
 			active=active
 			)
+		if active:
+			client.playback.bind(client.playback.UPDATE,self.update)
+
+	def update(self):
+		""" Update song notify.
+
+		get current playing song and call song().
+		"""
+		status = self.client.playback.status
+		if status and u'song' in status and len(self.client.playlist)> int(status[u'song']):
+			self.song(self.client.playlist[int(status[u'song'])])
+
+
 
 	def test(self):
 		pass
@@ -45,17 +58,56 @@ class NotifyOSD(NotifyBase):
 			pynotify.init(APP_NAME)
 			self.notify = pynotify.Notification(APP_NAME,u'Connecting Server',None)
 			NotifyBase.__init__(self,client,True)
-			client.playback.bind(client.playback.UPDATE,self.update)
 		except ImportError:
 			NotifyBase.__init__(self,client,False)
-
-	def update(self):
-		status = self.client.playback.status
-		if status and u'song' in status and len(self.client.playlist)> int(status[u'song']):
-			self.song(self.client.playlist[int(status[u'song'])])
 
 	def song(self,song):
 		title = song.format('%title% %artist%')
 		desc = song.format('%album% %date%')
 		self.notify.update(title,desc,None)
 		self.notify.show()
+
+class GrowlNotify(NotifyBase):
+	def __init__(self,client):
+		self.client = client
+		self.__inited = False
+		try:
+			import gntp
+			NotifyBase.__init__(self,client,True)
+			self.reconnect()
+		except ImportError:
+			NotifyBase.__init__(self,client,False)
+	
+
+	def reconnect(self,*args,**kwargs):
+		import gntp.notifier
+		kwargs = dict(
+			applicationName = APP_NAME,
+			notifications = ["Song","Connection"],
+			defaultNotifications = ["Song"],
+			)
+		if self.client.config.notify_growl_host and not self.client.config.notify_growl_host == 'localhost':
+			kwargs['hostname'] = self.client.config.notify_growl_host
+		if self.client.config.notify_growl_pass:
+			kwargs['password'] = self.client.config.notify_growl_pass
+		growl = gntp.notifier.GrowlNotifier(**kwargs)
+		try:
+			growl.register()
+			self.growl = growl
+			self.__inited = True
+		except gntp.errors.NetworkError:
+			pass
+
+	def song(self,song):
+		title = song.format('%title% %artist%')
+		desc = song.format('%album% %date%')
+		try:
+			self.growl.notify(
+				"Song",
+				title=title,
+				description=desc,
+				sticky=False)
+		except:
+			pass
+
+
