@@ -23,12 +23,6 @@ class MenuBar(wx.MenuBar):
 				(wx.NewId(),u'Close',self.NORMAL),
 				(wx.ID_EXIT,u'Quit',self.NORMAL),
 				(wx.NewId(),u'',self.SPLITTER),
-				(wx.NewId(),u'Remove from List',self.NORMAL),
-				(wx.NewId(),u'And',self.NORMAL),
-				(wx.NewId(),u'Not',self.NORMAL),
-				(wx.NewId(),u'Clear',self.NORMAL),
-				(wx.NewId(),u'Edit Lyric...',self.NORMAL),
-				(wx.NewId(),u'Download Lyric...',self.NORMAL),
 				(wx.NewId(),u'Get Info',self.NORMAL),
 				]),
 			('Edit',[
@@ -84,9 +78,6 @@ class MenuBar(wx.MenuBar):
 		self.__keys = {
 				u'File_Close':'Ctrl+W',
 				u'File_Quit':'Ctrl+Q',
-				u'File_And':'Ctrl+D',
-				u'File_Not':'Ctrl+F',
-				u'File_Clear':'Ctrl+U',
 				u'File_Get Info':'Ctrl+I',
 				u'Edit_Select All':'Ctrl+A',
 				u'Edit_Preferences':'Ctrl+,',
@@ -132,6 +123,9 @@ class MenuBar(wx.MenuBar):
 		self.client.playback.bind(self.client.playback.UPDATE,self.OnUpdate)
 		self.parent.bind(self.parent.VIEW,self.update_by_frame)
 		self.parent.Bind(wx.EVT_IDLE,self.update_by_idle)
+		self.client.connection.bind(self.client.connection.CONNECT,self.update_by_connection)
+		self.client.connection.bind(self.client.connection.CLOSE,self.update_by_connection)
+		self.client.connection.bind(self.client.connection.CLOSE_UNEXPECT,self.update_by_connection)
 
 	def set_accelerator_table(self,keys):
 		flag_tables = dict(Ctrl=wx.ACCEL_CTRL)
@@ -200,6 +194,35 @@ class MenuBar(wx.MenuBar):
 		for id,label,menu_type in items:
 			if label == u'Select All':
 				menu.Enable(id,widget and hasattr(widget,'HasMultipleSelection') and widget.HasMultipleSelection() or type(widget) is wx.TextCtrl and hasattr(widget,'SetSelection'))
+
+
+	def update_by_connection(self,event=None):
+		updates = [
+			u'Rescan Library',
+			u'Get Info',
+			u'Play',
+			u'Stop',
+			u'Previous',
+			u'Next',
+			u'Shuffle',
+			u'Repeat',
+			u'Single',
+			u'Playlist',
+			u'Library',
+			u'Lyric',
+			u'Albumlist',
+			u'Info',
+			u'Focus Current Song',
+			]
+		def __update():
+			for index,(head,items) in enumerate(self.menu_list):
+				menu = self.GetMenu(index)
+				for id,label,menu_type in items:
+					for update_label in updates:
+						if label == update_label:
+							menu.Enable(id,self.client.connection.connected)
+		wx.CallAfter(__update)
+	
 
 	def set_select_all(self):
 		widget = self.FindFocus()
