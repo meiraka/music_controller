@@ -75,6 +75,13 @@ class Frame(wx.Frame,Object):
 		self.client.playback.bind(self.client.playback.UPDATE_PLAYING,self.change_title)
 		if debug: print 'binded.'
 
+	def can_get_info(self):
+		view = getattr(self,self.current_view)
+		return hasattr(view,'IsShown') and view.IsShown() and hasattr(view,'selected_get_info')
+
+	def get_info(self):
+		getattr(getattr(self,self.current_view),'selected_get_info')()
+
 	def hide_children(self):
 		self.playlist.Hide()
 		self.albumlist.Hide()
@@ -82,7 +89,6 @@ class Frame(wx.Frame,Object):
 		self.connection.Hide()
 		self.info.Hide()
 		self.lyric.Hide()
-
 
 	def show_connection(self):
 		self.SetTitle(self.TITLE +' - '+ 'connection')
@@ -93,7 +99,6 @@ class Frame(wx.Frame,Object):
 		self.info.Hide()
 		self.Layout()
 		self.connection.Show()
-		self.connection.SetFocus()
 		self.Layout()
 		self.call(self.VIEW)
 

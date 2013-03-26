@@ -268,7 +268,10 @@ class ViewBase(wx.VListBox):
 		if len( self.songs[key_y][key]):
 			songs = self.songs[key_y][key]
 			dialog.SongInfo(self.parent,songs)
-		
+	
+	def selected_get_info(self):
+		index = self.GetSelection()
+		self.get_info(index)
 
 	def replace_master(self):
 		song_indexed = [(song.format(self.sorter),song) for song in self.__master]

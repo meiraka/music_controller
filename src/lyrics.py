@@ -76,6 +76,9 @@ class LyricView(wx.Panel):
 		self.Bind(wx.EVT_RIGHT_UP,self.OnRightClick)
 		self.__update()
 
+	def selected_get_info(self):
+		dialog.SongInfo(self.parent,[self.__song])
+
 	def update_time(self):
 		""" updates LyricView managed time.
 		"""

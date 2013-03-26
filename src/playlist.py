@@ -58,6 +58,9 @@ class HeaderPlaylistBase(wx.VListBox):
 		if self.__line_song.has_key(song_id):
 			self.RefreshLine(self.__line_song[song_id])
 
+	def selected_get_info(self):
+		dialog.SongInfo(self,self.selected)
+
 	def play(self,index):
 		""" play the given pos song.
 

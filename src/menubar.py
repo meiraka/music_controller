@@ -62,6 +62,7 @@ class MenuBar(wx.MenuBar):
 
 		self.__functions = {
 				u'File_Rescan Library':self.client.library.update,
+				u'File_Get Info':self.parent.get_info,
 				u'File_Quit':sys.exit,
 				u'Edit_Select All':self.set_select_all,
 				u'Edit_Preferences':self.parent.show_preferences,
@@ -181,14 +182,24 @@ class MenuBar(wx.MenuBar):
 
 	def update_by_idle(self,event):
 		widget = self.FindFocus()
-		if widget:
-			index = 1
-			head,items = self.menu_list[index]
-			menu = self.GetMenu(index)
-				
-			for id,label,menu_type in items:
-				if label == u'Select All':
-					menu.Enable(id,hasattr(widget,'HasMultipleSelection') and widget.HasMultipleSelection() or type(widget) is wx.TextCtrl and hasattr(widget,'SetSelection'))
+		# File
+		index = 0
+		head,items = self.menu_list[index]
+		menu = self.GetMenu(index)
+			
+		for id,label,menu_type in items:
+			if label == u'Get Info':
+				menu.Enable(id,self.parent.can_get_info())
+
+
+		# Edit
+		index = 1
+		head,items = self.menu_list[index]
+		menu = self.GetMenu(index)
+			
+		for id,label,menu_type in items:
+			if label == u'Select All':
+				menu.Enable(id,widget and hasattr(widget,'HasMultipleSelection') and widget.HasMultipleSelection() or type(widget) is wx.TextCtrl and hasattr(widget,'SetSelection'))
 
 	def set_select_all(self):
 		widget = self.FindFocus()
