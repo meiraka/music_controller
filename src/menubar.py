@@ -20,10 +20,19 @@ class MenuBar(wx.MenuBar):
 		self.menu_list = [
 			('File',[
 				(wx.NewId(),u'Rescan Library',self.NORMAL),
+				(wx.NewId(),u'Close',self.NORMAL),
+				(wx.ID_EXIT,u'Quit',self.NORMAL),
 				(wx.NewId(),u'',self.SPLITTER),
-				(wx.ID_EXIT,u'Quit',self.NORMAL)
+				(wx.NewId(),u'Remove from List',self.NORMAL),
+				(wx.NewId(),u'And',self.NORMAL),
+				(wx.NewId(),u'Not',self.NORMAL),
+				(wx.NewId(),u'Clear',self.NORMAL),
+				(wx.NewId(),u'Edit Lyric...',self.NORMAL),
+				(wx.NewId(),u'Download Lyric...',self.NORMAL),
+				(wx.NewId(),u'Get Info',self.NORMAL),
 				]),
 			('Edit',[
+				(wx.NewId(),u'Select All',self.NORMAL),
 				(wx.ID_PREFERENCES,u'Preferences',self.NORMAL)
 				]),
 			('Playback',[
@@ -54,6 +63,7 @@ class MenuBar(wx.MenuBar):
 		self.__functions = {
 				u'File_Rescan Library':self.client.library.update,
 				u'File_Quit':sys.exit,
+				u'Edit_Select All':self.set_select_all,
 				u'Edit_Preferences':self.parent.show_preferences,
 				u'Playback_Play':self.set_play,
 				u'Playback_Stop':self.client.playback.stop,
@@ -71,7 +81,13 @@ class MenuBar(wx.MenuBar):
 				u'Help_About':AboutDialog
 				}
 		self.__keys = {
+				u'File_Close':'Ctrl+W',
 				u'File_Quit':'Ctrl+Q',
+				u'File_And':'Ctrl+D',
+				u'File_Not':'Ctrl+F',
+				u'File_Clear':'Ctrl+U',
+				u'File_Get Info':'Ctrl+I',
+				u'Edit_Select All':'Ctrl+A',
 				u'Edit_Preferences':'Ctrl+,',
 				u'Playback_Play':'Space',
 				u'Playback_Next':'Ctrl+Right',
@@ -86,10 +102,10 @@ class MenuBar(wx.MenuBar):
 
 		self.__ids = {}
 		self.__labels = {}
+		self.SetAutoWindowMenu(0)
 		for head,items in self.menu_list:
 			menu = wx.Menu()
 			menu.Bind(wx.EVT_MENU,self.OnMenu)
-			self.Append(menu,head)
 			for id,label,menu_type in items:
 				if menu_type == self.NORMAL:
 					self.__ids[id] = head+u'_'+label
@@ -105,6 +121,8 @@ class MenuBar(wx.MenuBar):
 					self.__ids[id] = head+u'_'+label
 					self.__labels[head+u'_'+label] = id
 					menu.AppendRadioItem(id,label)
+			self.Append(menu,head)
+			self.parent.Bind(wx.EVT_MENU,self.OnMenu,id=id)
 					
 		self.parent.Bind(wx.EVT_MENU,self.OnMenu)
 		if self.accele:
@@ -112,6 +130,7 @@ class MenuBar(wx.MenuBar):
 		self.set_menu_accelerator(self.__keys,self.accele)
 		self.client.playback.bind(self.client.playback.UPDATE,self.OnUpdate)
 		self.parent.bind(self.parent.VIEW,self.update_by_frame)
+		self.parent.Bind(wx.EVT_IDLE,self.update_by_idle)
 
 	def set_accelerator_table(self,keys):
 		flag_tables = dict(Ctrl=wx.ACCEL_CTRL)
@@ -159,7 +178,26 @@ class MenuBar(wx.MenuBar):
 						menu.SetLabel(id,self.menu_label(label,accele)+u'\t'+key)
 					else:
 						menu.SetLabel(id,self.menu_label(label))
-						
+
+	def update_by_idle(self,event):
+		widget = self.FindFocus()
+		if widget:
+			index = 1
+			head,items = self.menu_list[index]
+			menu = self.GetMenu(index)
+				
+			for id,label,menu_type in items:
+				if label == u'Select All':
+					menu.Enable(id,hasattr(widget,'HasMultipleSelection') and widget.HasMultipleSelection() or type(widget) is wx.TextCtrl and hasattr(widget,'SetSelection'))
+
+	def set_select_all(self):
+		widget = self.FindFocus()
+		if widget:
+			if hasattr(widget,'SelectAll'):
+				widget.SelectAll()
+			elif hasattr(widget,'SetSelection'):
+				widget.SetSelection(-1,-1)
+			
 
 	def menu_label(self,label,accele=None):
 		if accele:
@@ -176,6 +214,7 @@ class MenuBar(wx.MenuBar):
 		status = playback.status
 		if status and u'state' in status:
 			playback.pause() if status[u'state'] == u'play' else playback.play()
+
 
 	def toggle_config_value(self,attr,callback=None):
 		def set():
