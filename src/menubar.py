@@ -20,7 +20,6 @@ class MenuBar(wx.MenuBar):
 		self.menu_list = [
 			('File',[
 				(wx.NewId(),u'Rescan Library',self.NORMAL),
-				(wx.NewId(),u'Close',self.NORMAL),
 				(wx.ID_EXIT,u'Quit',self.NORMAL),
 				(wx.NewId(),u'',self.SPLITTER),
 				(wx.NewId(),u'Get Info',self.NORMAL),
@@ -76,7 +75,6 @@ class MenuBar(wx.MenuBar):
 				u'Help_About':AboutDialog
 				}
 		self.__keys = {
-				u'File_Close':'Ctrl+W',
 				u'File_Quit':'Ctrl+Q',
 				u'File_Get Info':'Ctrl+I',
 				u'Edit_Select All':'Ctrl+A',

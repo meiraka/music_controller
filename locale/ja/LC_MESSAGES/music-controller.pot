@@ -11,9 +11,13 @@ msgid "Rescan Library"
 msgstr "ライブラリを再読み込み"
 msgid "Quit"
 msgstr "終了"
+msgid "Close"
+msgstr "閉じる"
 
 msgid "Edit"
 msgstr "編集"
+msgid "Select All"
+msgstr "すべてを選択"
 msgid "Preferences"
 msgstr "設定"
 
