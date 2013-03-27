@@ -4,7 +4,7 @@
 notifies MusicController status by on screen display.
 """
 
-from common import artwork
+import artwork
 
 APP_NAME = u'MusicController'
 

@@ -1,7 +1,9 @@
 #!/usr/bin/python
 
 """
-Draw lyric 
+Lyrics reader and writer.
+
+Supports read, write, search and download lyrics.
 """
 
 import sqlite3

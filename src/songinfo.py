@@ -4,7 +4,7 @@ import thread
 
 import wx
 
-from common import artwork
+import artwork
 from common import environment
 from common.client import Song
 

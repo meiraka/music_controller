@@ -1,207 +1,204 @@
 #!/usr/bin/python
 
+"""
+Artwork reader and writer.
+
+Supports read, write, search and download artwork.
+"""
+
 import os
+import sqlite3
 import thread
-import wx
 import client
 import environment
-import math
-import lastfm
+import rest
 
-class ArtworkFinder(client.Object):
-	DOWNLOADED = 'downloaded'
-	def __init__(self):
-		client.Object.__init__(self)
-		self.__lastfm = lastfm.Artwork()
-		self.__lastfm.download_auto = True
-		self.__lastfm.download_background = True
-		self.__lastfm.bind(self.__lastfm.DOWNLOADED,self.__downloaded)
-
-	def __getitem__(self,song):
-		return self.__lastfm[song]
-
-	def __downloaded(self,path,song):
-		""" event function for lastfm.Album.DOWNLOADED. """
-		self.call(self.DOWNLOADED,path,song)
-
-
-
-class Database(ArtworkFinder):
+class Database(client.Object):
 	"""
-	Artwork database.
-
-	to get song artwork and artwork mirror:
-
-	::
-
-		img = db[song]
-		mirror_img  = db.mirror[song]
-
-	Events:
-		UPDATE -- database is updated. raises with no arguments.
+	Downloads and manages Artwork.
 	"""
+	UPDATING = 'updating'
 	UPDATE = 'update'
-	class Mirror(ArtworkFinder):
-		def __init__(self,parent,enable=False):
-			self.parent = parent
-			ArtworkFinder.__init__(self)
-			self.__images = {}
-			self.__empty_image = None
-			self.__enable = enable
-			if not enable:
-				self.__empty_image = self.parent.empty
-			self.size = (120,120)
-			self.length = 0.3
-		def __getitem__(self,song):
-			""" Returns mirrored artwork image.
-			"""
-			if not self.__enable:
-				return self.__get_empty_image()
-			path = ArtworkFinder.__getitem__(self,song)
-			if not path:
-				return self.__get_empty_image()
-			if self.__images.has_key((path,self.size)):
-				return self.__images[(path,self.size)]
-			else:
-				return self.__get_empty_image()
+	def __init__(self):
+		""" init values and database."""
+		self.__download_path = environment.config_dir+'/artwork'
+		self.__downloading = []
+		self.download_auto = False
+		self.download_background = False
+		self.downloaders = dict(
+			lastfm = True
+			)
 
-		def load(self,path,image):
-			""" converts image to mirror image and 
-			stores image as given path of image.
-			"""
-			mirror = image.Mirror()
-			h = int(mirror.GetHeight()*self.length)
-			mirror = mirror.Rotate90()
-			mirror = mirror.Rotate90()
-			mirror = mirror.Size((mirror.GetWidth(),h),(0,0))
-			if not mirror.HasAlpha():
-				mirror.InitAlpha()
-			w,h = mirror.GetSize()
-			for x in xrange(w):
-				for y in xrange(h):
-					if y:
-						p = int(y*1.0/h * 200)
-						mirror.SetAlpha(x,y,200-p if 200-p>0 else 0)
+		self.download_class = dict(
+			lastfm = rest.ArtworkLastfm
+			)
+		""" init database.
 
-			def __cache_image(path,image):
-				bmp = wx.BitmapFromImage(image)
-				self.__images[(path,self.size)] = bmp
-			wx.CallAfter(__cache_image,path,mirror)
+		if not exists database, create table.
+		"""
+		sql_init = '''
+		CREATE TABLE IF NOT EXISTS artwork
+		(
+			artist TEXT,
+			album TEXT,
+			artwork TEXT,
+			UNIQUE(artist,album)
+		);
+		'''
+		client.Object.__init__(self)
+		connection = self.__get_connection()
+		connection.execute(sql_init)
 
+	def __get_connection(self):
+		""" Returns database instance.
 
-		def __get_empty_image(self):
-			if not self.__empty_image:
-				image = wx.ImageFromBitmap(self.parent.empty)
-				image = image.Mirror()
-				image = image.Rotate90()
-				image = image.Rotate90()
-				h = int(image.GetHeight()*self.length)
-				image = image.Size((image.GetWidth(),h),(0,0))
-				w,h = image.GetSize()
-				if not image.HasAlpha():
-					image.InitAlpha()
-				for x in xrange(w):
-					for y in xrange(h):
-						if y:
-							p = int(y*1.0/h * 200)
-							image.SetAlpha(x,y,200-p if 200-p>0 else 0)
-				self.__empty_image = wx.BitmapFromImage(image)
-			return self.__empty_image
-
-		empty = property(__get_empty_image)
-			
-	def __init__(self,mirror=False):
-		""" Inits database interface.
+		must generate instance at everytime cause
+		sqlite3 is not thread-safe.
+		"""
+		db = sqlite3.connect(environment.config_dir+'/artworkdb')
+		return db
+		
+	def __getitem__(self,song):
+		""" Returns artwork path.
 
 		Arguments:
-			mirror -- if True, generates mirrored image.
+			song - client.Song object.
 
+		Returns u'' if artwork is not found.
+		if not found and self.download_auto,
+		downloads and returns artwork path.
+		if download_background is True,
+		run in another thread and raises UPDATING and UPDATE event.
+
+		check self.downloading param to downloading artwork list.
 		"""
-		ArtworkFinder.__init__(self)
-		self.__files = []
-		self.__images = {}
-		self.__empty = None
-		self.__callbacks = []
-		self.__size = (120,120)
-		self.mirror = Database.Mirror(self,mirror)
-		self.bind(self.DOWNLOADED,self.__load_image)
-
-
-	def __getitem__(self,song):
-		path = ArtworkFinder.__getitem__(self,song)
-		if not path:
-			return self.__get_empty_image()
-		if self.__images.has_key((path,self.size)) and self.__images[(path,self.size)]:
-			return self.__images[(path,self.size)]
-		elif self.__images.has_key((path,self.size)):
-			return self.__get_empty_image()
+		sql_search = '''
+		SELECT artwork FROM artwork WHERE
+			artist=? and
+			album=?
+		'''
+		connection = self.__get_connection()
+		cursor = connection.cursor()
+		cursor.execute(sql_search,
+				(
+				song.format('%albumartist%'),
+				song.format('%album%')
+				)
+			)
+		artwork = cursor.fetchone()
+		if artwork is None:
+			if self.download_auto:
+				if self.download_background:
+					thread.start_new_thread(self.download,(song,))
+				else:
+					return self.download(song)
+			return u''
+		elif artwork[0]:
+			return self.__download_path + '/' + artwork[0]
 		else:
-			thread.start_new_thread(self.__load_image,(path,song))
-			return None
+			return u''
 
-	def __load_image(self,path,song):
-		""" Generates given path of image object.
-		
-		
+	def __setitem__(self,song,artwork_binary):
+		""" Saves artwork binary.
+
+		Arguments:
+			song - song object.
+			artwork - string artwork binary, not filepath.
 		"""
-		self.__images[(path,self.size)] = None
-		image = wx.Image(path)
-		w,h = image.GetSize()
-		if w is 0 or h is 0:
-			return
-		if w > h:
-			new_size = (self.size[0],int(1.0*h/w*self.size[1]))
+
+		# save binary to local dir.
+		if artwork_binary:
+			filename = song.format('%albumartist% %album%')
+			fullpath = self.__download_path + '/' + filename
+			if not os.path.exists(self.__download_path):
+				os.makedirs(self.__download_path)
+			f = open(fullpath,'w')
+			f.write(artwork_binary)
+			f.close()
 		else:
-			new_size = (int(1.0*w/h*self.size[0]),self.size[1])
-		if all([i > 0 for i in new_size]):
-			image.Rescale(*new_size,quality=wx.IMAGE_QUALITY_HIGH)
-		self.mirror.load(path,image)
-		wx.CallAfter(self.__cache_image,path,image)
+			fullpath = u''
+			filename = u''
 
-	def __get_empty_image(self):
-		""" Returns image for "Not found".
-
-		if empty image was not generated, generates and
-		returns image.
-		"""
-		if not self.__empty:
-			self.__empty = wx.EmptyBitmap(*self.__size)
-			writer = wx.MemoryDC(self.__empty)
-			bg,fg = environment.userinterface.colors
-			writer.SetBrush(wx.Brush(bg))
-			writer.SetPen(wx.Pen(bg))
-			writer.DrawRectangle(0,0,*self.__size)
-			writer.SetBrush(wx.Brush(fg))
-			width = environment.userinterface.text_height/2
-			space = int(math.sqrt(width*width*2))
-			writer.SetPen(wx.Pen(fg,width=width))
-			for x in xrange(self.__size[0]/space+1):
-				if x%2:
-					writer.DrawLine(x*space,0,x*space+self.__size[0],self.__size[1])
-					writer.DrawLine(0,x*space,self.__size[0],x*space+self.__size[1])
-		return self.__empty
-
+		# save filepath to database.
+		sql_write = '''
+		INSERT OR REPLACE INTO artwork
+		(artist,album,artwork)
+		VALUES(?, ?, ?)
+		'''
+		connection = self.__get_connection()
+		cursor = connection.cursor()
+		cursor.execute(sql_write,
+				(
+				song.format('%albumartist%'),
+				song.format('%album%'),
+				filename
+				)
+			)
+		connection.commit()
+		if fullpath:
+			self.call(self.UPDATE,song,fullpath)
 		
-
-	def __cache_image(self,path,image):
-		""" converts image to bitmap and stores __cache
-
-		Raises UPDATE event.
-		"""
-		bmp = wx.BitmapFromImage(image)
-		self.__images[(path,self.size)] = bmp
-		self.call(self.UPDATE)
-
-	
-	
-	def __change_size(self,size=None):
-		if size:
-			self.__size = size
-			self.mirror.size = size
-			self.__empty = None
-			self.__get_empty_image()
+	def download(self,song):
+		if not song in self.__downloading:
+			self.__downloading.append(song)
+			self.__setitem__(song,u'')  # flush for terrible lock.
+			self.call(self.UPDATING)
+			artwork_binary = u''
+			for label,is_download in self.downloaders.iteritems():
+				if is_download:
+					downloader = self.download_class[label]()
+					artwork_binary = downloader.download(song)
+					if artwork_binary:
+						break
+				else:
+					pass
+			del self.__downloading[self.__downloading.index(song)]
+			self.__setitem__(song,artwork_binary)
+			return self.__getitem__(song)
 		else:
-			return self.__size
-	size = property(__change_size,__change_size)
-	empty = property(__get_empty_image)
+			return ''
+
+	def list(self,keywords,callback=None):
+		""" Returns candidate artworks of given song.
+
+		Arguments:
+			keywords -- keyword dict like dict(artist=foo,title=bar)
+			callback -- if not None, callback(*each_list_item)
+
+		Returns list like:
+			[
+				( downloadfunc,urlinfo formatter func, urlinfo list),
+				...,
+			]
+
+		to get artwork list[0][0]:
+			returnslist = db.list(keywords)
+			func,formatter,urlinfo_list = returnslist[0]
+			artwork_binary = func(urlinfo_list[0])
+			db[song] = artwork_binary
+			
+
+		to show readable candidate artworks:
+			returnslist = db.list(keywords)
+			for func,formatter,urlinfo_list in returnslist:
+				for urlinfo in urlinfo_list:
+					print formatter(urlinfo)
+		"""
+
+		lists = []
+		for label,is_download in self.downloaders.iteritems():
+			if is_download:
+				downloader = self.download_class[label]()
+				urls = downloader.list(**keywords)
+				appends = (downloader.get,downloader.format,urls)
+				lists.append(appends)
+				if callback:
+					callback(*appends)
+			else:
+				pass
+		return lists
+
+	downloading = property(lambda self:self.__downloading)
+
+
 

@@ -32,6 +32,7 @@ class Downloader(object):
 		"""
 		items = self.list(title=song.format('%title%'),
 				artist=song.format('%artist%'),
+				albumartist=song.format('%albumartist%'),
 				album = song.format('%album%'))
 		if items:
 			time.sleep(1)
@@ -77,19 +78,21 @@ class ArtworkLastfm(Downloader):
 	KEY = u'1f898a6986e69cd5a456d18e56051e0c'
 	SECRET = u'4c77ec44c856dc04bbc5b69a6068a8d9'
 	def list(self,**kwargs):
-		artist = kwargs['artist']
+		artist = kwargs['albumartist']
 		album = kwargs['album']
 		req = 'http://ws.audioscrobbler.com/2.0/?method=album.getinfo&api_key=%(key)s&artist=%(artist)s&album=%(album)s&format=json'
-		req = req * dict(key=self.KEY,
+		req = req % dict(key=self.KEY,
 				artist=urllib.quote(artist.encode('utf8')),
 				album=urllib.quote(album.encode('utf8')))
 		try:
-			json_text = urllib.urlopen(reqest).read().decode('utf8')
+			json_text = urllib.urlopen(req).read().decode('utf8')
 		except urllib2.URLError,err:
 			self.download_errmsg(req,err)
 		json_parsed = json.loads(json_text)
 		if 'album' in json_parsed and 'image' in json_parsed['album']:
-			return [i for i in json_parsed['album']['image'] if '#text' in i]
+			url_list = [i for i in json_parsed['album']['image'] if '#text' in i]
+			url_list.reverse()
+			return url_list
 		else:
 			return []
 
@@ -97,8 +100,10 @@ class ArtworkLastfm(Downloader):
 		""" Returns image binary text. not image path.
 		"""
 		url = list_returns_line['#text']
-		try:
-			image_bin = urllib2.urlopen(path).read()
-		except urllib2.URLError,err:
-			self.download_errmsg(req,err)
-		return image_bin
+		if url:
+			try:
+				image_bin = urllib2.urlopen(url).read()
+				return image_bin
+			except urllib2.URLError,err:
+				self.download_errmsg(req,err)
+		return ''
