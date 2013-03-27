@@ -97,6 +97,8 @@ class Database(client.Object):
 		elif artwork[0]:
 			return self.__download_path + '/' + artwork[0]
 		else:
+			# download is blocked
+			# or already downloaded but not found any data.
 			return u''
 
 	def __setitem__(self,song,artwork_binary):
