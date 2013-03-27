@@ -9,9 +9,10 @@ Supports read, write, search and download artwork.
 import os
 import sqlite3
 import thread
+
 import client
-import environment
 import rest
+import environment
 
 class Database(client.Object):
 	"""

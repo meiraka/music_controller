@@ -10,10 +10,13 @@ import urllib2
 import json
 
 class Downloader(object):
+	"""
+	Base class for rest api.
+	"""
 	def list(self,**kwargs):
 		""" Returns list for format() or get() arg.
 
-		Normally returns lyric url.
+		Normally returns data url.
 		"""
 		pass
 
@@ -23,12 +26,12 @@ class Downloader(object):
 		return unicode(list_returns_line)
 
 	def get(self,list_returns_line):
-		""" Returns lyric from url in given arg data.
+		""" Returns data from url in given arg data.
 		"""
 		pass
 
 	def download(self,song):
-		""" Returns lyric by given song data.
+		""" Returns data by given song data.
 		"""
 		items = self.list(title=song.format('%title%'),
 				artist=song.format('%artist%'),
@@ -43,6 +46,9 @@ class Downloader(object):
 
 
 class GeciMe(Downloader):
+	"""
+	Download lyrics from geci.me
+	"""
 	def list(self,**kwargs):
 		if not 'title' in kwargs:
 			return []
@@ -75,6 +81,9 @@ class GeciMe(Downloader):
 
 
 class ArtworkLastfm(Downloader):
+	"""
+	Download artwork from lastfm.
+	"""
 	KEY = u'1f898a6986e69cd5a456d18e56051e0c'
 	SECRET = u'4c77ec44c856dc04bbc5b69a6068a8d9'
 	def list(self,**kwargs):

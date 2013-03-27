@@ -7,17 +7,11 @@ Supports read, write, search and download lyrics.
 """
 
 import sqlite3
-import time
-import urllib
-import urllib2
-import json
 import thread
-import re
 
 import client
 import rest
 import environment
-
 
 class Database(client.Object):
 	"""
