@@ -69,8 +69,8 @@ class NotifyOSD(NotifyBase):
 			NotifyBase.__init__(self,client,False)
 
 	def song(self,song):
-		title = song.format('%title% %artist%')
-		desc = song.format('%album% %date%')
+		title = song.format('%title%')
+		desc = song.format('%artist%\n%album% %date%')
 		img = self.artwork[song]
 		self.notify.update(title,desc,img)
 		self.notify.set_timeout(4000)
