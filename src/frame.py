@@ -20,7 +20,7 @@ class Frame(wx.Frame,Object):
 		""" generate main app window."""
 		self.parent = parent
 		self.client = client
-		self.current_view = None
+		self.current_view = 'playlist'
 		wx.Frame.__init__(self,parent,-1)
 		Object.__init__(self)
 		self.SetTitle(self.TITLE)
