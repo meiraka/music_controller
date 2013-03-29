@@ -43,10 +43,10 @@ class Song(Data):
 		return u'%%'.join(f)
 
 	def __get_artwork(self):
-		return self.__artwork[self]
+		return self.__artwork[self] if self.__artwork else ''
 
 	def __get_lyric(self):
-		return self.__lyrics[self]
+		return self.__lyrics[self] if self.__lyrics else ''
 
 	artwork = property(__get_artwork)
 	lyric   = property(__get_lyric)
@@ -66,8 +66,8 @@ class Client(Object):
 	def __init__(self,config_path='./'):
 		Object.__init__(self)
 		self.__config     = Config(config_path)
-		self.__artwork    = artwork.Database()
-		self.__lyrics     = lyrics.Database()
+		self.__artwork    = artwork.Database(self)
+		self.__lyrics     = lyrics.Database(self)
 		self.__connection = Connection(self.config)
 		self.__playback   = Playback(self.__connection,self.__config)
 		args = [self.__connection,self.__playback,self.__config,self.__artwork,self.__lyrics]
@@ -85,6 +85,8 @@ class Client(Object):
 	library = property(lambda self:self.__library)
 	playlist = property(lambda self:self.__playlist)
 	connection = property(lambda self:self.__connection)
+	artwork = property(lambda self:self.__artwork)
+	lyrics = property(lambda self:self.__lyrics)
 	
 
 class Connection(Object):

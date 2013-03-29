@@ -4,8 +4,6 @@
 notifies MusicController status by on screen display.
 """
 
-import artwork
-
 APP_NAME = u'MusicController'
 
 class NotifyBase(object):
@@ -59,7 +57,6 @@ class NotifyBase(object):
 class NotifyOSD(NotifyBase):
 	def __init__(self,client):
 		self.client = client
-		self.artwork = artwork.ArtworkFinder()
 		try:
 			import pynotify
 			pynotify.init(APP_NAME)
@@ -71,13 +68,13 @@ class NotifyOSD(NotifyBase):
 	def song(self,song):
 		title = song.format('%title%')
 		desc = song.format('%artist%\n%album% %date%')
-		img = self.artwork[song]
+		img = song.artwork
 		self.notify.update(title,desc,img)
 		self.notify.set_timeout(4000)
 		try:
 			self.notify.show()
-		except:
-			pass
+		except Exception,err:
+			print err
 
 class GrowlNotify(NotifyBase):
 	def __init__(self,client):

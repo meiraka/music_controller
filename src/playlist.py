@@ -12,12 +12,12 @@ class HeaderPlaylistBase(wx.VListBox):
 	"""
 	Show playlist with album header.
 	"""
-	def __init__(self,parent,playlist,playback,head_format,
+	def __init__(self,parent,client,head_format,
 			list_height,list_head_size,list_min_low,debug=False):
 		wx.VListBox.__init__(self,parent,-1,style=wx.LB_MULTIPLE)
 		# set client objects.
-		self.playlist = playlist
-		self.playback = playback
+		self.playlist = client.playlist
+		self.playback = client.playback
 		# generates by this ui.
 		self.songs = []       # playlist struct
 		self.__line_song = {} # key=line index value=song
@@ -286,9 +286,9 @@ class AlbumListBase(wx.ScrolledWindow):
 
 	Overrides draw_background and draw_album to show items.
 	"""
-	def __init__(self,parent,playlist,playback,box_size,scroll_block,debug=False):
+	def __init__(self,parent,client,box_size,scroll_block,debug=False):
 		wx.ScrolledWindow.__init__(self,parent,style=wx.TAB_TRAVERSAL)
-		self.playlist = playlist
+		self.playlist = client.playlist
 		self.albums = []
 		self.group_songs = []
 		self.selected = []
@@ -481,13 +481,13 @@ class Menu(wx.Menu):
 
 
 class HeaderPlaylist(HeaderPlaylistBase):
-	def __init__(self,parent,playlist,playback,debug=False):
+	def __init__(self,parent,client,debug=False):
 		text_height = environment.userinterface.text_height
-		HeaderPlaylistBase.__init__(self,parent,playlist,playback,u'%album%',
+		HeaderPlaylistBase.__init__(self,parent,client,u'%album%',
 			text_height*3/2,2,6,debug)
 		self.active_background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT )
 		self.background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX)
-		self.artwork = artwork.Database()
+		self.artwork = artwork.Loader(client)
 		self.artwork.size = (text_height*8,text_height*8)
 		self.artwork.bind(self.artwork.UPDATE,self.RefreshAll)
 
@@ -580,7 +580,7 @@ class HeaderPlaylist(HeaderPlaylistBase):
 		pass
 
 	def draw_songs(self,dc,rect,song):
-		bmp = self.artwork[song]
+		bmp = self.artwork[song.artwork]
 		if not bmp:
 			bmp = self.artwork.empty
 		if bmp:
@@ -595,17 +595,16 @@ class HeaderPlaylist(HeaderPlaylistBase):
 
 
 class AlbumList(AlbumListBase):
-	def __init__(self,parent,playlist,playback,debug=False):
+	def __init__(self,parent,client,debug=False):
 		text_height = environment.userinterface.text_height
 		box_size = (text_height*10,text_height*12)
 		scroll_block = text_height
-		self.artwork = artwork.Database()
+		self.artwork = artwork.Loader(client)
 		self.artwork.size = (text_height*8,text_height*8)  # image size
 		self.artwork.bind(self.artwork.UPDATE,self.update)
 		self.active_background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT )
 		self.background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX)
-		AlbumListBase.__init__(self,parent,playlist,
-				playback,box_size,scroll_block,debug)
+		AlbumListBase.__init__(self,parent,client,box_size,scroll_block,debug)
 		self.SetBackgroundColour(self.background_color)
 
 
@@ -628,7 +627,7 @@ class AlbumList(AlbumListBase):
 		text_height = environment.userinterface.text_height
 		x = x + text_height*1
 		y = y + text_height*1
-		image = self.artwork[song]
+		image = self.artwork[song.artwork]
 		if not image:
 			image = self.artwork.empty
 		image_size = image.GetSize()

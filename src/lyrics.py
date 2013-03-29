@@ -13,33 +13,10 @@ import thread
 import re
 
 from common import environment
-from common import lyrics
 
 import wx
 import dialog
 
-
-class Database(lyrics.Database):
-	""" extends Database class with config."""
-	def __init__(self,client):
-		self.client = client
-		lyrics.Database.__init__(self)
-
-	def download(self,song):
-		""" download lyric.
-
-		if turn off by config ,
-		does not download or does not use some api.
-		"""
-		if self.client.config.lyrics_download:
-			downloaders = {}
-			for label,isd in self.downloaders.iteritems():
-				attr = u'lyrics_api_'+label
-				downloaders[label] = getattr(self.client.config,attr)
-			self.downloaders = downloaders
-			lyrics.Database.download(self,song)
-		else:
-			pass
 
 class LyricView(wx.Panel):
 	"""
@@ -52,10 +29,7 @@ class LyricView(wx.Panel):
 		self.fg = wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWTEXT)
 		self.hbg = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT)
 		self.hfg = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT)
-		self.database = Database(client)
-		self.database.clear_empty_lyrics()
-		self.database.download_auto = True
-		self.database.download_background = True
+		self.database = client.lyrics
 
 		self.time = 0
 		self.time_msec = 0.0

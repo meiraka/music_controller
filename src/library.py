@@ -36,13 +36,13 @@ default_settings = [
 default_sorter = '%albumartist% %disc% %date% %album% %track_index% %title%'
 
 class ViewBase(wx.VListBox):
-	def __init__(self,parent,library,playlist,
+	def __init__(self,parent,client,
 			criteria_default_height,criteria_root_height,
 			criteria_song_height,criteria_album_height,debug=False):
 		wx.VListBox.__init__(self,parent,-1)
 		self.parent = parent
-		self.library = library
-		self.playlist = playlist
+		self.library = client.library
+		self.playlist = client.playlist
 		self.settings = [[format for format,style in i] for i in default_settings]
 		self.styles = [[style for format,style in i] for i in default_settings]
 		self.sorter = default_sorter
@@ -306,16 +306,16 @@ class Menu(wx.Menu):
 
 
 class View(ViewBase):
-	def __init__(self,parent,library,playlist,debug=False):
+	def __init__(self,parent,client,debug=False):
 		text_height = environment.userinterface.text_height
 		self.active_background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT )
 		self.background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX)
 	
-		ViewBase.__init__(self,parent,library,playlist,
+		ViewBase.__init__(self,parent,client,
 			text_height*3/2,text_height*3/2,text_height*3/2,text_height*4,debug)
 		self.text_height = text_height
 		self.diff = text_height/4
-		self.artwork = artwork.Database()
+		self.artwork = artwork.Loader(client)
 		self.artwork.size = (text_height*7/2,text_height*7/2)
 		self.artwork.bind(self.artwork.UPDATE,self.RefreshAll)
 
@@ -356,7 +356,7 @@ class View(ViewBase):
 		left = left + depth*self.text_height*2 + self.text_height
 		top = top + self.diff
 		song = songs[0]
-		bmp = self.artwork[song]
+		bmp = self.artwork[song.artwork]
 		if not bmp:
 			bmp = self.artwork.empty
 		image_size = bmp.GetSize()

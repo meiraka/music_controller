@@ -1,7 +1,6 @@
 
 import wx
 from common import environment
-from common import lyrics
 
 frame = wx.Frame
 if environment.userinterface.subwindow_small_frame:
@@ -25,7 +24,6 @@ class SongInfo(Frame):
 	def __init__(self,parent,songs):
 		Frame.__init__(self,None)
 		self.songs = songs
-		self.lyrics_database = lyrics.Database()
 		self.must_tags = [u'artist',u'title',u'album']
 		must = wx.CollapsiblePane(self,-1,_('General Info')+':')
 		sub = wx.CollapsiblePane(self,-1,_('Extra Info')+':')
@@ -121,4 +119,4 @@ class SongInfo(Frame):
 			label.SetLabel(_(tag)+':')
 			value.SetValue(song[tag])
 		self.SetTitle(u'%s info' % song.format(u'%title% - %artist%'))
-		self.lyric.SetValue(self.lyrics_database[song])
+		self.lyric.SetValue(song.lyric)

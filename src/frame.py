@@ -32,12 +32,9 @@ class Frame(wx.Frame,Object):
 		self.SetMenuBar(self.menubar)
 		self.toolbar = toolbar.Toolbar(self,self.client)
 
-		self.playlist = playlist.HeaderPlaylist(self,self.client.playlist,
-				self.client.playback,debug)
-		self.library = library.View(self,self.client.library,
-				self.client.playlist,debug)
-		self.albumlist = playlist.AlbumList(self,self.client.playlist,
-				self.client.playback,debug)
+		self.playlist = playlist.HeaderPlaylist(self,self.client,debug)
+		self.library = library.View(self,self.client,debug)
+		self.albumlist = playlist.AlbumList(self,self.client,debug)
 		self.info = songinfo.Info(self,self.client,debug)
 		self.connection = preferences.Connection(self,self.client)
 		self.lyric = lyrics.LyricView(self,self.client)

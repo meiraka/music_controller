@@ -20,8 +20,9 @@ class Database(Object):
 	"""
 	UPDATING = 'updating'
 	UPDATE = 'update'
-	def __init__(self):
+	def __init__(self,client):
 		""" init values and database."""
+		self.client = client
 		self.__download_path = environment.config_dir+'/artwork'
 		self.__downloading = []
 		self.download_auto = False
