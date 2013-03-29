@@ -113,8 +113,8 @@ class Database(Object):
 		if artwork_binary:
 			filename = song.format('%albumartist% %album%')
 			fullpath = self.__download_path + '/' + filename
-			if not os.path.exists(self.__download_path):
-				os.makedirs(self.__download_path)
+			if not os.path.exists(os.path.dirname(fullpath)):
+				os.makedirs(os.path.dirname(fullpath))
 			f = open(fullpath,'w')
 			f.write(artwork_binary)
 			f.close()

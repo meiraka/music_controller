@@ -42,7 +42,7 @@ class Downloader(object):
 			return self.get(items[0])
 
 	def download_errmsg(self,url,err):
-		print 'cam not access: ',msg,err
+		print 'cam not access: ',url,err
 
 
 class GeciMe(Downloader):
