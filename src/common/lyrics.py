@@ -9,11 +9,11 @@ Supports read, write, search and download lyrics.
 import sqlite3
 import thread
 
-import client
+from base import Object
 import rest
 import environment
 
-class Database(client.Object):
+class Database(Object):
 	"""
 	Downloads and manages lyric.
 	"""
@@ -45,7 +45,7 @@ class Database(client.Object):
 			UNIQUE(artist,title,album)
 		);
 		'''
-		client.Object.__init__(self)
+		Object.__init__(self)
 		connection = self.__get_connection()
 		connection.execute(sql_init)
 

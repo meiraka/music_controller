@@ -10,11 +10,11 @@ import os
 import sqlite3
 import thread
 
-import client
+from base import Object
 import rest
 import environment
 
-class Database(client.Object):
+class Database(Object):
 	"""
 	Downloads and manages Artwork.
 	"""
@@ -46,7 +46,7 @@ class Database(client.Object):
 			UNIQUE(artist,album)
 		);
 		'''
-		client.Object.__init__(self)
+		Object.__init__(self)
 		connection = self.__get_connection()
 		connection.execute(sql_init)
 
