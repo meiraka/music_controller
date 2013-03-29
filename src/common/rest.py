@@ -99,7 +99,7 @@ class ArtworkLastfm(Downloader):
 			self.download_errmsg(req,err)
 		json_parsed = json.loads(json_text)
 		if 'album' in json_parsed and 'image' in json_parsed['album']:
-			url_list = [i for i in json_parsed['album']['image'] if '#text' in i]
+			url_list = [i for i in json_parsed['album']['image'] if '#text' in i and i['#text']]
 			url_list.reverse()
 			return url_list
 		else:
