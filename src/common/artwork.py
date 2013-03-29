@@ -58,7 +58,7 @@ class Database(Object):
 		"""
 		db = sqlite3.connect(environment.config_dir+'/artworkdb')
 		return db
-		
+
 	def __getitem__(self,song):
 		""" Returns artwork path.
 
@@ -140,6 +140,14 @@ class Database(Object):
 		connection.commit()
 		if fullpath:
 			self.call(self.UPDATE,song,fullpath)
+
+	def clear_empty(self):
+		sql_clear = 'delete from artwork where artwork="";'
+		connection = self.__get_connection()
+		cursor = connection.cursor()
+		cursor.execute(sql_clear)
+		connection.commit()
+		
 		
 	def download(self,song):
 		if not song in self.__downloading:

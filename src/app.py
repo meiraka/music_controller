@@ -2,6 +2,7 @@ import os
 import wx
 
 from common import client
+from common import artwork
 from common import environment
 
 import thread
@@ -45,8 +46,14 @@ class App(wx.App):
 		self.notifyosd = notify.NotifyOSD(self.client)
 		self.growlnotify = notify.GrowlNotify(self.client)
 		
+		self.clear_empty_artwork_data()
+		
 		__builtins__['_']  = self.translate
 		wx.App.__init__(self)
+
+	def clear_empty_artwork_data(self):
+		db = artwork.Database()
+		db.clear_empty()
 
 	def translate(self,text):
 		""" translate text to current system language.
