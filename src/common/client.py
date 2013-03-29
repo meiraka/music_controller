@@ -25,7 +25,7 @@ class Data(dict):
 class Song(Data):
 	splitter = re.compile(u'\\%\\%')
 	__param = re.compile(u'\\%([^\\%]+\\%)')
-	def __init__(self,data):
+	def __init__(self,data,artwork=None,lyrics=None):
 		if u'time' in data:
 			t = int(data[u'time'].split(u':')[0])
 			data[u'length'] = u'%i:%s' % (t/60,str(t%60).zfill(2))
@@ -33,11 +33,23 @@ class Song(Data):
 			data[u'track_index'] = data[u'track'].zfill(2)
 		if not data.has_key(u'albumartist') and data.has_key(u'artist'):
 			data[u'albumartist'] = data[u'artist']
+		self.__artwork = artwork
+		self.__lyrics = lyrics
 		Data.__init__(self,data)
+
 	def format(self,format_string):
 		v = self.splitter.split(format_string)
 		f = [u''.join([ self[ii[:-1]] if ii.endswith(u'%') and len(ii) > 0 and self.has_key(ii[:-1]) else u' [no %s] ' % ii[:-1] if ii.endswith(u'%') else ii  for ii in self.__param.split(i)]) for i in v]
 		return u'%%'.join(f)
+
+	def __get_artwork(self):
+		return self.__artwork[self]
+
+	def __get_lyric(self):
+		return self.__lyrics[self]
+
+	artwork = property(__get_artwork)
+	lyric   = property(__get_lyric)
 		
 class Error(Exception):
 	pass
@@ -54,10 +66,13 @@ class Client(Object):
 	def __init__(self,config_path='./'):
 		Object.__init__(self)
 		self.__config     = Config(config_path)
+		self.__artwork    = artwork.Database()
+		self.__lyrics     = lyrics.Database()
 		self.__connection = Connection(self.config)
 		self.__playback   = Playback(self.__connection,self.__config)
-		self.__library    = Library(self.__connection,self.__playback,self.__config)
-		self.__playlist   = Playlist(self.__connection,self.__playback,self.__config)
+		args = [self.__connection,self.__playback,self.__config,self.__artwork,self.__lyrics]
+		self.__library    = Library(*args)
+		self.__playlist   = Playlist(*args)
 
 	def connect(self,profile=None):
 		return self.__connection.connect(profile)
@@ -328,8 +343,8 @@ class Playlist(Object):
 	class Song(Song):
 		""" A playable song object.
 		"""
-		def __init__(self,song,connection):
-			Song.__init__(self,song)
+		def __init__(self,song,connection,artwork,lyrics):
+			Song.__init__(self,song,artwork,lyrics)
 			self.__connection = connection
 
 		def play(self):
@@ -340,11 +355,13 @@ class Playlist(Object):
 		def remove(self):
 			self.__connection.execute(u'deleteid',False,self[u'id'])
 			
-	def __init__(self,connection,playback,config):
+	def __init__(self,connection,playback,config,artwork,lyrics):
 		Object.__init__(self)
 		self.__connection = connection
 		self.__playback = playback
 		self.__config = config
+		self.__artwork = artwork
+		self.__lyrics = lyrics
 		self.__data = []
 		self.__selected = []
 		self.__focused = None
@@ -379,7 +396,7 @@ class Playlist(Object):
 		""" update playlist songs cache.
 		"""
 		data = self.__connection.execute('playlistinfo')
-		self.__data = [Playlist.Song(song,self.__connection) for song in data]
+		self.__data = [Playlist.Song(song,self.__connection,self.__artwork,self.__lyrics) for song in data]
 		if self.__config.playlist_focus:
 			self.focus_playing()
 		self.call(self.UPDATE)
@@ -484,11 +501,13 @@ class Playlist(Object):
 
 class Library(Object):
 	UPDATE = 'update'
-	def __init__(self,connection,playback,config):
+	def __init__(self,connection,playback,config,artwork,lyrics):
 		Object.__init__(self)
 		self.__connection = connection
 		self.__playback = playback
 		self.__config = config
+		self.__artwork = artwork
+		self.__lyrics = lyrics
 		self.__data = []
 		self.__connection.bind(self.__connection.CONNECT,self.__update_cache)
 		self.__playback.bind(self.__playback.UPDATE_DATABASE,self.__update_cache)
@@ -518,7 +537,7 @@ class Library(Object):
 		"""
 		data = self.__connection.execute('listallinfo')
 		# remove invalid songs.
-		self.__data = [Song(songinfo) for songinfo in data if songinfo.has_key(u'file')]
+		self.__data = [Song(songinfo,self.__artwork,self.__lyrics) for songinfo in data if songinfo.has_key(u'file')]
 		self.call(self.UPDATE)
 
 
