@@ -11,16 +11,16 @@ import wx
 import math
 from common import environment
 from common import artwork
-from common import client
+from common import Object
 
-class ArtworkFinder(client.Object):
+class ArtworkFinder(Object):
 	""" Wrapper for common.artwork.Database.
 
 	This class will be removed.
 	"""
 	DOWNLOADED = 'downloaded'
 	def __init__(self):
-		client.Object.__init__(self)
+		Object.__init__(self)
 		self.__db = artwork.Database()
 		self.__db.download_auto = True
 		self.__db.download_background = True
