@@ -114,5 +114,5 @@ class ArtworkLastfm(Downloader):
 				image_bin = urllib2.urlopen(url).read()
 				return image_bin
 			except urllib2.URLError,err:
-				self.download_errmsg(req,err)
+				self.download_errmsg(url,err)
 		return ''
