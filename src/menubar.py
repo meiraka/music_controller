@@ -1,5 +1,6 @@
 
 import sys
+import webbrowser
 import wx
 
 from common import environment

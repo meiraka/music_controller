@@ -54,6 +54,7 @@ class App(wx.App):
 		
 		__builtins__['_']  = self.translate
 		wx.App.__init__(self)
+		self.SetMacHelpMenuTitleName(_('Help'))
 
 
 	def translate(self,text):
