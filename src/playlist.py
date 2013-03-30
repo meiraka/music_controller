@@ -487,6 +487,7 @@ class HeaderPlaylist(HeaderPlaylistBase):
 			text_height*3/2,2,6,debug)
 		self.active_background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT )
 		self.background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX)
+		self.active_forground_color  = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT)
 		self.artwork = artwork.Loader(client)
 		self.artwork.size = (text_height*8,text_height*8)
 		self.artwork.bind(self.artwork.UPDATE,self.RefreshAll)
@@ -501,6 +502,8 @@ class HeaderPlaylist(HeaderPlaylistBase):
 		dc.DrawRectangle(*list(rect.GetPosition())+ list(rect.GetSize()))
 
 	def draw_head(self,dc,rect,index,song):
+		if self.IsSelected(index):
+			dc.SetTextForeground(self.active_forground_color)
 		left_text = song.format(u'%album%')
 		right_text = song.format(u'%genre%')
 		size = dc.GetTextExtent(left_text+right_text)
@@ -530,6 +533,8 @@ class HeaderPlaylist(HeaderPlaylistBase):
 				return ''
 
 	def draw_song(self,dc,rect,index,song,group_index):
+		if self.IsSelected(index):
+			dc.SetTextForeground(self.active_forground_color)
 		left_text = song.format(u'%title%')
 		time = int(song[u'time'])
 		right_text = u'%i:%s' % (time/60, str(time%60).zfill(2))
@@ -551,6 +556,9 @@ class HeaderPlaylist(HeaderPlaylistBase):
 		dc.DrawText(right_text,*right_pos)
 
 	def draw_current_song(self,dc,rect,index,song,group_index):
+		if self.IsSelected(index):
+			dc.SetTextForeground(self.active_forground_color)
+
 		left_text = u'>>>' + song.format(u'%title%')
 		time = int(song[u'time'])
 		status = self.playback.status

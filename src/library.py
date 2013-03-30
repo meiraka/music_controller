@@ -310,7 +310,7 @@ class View(ViewBase):
 		text_height = environment.userinterface.text_height
 		self.active_background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT )
 		self.background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX)
-	
+		self.active_forground_color  = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT)
 		ViewBase.__init__(self,parent,client,
 			text_height*3/2,text_height*3/2,text_height*3/2,text_height*4,debug)
 		self.text_height = text_height
@@ -332,6 +332,8 @@ class View(ViewBase):
 				return ''
 	
 	def draw_default(self,dc,rect,label,songs,index,depth):
+		if self.IsSelected(index):
+			dc.SetTextForeground(self.active_forground_color)
 		diff = depth*self.text_height*2
 		left_pos = rect.GetPosition()
 		left_pos = [left_pos[0]+self.text_height,left_pos[1]+self.diff]
@@ -352,6 +354,8 @@ class View(ViewBase):
 	def draw_album(self,dc,rect,label,songs,index,depth):
 		if len(songs) == 0:
 			return
+		if self.IsSelected(index):
+			dc.SetTextForeground(self.active_forground_color)
 		left,top = rect.GetPosition()
 		left = left + depth*self.text_height*2 + self.text_height
 		top = top + self.diff
@@ -375,6 +379,8 @@ class View(ViewBase):
 	def draw_song(self,dc,rect,label,songs,index,depth):
 		if len(songs) == 0:
 			return
+		if self.IsSelected(index):
+			dc.SetTextForeground(self.active_forground_color)
 		song = songs[0]
 		diff = depth*self.text_height*2
 		left_pos = rect.GetPosition()
@@ -396,6 +402,8 @@ class View(ViewBase):
 	def draw_root(self,dc,rect,label,songs,index,depth):
 		if len(songs) == 0:
 			return
+		if self.IsSelected(index):
+			dc.SetTextForeground(self.active_forground_color)
 		song = songs[0]
 		diff = depth*self.text_height*2
 		left_pos = rect.GetPosition()
