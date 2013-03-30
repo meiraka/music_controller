@@ -52,6 +52,7 @@ class Info(wx.BoxSizer):
 		self.Add(self.sizer,1,wx.EXPAND)
 		self.__update(self.client.playback.status)
 		self.client.playback.bind(self.client.playback.UPDATE,self.update)
+		self.client.connection.bind(self.client.connection.CONNECT,self.update)
 
 	def Hide(self):
 		self.ShowItems(False)
@@ -87,12 +88,15 @@ class Info(wx.BoxSizer):
 			if not self.slider.GetMax() == max:
 				self.slider.SetMax(max)
 			self.slider.SetValue(current)
-		image = self.artwork_loader[song.artwork]
+		image_path = ''
+		if song:
+			image_path = song.artwork
+		image = self.artwork_loader[image_path]
 		if not self.__image == image:
 			self.__image = image
 			if self.__image:
 				self.artwork.SetBitmap(self.__image)
-				self.artwork_mirror.SetBitmap(self.artwork_loader.mirror[song.artwork])
+				self.artwork_mirror.SetBitmap(self.artwork_loader.mirror[image_path])
 			else:
 				self.artwork.SetBitmap(self.artwork_loader.empty)
 				self.artwork_mirror.SetBitmap(self.artwork_loader.mirror.empty)
