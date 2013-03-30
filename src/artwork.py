@@ -134,6 +134,8 @@ class Loader(Object):
 		"""
 		self.__images[(path,self.size)] = None
 		image = wx.Image(path)
+		if not image.IsOk():
+			return
 		w,h = image.GetSize()
 		if w is 0 or h is 0:
 			return
