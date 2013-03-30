@@ -157,9 +157,12 @@ class ViewMenu(wx.Menu):
 		items = [u'Playlist',u'Library',u'Lyric']
 		self.__items = dict([(item,wx.NewId()) for item in items])
 		for item in items:
-			self.Append(self.__items[item],_(item),_(item))
+			id = self.__items[item]
+			self.AppendRadioItem(id,_(item),_(item))
+			if item.lower() == self.parent.parent.current_view:
+				self.Check(id,True)
 			func_name = 'show_'+item.lower()
-			self.Bind(wx.EVT_MENU,getattr(self,func_name),id=self.__items[item])
+			self.Bind(wx.EVT_MENU,getattr(self,func_name),id=id)
 
 	def show_playlist(self,event):
 		self.parent.parent.show_playlist()
