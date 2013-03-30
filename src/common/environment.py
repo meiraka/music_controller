@@ -59,6 +59,7 @@ class __UI(object):
 		text_height - desktop font height.
 	"""
 	__cached = dict(
+		fill_window_background = True,
 		fill_readonly_background = False,
 		subitem_small_font = False,
 		subwindow_small_frame = False,
@@ -73,6 +74,7 @@ class __UI(object):
 		)
 	def __init__(self):
 		if wx.PlatformInfo[1] == 'wxGTK':
+			#self.__cached['fill_window_background'] = False
 			self.__cached['style'] = u'gtk'
 		if wx.PlatformInfo[1] == 'wxMac':
 			self.__cached['fill_readonly_background'] = True
@@ -152,6 +154,7 @@ class __UI(object):
 			return self.__cached[key]
 		return get
 
+	fill_window_background =   property(__get('fill_window_background'))
 	fill_readonly_background = property(__get('fill_readonly_background'))
 	subitem_small_font =       property(__get('subitem_small_font'))
 	subwindow_small_frame =    property(__get('subwindow_small_frame')) 

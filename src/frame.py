@@ -33,13 +33,16 @@ class Frame(wx.Frame,Object):
 		wx.GetApp().SetMacHelpMenuTitleName(_('Help'))
 		self.SetMenuBar(self.menubar)
 		self.toolbar = toolbar.Toolbar(self,self.client)
-
-		self.playlist = playlist.HeaderPlaylist(self,self.client,debug)
-		self.library = library.View(self,self.client,debug)
-		self.albumlist = playlist.AlbumList(self,self.client,debug)
-		self.info = songinfo.Info(self,self.client,debug)
-		self.connection = preferences.Connection(self,self.client)
-		self.lyric = lyrics.LyricView(self,self.client)
+		if environment.userinterface.fill_window_background:
+			base = wx.Panel(self,-1)
+		else:
+			base = self
+		self.playlist = playlist.HeaderPlaylist(base,self.client,debug)
+		self.library = library.View(base,self.client,debug)
+		self.albumlist = playlist.AlbumList(base,self.client,debug)
+		self.info = songinfo.Info(base,self.client,debug)
+		self.connection = preferences.Connection(base,self.client)
+		self.lyric = lyrics.LyricView(base,self.client)
 		self.sizer = wx.BoxSizer()
 		s = wx.BoxSizer(wx.VERTICAL)
 		s.Add(self.playlist,1,flag=wx.EXPAND)
@@ -50,7 +53,11 @@ class Frame(wx.Frame,Object):
 		self.sizer.Add(s,1,flag=wx.EXPAND)
 		self.sizer.Add(self.info,0,wx.EXPAND)
 		#self.sizer.Add(self.albumlist,0,flag=wx.EXPAND)
-		self.SetSizer(self.sizer)
+		base.SetSizer(self.sizer)
+		if environment.userinterface.fill_window_background:
+			sizer = wx.BoxSizer()
+			sizer.Add(base,1,wx.EXPAND)
+			self.SetSizer(sizer)
 		self.hide_children()
 		self.Layout()
 		window_size = self.client.config.window_size
