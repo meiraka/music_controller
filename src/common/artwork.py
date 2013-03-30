@@ -57,6 +57,8 @@ class Database(Object):
 		must generate instance at everytime cause
 		sqlite3 is not thread-safe.
 		"""
+		if not os.path.exists(environment.config_dir):
+			os.makedirs(environment.config_dir)
 		db = sqlite3.connect(environment.config_dir+'/artworkdb')
 		return db
 
@@ -116,7 +118,7 @@ class Database(Object):
 			fullpath = self.__download_path + '/' + filename
 			if not os.path.exists(os.path.dirname(fullpath)):
 				os.makedirs(os.path.dirname(fullpath))
-			f = open(fullpath,'w')
+			f = open(fullpath,'wb')
 			f.write(artwork_binary)
 			f.close()
 		else:
