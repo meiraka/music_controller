@@ -160,12 +160,15 @@ class Setup(object):
 				)
 
 		# add lang
+		'''
+		# comment out because Help menu can not have search item in Japanese,
+		# disable i18n in Mac.
 		langs = glob.glob('osx/*.lproj')
 		for lang in langs:
 			self.setup_args['data_files'].append(
 				(os.path.basename(lang),glob.glob(lang+'/*'))
 				)
-
+		'''
 
 
 	def run(self):

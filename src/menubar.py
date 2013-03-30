@@ -336,9 +336,13 @@ class MenuBar(wx.MenuBar):
 		self.parent.albumlist.focus()
 
 	def OnMenu(self,event):
-		label = self.__ids[event.GetId()]
-		func = self.__functions[label]
-		func()
+		id = event.GetId()
+		if id in self.__ids:
+			label = self.__ids[id]
+			func = self.__functions[label]
+			func()
+		else:
+			event.Skip()
 
 	def OnUpdate(self,*args,**kwargs):
 		self.update_by_status()
