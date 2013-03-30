@@ -2,14 +2,10 @@
 import wx
 from common import environment
 
-frame = wx.Frame
-if environment.userinterface.subwindow_small_frame:
-	frame = wx.MiniFrame
-
-class Frame(frame):
+class Frame(wx.Frame):
 	""" Frames for dialog. close with Esc key."""
 	def __init__(self,parent=None):
-		frame.__init__(self,parent,-1,style=wx.CLOSE_BOX|wx.CAPTION|wx.FRAME_NO_TASKBAR)
+		wx.Frame.__init__(self,parent,-1)
 		id = wx.NewId()
 		self.Bind(wx.EVT_MENU,self.OnClose,id=id)
 		table = [(wx.ACCEL_NORMAL,wx.WXK_ESCAPE,id)]

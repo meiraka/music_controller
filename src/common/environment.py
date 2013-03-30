@@ -79,7 +79,6 @@ class __UI(object):
 		if wx.PlatformInfo[1] == 'wxMac':
 			self.__cached['fill_readonly_background'] = True
 			self.__cached['subitem_small_font'] = True
-			self.__cached['subwindow_small_frame'] = True
 			self.__cached['style'] = u'mac'
 			self.__cached['draw_double_buffered'] = False
 			self.__cached['toolbar_toggle'] = False
@@ -157,7 +156,6 @@ class __UI(object):
 	fill_window_background =   property(__get('fill_window_background'))
 	fill_readonly_background = property(__get('fill_readonly_background'))
 	subitem_small_font =       property(__get('subitem_small_font'))
-	subwindow_small_frame =    property(__get('subwindow_small_frame')) 
 	style =                    property(__get('style')) 
 	draw_double_buffered =     property(__get('draw_double_buffered')) 
 	toolbar_toggle =           property(__get('toolbar_toggle'))
