@@ -4,7 +4,7 @@ import sys
 import wx
 
 
-config_dir = '%s/.config/MusicController' % os.environ['HOME']
+config_dir = '%s/.config/MusicController' % os.path.expanduser("~")
 
 class __Common(object):
 	__cached = dict(
