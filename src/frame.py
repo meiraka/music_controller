@@ -29,6 +29,8 @@ class Frame(wx.Frame,Object):
 			self.SetIcon(icon)
 	
 		self.menubar = menubar.MenuBar(self,client,accele=False if environment.userinterface.style == 'mac' else True)
+		# add mac Help -> search item. (not work)
+		wx.GetApp().SetMacHelpMenuTitleName(_('Help'))
 		self.SetMenuBar(self.menubar)
 		self.toolbar = toolbar.Toolbar(self,self.client)
 
