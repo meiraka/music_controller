@@ -74,7 +74,7 @@ class __UI(object):
 		)
 	def __init__(self):
 		if wx.PlatformInfo[1] == 'wxGTK':
-			#self.__cached['fill_window_background'] = False
+			self.__cached['fill_window_background'] = False
 			self.__cached['style'] = u'gtk'
 		if wx.PlatformInfo[1] == 'wxMac':
 			self.__cached['fill_readonly_background'] = True
