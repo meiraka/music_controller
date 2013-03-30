@@ -50,7 +50,7 @@ class Info(wx.BoxSizer):
 		self.sizer.Add(self.slider,0,wx.ALIGN_CENTRE)
 		self.sizer.Add(doublesizer,0,wx.ALIGN_CENTRE|wx.BOTTOM,border=h*2)
 		self.Add(self.sizer,1,wx.EXPAND)
-		self.__update({},Song({}))
+		self.__update(self.client.playback.status)
 		self.client.playback.bind(self.client.playback.UPDATE,self.update)
 
 	def Hide(self):

@@ -259,6 +259,7 @@ class Editor(wx.Frame):
 			]
 		self.toolbar_item = [(wx.NewId(),t,l,i) for t,l,i in toolbar_item]
 		wx.Frame.__init__(self,None,-1)
+		self.SetTitle(_('Edit Lyric: %s') % song.format('%title% - %artist%'))
 		toolbar_style = wx.TB_TEXT
 		if environment.userinterface.toolbar_icon_horizontal:
 			toolbar_style = wx.TB_HORZ_TEXT
@@ -387,6 +388,7 @@ class Downloader(wx.Frame):
 		self.song = song
 		self.items = []
 		wx.Frame.__init__(self,parent,-1)
+		self.SetTitle(_('Download Lyric: %s') % song.format('%title% - %artist%'))
 		sizer = wx.GridBagSizer()
 		sizer_flag = dict(flag=wx.ALL|wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT,border=3)
 		expand_sizer_flag = dict(flag=wx.ALL|wx.EXPAND|wx.ALIGN_CENTRE_VERTICAL,border=3)
