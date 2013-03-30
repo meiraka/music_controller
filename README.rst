@@ -12,7 +12,7 @@ FEATURES
 
 * Support for fetching and displaying artworks
 * Support for fetching and displaying lyrics with timetag.
-* Editting LRC format lyric text while listing songs.
+* Editting LRC format lyric text while listening songs.
 * Manage connection profiles.
 * Auto reconnection.
 
