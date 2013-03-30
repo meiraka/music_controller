@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
 """
-Draw lyric 
+Lyric view, menu and dialogs.
+
 """
 
 import sqlite3
@@ -13,37 +14,14 @@ import thread
 import re
 
 from common import environment
-from common import lyrics
 
 import wx
 import dialog
 
 
-class Database(lyrics.Database):
-	""" extends Database class with config."""
-	def __init__(self,client):
-		self.client = client
-		lyrics.Database.__init__(self)
-
-	def download(self,song):
-		""" download lyric.
-
-		if turn off by config ,
-		does not download or does not use some api.
-		"""
-		if self.client.config.lyrics_download:
-			downloaders = {}
-			for label,isd in self.downloaders.iteritems():
-				attr = u'lyrics_api_'+label
-				downloaders[label] = getattr(self.client.config,attr)
-			self.downloaders = downloaders
-			lyrics.Database.download(self,song)
-		else:
-			pass
-
 class LyricView(wx.Panel):
 	"""
-	Draw lyric.
+	Lyric view.
 	"""
 	def __init__(self,parent,client):
 		self.client = client
@@ -52,10 +30,7 @@ class LyricView(wx.Panel):
 		self.fg = wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWTEXT)
 		self.hbg = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT)
 		self.hfg = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT)
-		self.database = Database(client)
-		self.database.clear_empty_lyrics()
-		self.database.download_auto = True
-		self.database.download_background = True
+		self.database = client.lyrics
 
 		self.time = 0
 		self.time_msec = 0.0
@@ -125,10 +100,19 @@ class LyricView(wx.Panel):
 			for i in self.__decode_line(line):
 				result.append(i)
 		result.sort()
+		if 'time' in song and song['time'].isdigit():
+			result.append((float(song['time']),''))
 		self.__lyric = result
 
 	def __decode_line(self,line):
-		""" convert raw LRC lyric line to tuple."""
+		""" convert raw LRC lyric line to tuple.
+
+		Supports 3 types:
+			[00:00.00]
+			[00:00:00]
+			[00:00]
+		currently, karaoke tag is not supported.
+		"""
 		def convert_sec(time):
 			sec = float(time[0])*60.0+float(time[1])
 			if len(time) > 2:
@@ -200,9 +184,9 @@ class LyricView(wx.Panel):
 				current_line = index-1
 				if guess_count>0:
 					add_offset = (index*height-self.__offset)/guess_count
-					if add_offset > height:
+					if add_offset > height or abs(index*height - self.__offset) > h:
 						# too far from current pos, jump.
-						self.__offset = (index)*height
+						self.__offset = index*height
 					else:
 						self.__offset = self.__offset + add_offset 
 				break
@@ -229,6 +213,9 @@ class LyricView(wx.Panel):
 		self.PopupMenu(Menu(self,self.__song))
 
 class Menu(wx.Menu):
+	"""
+	Lyric menu.
+	"""
 	def __init__(self,parent,song):
 		wx.Menu.__init__(self)
 		self.parent = parent
@@ -253,7 +240,7 @@ class Menu(wx.Menu):
 		
 class Editor(wx.Frame):
 	"""
-	Lyric editor.
+	Lyric editor dialog.
 
 	Supports normal text edit and timetag writer mode.
 	"""
@@ -390,6 +377,9 @@ class Editor(wx.Frame):
 
 
 class Downloader(wx.Frame):
+	"""
+	Lyric Download dialog.
+	"""
 	def __init__(self,parent,client,database,song):
 		self.parent = parent
 		self.client = client

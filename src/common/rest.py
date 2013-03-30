@@ -42,7 +42,7 @@ class Downloader(object):
 			return self.get(items[0])
 
 	def download_errmsg(self,url,err):
-		print 'cam not access: ',msg,err
+		print 'cam not access: ',url,err
 
 
 class GeciMe(Downloader):
@@ -99,7 +99,7 @@ class ArtworkLastfm(Downloader):
 			self.download_errmsg(req,err)
 		json_parsed = json.loads(json_text)
 		if 'album' in json_parsed and 'image' in json_parsed['album']:
-			url_list = [i for i in json_parsed['album']['image'] if '#text' in i]
+			url_list = [i for i in json_parsed['album']['image'] if '#text' in i and i['#text']]
 			url_list.reverse()
 			return url_list
 		else:
@@ -114,5 +114,5 @@ class ArtworkLastfm(Downloader):
 				image_bin = urllib2.urlopen(url).read()
 				return image_bin
 			except urllib2.URLError,err:
-				self.download_errmsg(req,err)
+				self.download_errmsg(url,err)
 		return ''

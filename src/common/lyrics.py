@@ -9,18 +9,19 @@ Supports read, write, search and download lyrics.
 import sqlite3
 import thread
 
-import client
+from base import Object
 import rest
 import environment
 
-class Database(client.Object):
+class Database(Object):
 	"""
 	Downloads and manages lyric.
 	"""
 	UPDATING = 'updating'
 	UPDATE = 'update'
-	def __init__(self):
+	def __init__(self,client):
 		""" init values and database."""
+		self.client = client
 		self.__downloading = []
 		self.download_auto = False
 		self.download_background = False
@@ -45,11 +46,11 @@ class Database(client.Object):
 			UNIQUE(artist,title,album)
 		);
 		'''
-		client.Object.__init__(self)
+		Object.__init__(self)
 		connection = self.__get_connection()
 		connection.execute(sql_init)
 
-	def clear_empty_lyrics(self):
+	def clear_empty(self):
 		""" Clears no lyrics data raw(fail to download or no lyrics found raw).
 		"""
 		sql_clear = 'delete from lyrics where lyric="None";'
@@ -133,6 +134,14 @@ class Database(client.Object):
 		self.call(self.UPDATE,song,lyric)
 		
 	def download(self,song):
+		if self.client.config.lyrics_download:
+			downloaders = {}
+			for label,isd in self.downloaders.iteritems():
+				attr = u'lyrics_api_'+label
+				downloaders[label] = getattr(self.client.config,attr)
+			self.downloaders = downloaders
+		else:
+			return
 		self.__downloading.append(song)
 		self.call(self.UPDATING)
 		lyric = u''

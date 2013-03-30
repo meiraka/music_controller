@@ -9,51 +9,29 @@ import os
 import thread
 import wx
 import math
+
 from common import environment
-from common import artwork
-from common import client
+from common import Object
 
-class ArtworkFinder(client.Object):
-	""" Wrapper for common.artwork.Database.
-
-	This class will be removed.
+class Loader(Object):
 	"""
-	DOWNLOADED = 'downloaded'
-	def __init__(self):
-		client.Object.__init__(self)
-		self.__db = artwork.Database()
-		self.__db.download_auto = True
-		self.__db.download_background = True
-		self.__db.bind(self.__db.UPDATE,self.__downloaded)
+	Artwork image loader.
 
-	def __getitem__(self,song):
-		return self.__db[song]
-
-	def __downloaded(self,song,path):
-		""" event function for lastfm.Album.DOWNLOADED. """
-		self.call(self.DOWNLOADED,path,song)
-
-
-
-class Database(ArtworkFinder):
-	"""
-	Artwork database.
-
-	to get song artwork and artwork mirror:
+	to get image and mirror:
 
 	::
 
-		img = db[song]
-		mirror_img  = db.mirror[song]
+		img = db[song.artwork]
+		mirror_img  = db.mirror[song.artwork]
 
 	Events:
 		UPDATE -- database is updated. raises with no arguments.
 	"""
 	UPDATE = 'update'
-	class Mirror(ArtworkFinder):
+	class Mirror(Object):
 		def __init__(self,parent,enable=False):
+			Object.__init__(self)
 			self.parent = parent
-			ArtworkFinder.__init__(self)
 			self.__images = {}
 			self.__empty_image = None
 			self.__enable = enable
@@ -61,12 +39,12 @@ class Database(ArtworkFinder):
 				self.__empty_image = self.parent.empty
 			self.size = (120,120)
 			self.length = 0.3
-		def __getitem__(self,song):
+
+		def __getitem__(self,path):
 			""" Returns mirrored artwork image.
 			"""
 			if not self.__enable:
 				return self.__get_empty_image()
-			path = ArtworkFinder.__getitem__(self,song)
 			if not path:
 				return self.__get_empty_image()
 			if self.__images.has_key((path,self.size)):
@@ -119,25 +97,26 @@ class Database(ArtworkFinder):
 
 		empty = property(__get_empty_image)
 			
-	def __init__(self,mirror=False):
+	def __init__(self,client,mirror=False):
 		""" Inits database interface.
 
 		Arguments:
+			client -- mpd client object.
 			mirror -- if True, generates mirrored image.
 
 		"""
-		ArtworkFinder.__init__(self)
+		Object.__init__(self)
 		self.__files = []
 		self.__images = {}
 		self.__empty = None
 		self.__callbacks = []
 		self.__size = (120,120)
-		self.mirror = Database.Mirror(self,mirror)
-		self.bind(self.DOWNLOADED,self.__load_image)
+		self.mirror = Loader.Mirror(self,mirror)
+		self.artwork = client.artwork
+		self.artwork.bind(self.artwork.UPDATE,self.__load_image)
 
 
-	def __getitem__(self,song):
-		path = ArtworkFinder.__getitem__(self,song)
+	def __getitem__(self,path):
 		if not path:
 			return self.__get_empty_image()
 		if self.__images.has_key((path,self.size)) and self.__images[(path,self.size)]:
@@ -145,10 +124,10 @@ class Database(ArtworkFinder):
 		elif self.__images.has_key((path,self.size)):
 			return self.__get_empty_image()
 		else:
-			thread.start_new_thread(self.__load_image,(path,song))
+			thread.start_new_thread(self.__load_image,('',path))
 			return None
 
-	def __load_image(self,path,song):
+	def __load_image(self,song,path):
 		""" Generates given path of image object.
 		
 		

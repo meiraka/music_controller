@@ -29,7 +29,7 @@ class Info(wx.BoxSizer):
 			album  = wx.StaticText(parent,-1)
 			,genre = wx.StaticText(parent,-1)
 			)
-		self.artwork_loader = artwork.Database(mirror=True)
+		self.artwork_loader = artwork.Loader(self.client,mirror=True)
 		self.artwork_loader.size = (h*12,h*12)
 		self.SetMinSize((h*16,h*16))
 		self.artwork_loader.bind(self.artwork_loader.UPDATE,self.update)
@@ -87,12 +87,12 @@ class Info(wx.BoxSizer):
 			if not self.slider.GetMax() == max:
 				self.slider.SetMax(max)
 			self.slider.SetValue(current)
-		image = self.artwork_loader[song]
+		image = self.artwork_loader[song.artwork]
 		if not self.__image == image:
 			self.__image = image
 			if self.__image:
 				self.artwork.SetBitmap(self.__image)
-				self.artwork_mirror.SetBitmap(self.artwork_loader.mirror[song])
+				self.artwork_mirror.SetBitmap(self.artwork_loader.mirror[song.artwork])
 			else:
 				self.artwork.SetBitmap(self.artwork_loader.empty)
 				self.artwork_mirror.SetBitmap(self.artwork_loader.mirror.empty)

@@ -10,18 +10,19 @@ import os
 import sqlite3
 import thread
 
-import client
+from base import Object
 import rest
 import environment
 
-class Database(client.Object):
+class Database(Object):
 	"""
 	Downloads and manages Artwork.
 	"""
 	UPDATING = 'updating'
 	UPDATE = 'update'
-	def __init__(self):
+	def __init__(self,client):
 		""" init values and database."""
+		self.client = client
 		self.__download_path = environment.config_dir+'/artwork'
 		self.__downloading = []
 		self.download_auto = False
@@ -46,7 +47,7 @@ class Database(client.Object):
 			UNIQUE(artist,album)
 		);
 		'''
-		client.Object.__init__(self)
+		Object.__init__(self)
 		connection = self.__get_connection()
 		connection.execute(sql_init)
 
@@ -58,7 +59,7 @@ class Database(client.Object):
 		"""
 		db = sqlite3.connect(environment.config_dir+'/artworkdb')
 		return db
-		
+
 	def __getitem__(self,song):
 		""" Returns artwork path.
 
@@ -113,8 +114,8 @@ class Database(client.Object):
 		if artwork_binary:
 			filename = song.format('%albumartist% %album%')
 			fullpath = self.__download_path + '/' + filename
-			if not os.path.exists(self.__download_path):
-				os.makedirs(self.__download_path)
+			if not os.path.exists(os.path.dirname(fullpath)):
+				os.makedirs(os.path.dirname(fullpath))
 			f = open(fullpath,'w')
 			f.write(artwork_binary)
 			f.close()
@@ -140,6 +141,14 @@ class Database(client.Object):
 		connection.commit()
 		if fullpath:
 			self.call(self.UPDATE,song,fullpath)
+
+	def clear_empty(self):
+		sql_clear = 'delete from artwork where artwork="";'
+		connection = self.__get_connection()
+		cursor = connection.cursor()
+		cursor.execute(sql_clear)
+		connection.commit()
+		
 		
 	def download(self,song):
 		if not song in self.__downloading:
