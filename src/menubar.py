@@ -49,7 +49,8 @@ class MenuBar(wx.MenuBar):
 				(wx.NewId(),u'Focus Current Song',self.NORMAL)
 				]),
 			('Help',[
-				(wx.ID_ABOUT,u'About',self.NORMAL)
+				(wx.ID_ABOUT,u'About',self.NORMAL),
+				(wx.NewId(),u'MusicController Website',self.NORMAL),
 				])
 			]
 
@@ -72,7 +73,8 @@ class MenuBar(wx.MenuBar):
 				u'View_Albumlist':self.toggle_config_value('playlist_albumlist',self.parent.show_not_connection),
 				u'View_Info':self.toggle_config_value('info',self.parent.show_not_connection),
 				u'View_Focus Current Song':self.focus_song,
-				u'Help_About':AboutDialog
+				u'Help_About':AboutDialog,
+				u'Help_MusicController Website':self.show_repository,
 				}
 		self.__keys = {
 				u'File_Quit':'Ctrl+Q',
@@ -124,6 +126,7 @@ class MenuBar(wx.MenuBar):
 		self.client.connection.bind(self.client.connection.CONNECT,self.update_by_connection)
 		self.client.connection.bind(self.client.connection.CLOSE,self.update_by_connection)
 		self.client.connection.bind(self.client.connection.CLOSE_UNEXPECT,self.update_by_connection)
+		self.update_by_config()
 
 	def set_accelerator_table(self,keys):
 		flag_tables = dict(Ctrl=wx.ACCEL_CTRL)
@@ -172,6 +175,16 @@ class MenuBar(wx.MenuBar):
 					else:
 						menu.SetLabel(id,self.menu_label(label))
 
+	def menu_label(self,label,accele=None):
+		if accele:
+			i18n = _(label)
+			if i18n[0] == label[0]:
+				return u'&%s' % label[0] + i18n[1:]
+			else:
+				return i18n + u'(&%s)' % label[0]
+		else:
+			return _(label)
+
 	def update_by_idle(self,event):
 		widget = self.FindFocus()
 		# File
@@ -182,8 +195,6 @@ class MenuBar(wx.MenuBar):
 		for id,label,menu_type in items:
 			if label == u'Get Info':
 				menu.Enable(id,self.parent.can_get_info())
-
-
 		# Edit
 		index = 1
 		head,items = self.menu_list[index]
@@ -192,7 +203,6 @@ class MenuBar(wx.MenuBar):
 		for id,label,menu_type in items:
 			if label == u'Select All':
 				menu.Enable(id,widget and hasattr(widget,'HasMultipleSelection') and widget.HasMultipleSelection() or type(widget) is wx.TextCtrl and hasattr(widget,'SetSelection'))
-
 
 	def update_by_connection(self,event=None):
 		updates = [
@@ -221,6 +231,58 @@ class MenuBar(wx.MenuBar):
 							menu.Enable(id,self.client.connection.connected)
 		wx.CallAfter(__update)
 	
+	def update_by_config(self):
+		""" change menubar items by config value. """
+		for index,(head,items) in enumerate(self.menu_list):
+			for id,label,menu_type in items:
+				menu = self.GetMenu(index)
+				if label == u'Albumlist':
+					current = menu.IsChecked(id)
+					new = self.client.config.playlist_albumlist
+					if not current == new:
+						menu.Check(id,new)
+				if label == u'Info':
+					current = menu.IsChecked(id)
+					new = self.client.config.info
+					if not current == new:
+						menu.Check(id,new)
+					
+	def update_by_status(self):
+		""" change menubar items by playback status. """
+		status = self.client.playback.status
+		if not status:
+			return
+		for index,(head,items) in enumerate(self.menu_list):
+			for id,label,menu_type in items:
+				menu = self.GetMenu(index)
+				if label == u'Shuffle':
+					key = u'random'
+					current = menu.IsChecked(id)
+					new = True if key in status and status[key] == u'1' else False
+					if not current == new:
+						menu.Check(id,new)
+				if label == u'Repeat':
+					key = u'repeat'
+					current = menu.IsChecked(id)
+					new = True if key in status and status[key] == u'1' else False
+					if not current == new:
+						menu.Check(id,new)
+							
+				if label == u'Single':
+					key = u'single'
+					current = menu.IsChecked(id)
+					new = True if key in status and status[key] == u'1' else False
+					if not current == new:
+						menu.Check(id,new)
+
+	def update_by_frame(self):
+		""" change menubar items by main view. """
+		current = self.parent.current_view
+		if not current:
+			current = 'playlist'
+		id = self.__labels['View_' + current.capitalize()]
+		if not self.IsChecked(id):
+			self.Check(id,True)
 
 	def set_select_all(self):
 		widget = self.FindFocus()
@@ -230,23 +292,11 @@ class MenuBar(wx.MenuBar):
 			elif hasattr(widget,'SetSelection'):
 				widget.SetSelection(-1,-1)
 			
-
-	def menu_label(self,label,accele=None):
-		if accele:
-			i18n = _(label)
-			if i18n[0] == label[0]:
-				return u'&%s' % label[0] + i18n[1:]
-			else:
-				return i18n + u'(&%s)' % label[0]
-		else:
-			return _(label)
-
 	def set_play(self):
 		playback = self.client.playback
 		status = playback.status
 		if status and u'state' in status:
 			playback.pause() if status[u'state'] == u'play' else playback.play()
-
 
 	def toggle_config_value(self,attr,callback=None):
 		def set():
@@ -279,6 +329,7 @@ class MenuBar(wx.MenuBar):
 					menu = self.GetMenu(index)
 					self.client.playback.single(menu.IsChecked(id))
 					break
+
 	def focus_song(self):
 		self.parent.playlist.focus()
 		self.parent.albumlist.focus()
@@ -291,57 +342,8 @@ class MenuBar(wx.MenuBar):
 	def OnUpdate(self,*args,**kwargs):
 		self.update_by_status()
 
-	def update_by_config(self):
-		for index,(head,items) in enumerate(self.menu_list):
-			for id,label,menu_type in items:
-				menu = self.GetMenu(index)
-				if label == u'Albumlist':
-					current = menu.IsChecked(id)
-					new = self.client.config.playlist_albumlist
-					if not current == new:
-						menu.Check(id,new)
-				if label == u'Info':
-					current = menu.IsChecked(id)
-					new = self.client.config.info
-					if not current == new:
-						menu.Check(id,new)
-					
-		
-
-	def update_by_status(self):
-		status = self.client.playback.status
-		if not status:
-			return
-		for index,(head,items) in enumerate(self.menu_list):
-			for id,label,menu_type in items:
-				menu = self.GetMenu(index)
-				if label == u'Shuffle':
-					key = u'random'
-					current = menu.IsChecked(id)
-					new = True if key in status and status[key] == u'1' else False
-					if not current == new:
-						menu.Check(id,new)
-				if label == u'Repeat':
-					key = u'repeat'
-					current = menu.IsChecked(id)
-					new = True if key in status and status[key] == u'1' else False
-					if not current == new:
-						menu.Check(id,new)
-							
-				if label == u'Single':
-					key = u'single'
-					current = menu.IsChecked(id)
-					new = True if key in status and status[key] == u'1' else False
-					if not current == new:
-						menu.Check(id,new)
-
-	def update_by_frame(self):
-		current = self.parent.current_view
-		if not current:
-			current = 'playlist'
-		id = self.__labels['View_' + current.capitalize()]
-		if not self.IsChecked(id):
-			self.Check(id,True)
+	def show_repository(self):
+		webbrowser.open('https://bitbucket.org/meiraka/music_controller')
 
 
 class AboutDialog(object):

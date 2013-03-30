@@ -59,6 +59,8 @@ msgid "Help"
 msgstr "ヘルプ"
 msgid "About"
 msgstr "MusicControllerについて"
+msgid "MusicController Website"
+msgstr "MusicController ウェブサイト"
 
 msgid "Connection"
 msgstr "接続"
