@@ -15,7 +15,7 @@ class App(wx.Frame):
 
 		self.__ids = {}
 		self.__indexes = []
-
+		self.SetTitle(_(self.__windows[0][0]))
 		# toolbar
 		toolbar_style = wx.TB_TEXT
 		if environment.userinterface.toolbar_icon_horizontal:
