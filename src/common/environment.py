@@ -111,7 +111,7 @@ class __UI(object):
 		if self.__cached.has_key(key):
 			return self.__cached[key]
 		else:
-			font = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT )
+			font = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
 			self.__cached[key] = font
 			return self.__cached[key]
 	
