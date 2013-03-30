@@ -280,9 +280,19 @@ class Editor(wx.Frame):
 			else:
 				self.__tool.AddLabelTool(id,_(label),bmp)
 			self.__tool.Bind(wx.EVT_TOOL,getattr(self,'on_'+label.lower().replace(' ','_')),id=id)
-		self.text = wx.TextCtrl(self,-1,self.db[song],style=wx.TE_MULTILINE)
+		base = self
+		if environment.userinterface.fill_window_background:
+			base = wx.Panel(self,-1)
+		self.text = wx.TextCtrl(base,-1,self.db[song],style=wx.TE_MULTILINE)
 		self.text.Bind(wx.EVT_KEY_UP,self.on_keys)
 		self.text.SetFocus()
+		sizer = wx.BoxSizer()
+		sizer.Add(self.text,1,wx.EXPAND)
+		base.SetSizer(sizer)
+		if environment.userinterface.fill_window_background:
+			sizer = wx.BoxSizer()
+			sizer.Add(base,1,wx.EXPAND)
+			self.SetSizer(sizer)
 		# set esc to close
 		id = wx.NewId()
 		self.Bind(wx.EVT_MENU,self.on_close,id=id)
@@ -395,23 +405,30 @@ class Downloader(wx.Frame):
 		labels = ['title','artist']
 		self.values = {}
 		index = 0
+		base = self
+		if environment.userinterface.fill_window_background:
+			base = wx.Panel(self,-1)
 		for index,label in enumerate(labels):
-			sizer.Add(wx.StaticText(self,-1,_(label)+u':'),(index,0),**sizer_flag)
-			value = wx.TextCtrl(self,-1,getattr(self.song,label))
+			sizer.Add(wx.StaticText(base,-1,_(label)+u':'),(index,0),**sizer_flag)
+			value = wx.TextCtrl(base,-1,getattr(self.song,label))
 			self.values[label] = value
 			sizer.Add(value,(index,1),(1,3),**expand_sizer_flag)
-		self.listview = wx.ListBox(self,-1)
+		self.listview = wx.ListBox(base,-1)
 		index = index + 1
 		sizer.Add(self.listview,(index,0),(1,4),flag=wx.EXPAND)
 		sizer.AddGrowableRow(index)
 		sizer.AddGrowableCol(2)
 		index = index + 1
-		self.search_button = wx.Button(self,-1,_('Search'))
+		self.search_button = wx.Button(base,-1,_('Search'))
 		sizer.Add(self.search_button,(index,3),**sizer_flag)
-		self.SetSizer(sizer)
+		base.SetSizer(sizer)
 
 		self.search_button.Bind(wx.EVT_BUTTON,self.on_search_button)
 		self.listview.Bind(wx.EVT_LISTBOX_DCLICK,self.on_activate_item)
+		if environment.userinterface.fill_window_background:
+			sizer = wx.BoxSizer()
+			sizer.Add(base,1,wx.EXPAND)
+			self.SetSizer(sizer)
 		# set esc to close
 		id = wx.NewId()
 		self.Bind(wx.EVT_MENU,self.on_close,id=id)

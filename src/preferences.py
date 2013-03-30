@@ -36,14 +36,22 @@ class App(wx.Frame):
 				self.__tool.AddLabelTool(id,_(label),bmp)
 		self.__tool.Bind(wx.EVT_TOOL,self.OnTool)
 		self.__tool.Realize()
+		# generate panels
+		base = self
+		if environment.userinterface.fill_window_background:
+			base = wx.Panel(self,-1)
 
-		self.__sizers = [config_class(self,client) for label,config_class,i in self.__windows]
+		self.__sizers = [config_class(base,client) for label,config_class,i in self.__windows]
 		sizer = wx.BoxSizer()
 		for config_sizer in self.__sizers:
 			config_sizer.Hide()
 			sizer.Add(config_sizer,1,wx.EXPAND)
 		self.__sizers[0].Show()
-		self.SetSizer(sizer)
+		base.SetSizer(sizer)
+		if environment.userinterface.fill_window_background:
+			sizer = wx.BoxSizer()
+			sizer.Add(base,1,wx.EXPAND)
+			self.SetSizer(sizer)
 		self.set_accelerator()
 
 	def set_accelerator(self):
