@@ -238,7 +238,7 @@ class Menu(wx.Menu):
 	def get_info_item(self,event):
 		dialog.SongInfo(self.parent,[self.song])
 		
-class Editor(wx.Frame):
+class Editor(dialog.Frame):
 	"""
 	Lyric editor dialog.
 
@@ -258,7 +258,7 @@ class Editor(wx.Frame):
 			(self.TOOLBAR_RADIO,'Timetag',['',wx.ART_GO_HOME]),
 			]
 		self.toolbar_item = [(wx.NewId(),t,l,i) for t,l,i in toolbar_item]
-		wx.Frame.__init__(self,None,-1)
+		dialog.Frame.__init__(self,style=dialog.MIN_STYLE|wx.RESIZE_BORDER)
 		self.SetTitle(_('Edit Lyric: %s') % song.format('%title% - %artist%'))
 		toolbar_style = wx.TB_TEXT
 		if environment.userinterface.toolbar_icon_horizontal:
@@ -293,17 +293,6 @@ class Editor(wx.Frame):
 			sizer = wx.BoxSizer()
 			sizer.Add(base,1,wx.EXPAND)
 			self.SetSizer(sizer)
-		# set esc to close
-		id = wx.NewId()
-		self.Bind(wx.EVT_MENU,self.on_close,id=id)
-		table = [(wx.ACCEL_NORMAL,wx.WXK_ESCAPE,id)]
-		self.SetAcceleratorTable(wx.AcceleratorTable(table))
-		self.__tool.Realize()
-
-	def on_close(self,event):
-		""" Close frame.
-		"""
-		self.Close()
 
 	def get_current_time(self):
 		""" Returns LRC formatted current time.
@@ -387,7 +376,7 @@ class Editor(wx.Frame):
 		self.text.SetEditable(False)
 
 
-class Downloader(wx.Frame):
+class Downloader(dialog.Frame):
 	"""
 	Lyric Download dialog.
 	"""
@@ -397,7 +386,7 @@ class Downloader(wx.Frame):
 		self.database = database
 		self.song = song
 		self.items = []
-		wx.Frame.__init__(self,parent,-1)
+		dialog.Frame.__init__(self,parent,style=dialog.MIN_STYLE|wx.RESIZE_BORDER)
 		self.SetTitle(_('Download Lyric: %s') % song.format('%title% - %artist%'))
 		sizer = wx.GridBagSizer()
 		sizer_flag = dict(flag=wx.ALL|wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT,border=3)
@@ -412,15 +401,15 @@ class Downloader(wx.Frame):
 			sizer.Add(wx.StaticText(base,-1,_(label)+u':'),(index,0),**sizer_flag)
 			value = wx.TextCtrl(base,-1,getattr(self.song,label))
 			self.values[label] = value
-			sizer.Add(value,(index,1),(1,3),**expand_sizer_flag)
+			sizer.Add(value,(index,1),(1,2),**expand_sizer_flag)
 		self.listview = wx.ListBox(base,-1)
 		index = index + 1
-		sizer.Add(self.listview,(index,0),(1,4),flag=wx.EXPAND)
+		sizer.Add(self.listview,(index,0),(1,3),flag=wx.EXPAND)
 		sizer.AddGrowableRow(index)
-		sizer.AddGrowableCol(2)
+		sizer.AddGrowableCol(1)
 		index = index + 1
 		self.search_button = wx.Button(base,-1,_('Search'))
-		sizer.Add(self.search_button,(index,3),**sizer_flag)
+		sizer.Add(self.search_button,(index,2),**sizer_flag)
 		base.SetSizer(sizer)
 
 		self.search_button.Bind(wx.EVT_BUTTON,self.on_search_button)
@@ -429,14 +418,6 @@ class Downloader(wx.Frame):
 			sizer = wx.BoxSizer()
 			sizer.Add(base,1,wx.EXPAND)
 			self.SetSizer(sizer)
-		# set esc to close
-		id = wx.NewId()
-		self.Bind(wx.EVT_MENU,self.on_close,id=id)
-		table = [(wx.ACCEL_NORMAL,wx.WXK_ESCAPE,id)]
-		self.SetAcceleratorTable(wx.AcceleratorTable(table))
-
-	def on_close(self,event):
-		self.Close()
 
 	def on_search_button(self,event):
 		self.listview.Clear()
@@ -445,6 +426,7 @@ class Downloader(wx.Frame):
 			for i in list:
 				wx.CallAfter(self.listview.Append,format(i))
 				self.items.append((get,i))
+			wx.CallAfter(self.Layout)
 
 		thread.start_new_thread(self.database.list,(keywords,),dict(callback=download_callback))
 

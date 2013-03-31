@@ -1,12 +1,14 @@
 import wx
+
+import dialog
 from common import environment
 
-class App(wx.Frame):
+class App(dialog.Frame):
 	"""
 	Application preferences window.
 	"""
 	def __init__(self,parent,client,debug=False):
-		wx.Frame.__init__(self,parent,-1)
+		dialog.Frame.__init__(self,parent)
 		self.client = client
 		self.__windows = [
 			(u'Connection',Connection,['server',wx.ART_GO_HOME]),
@@ -52,16 +54,7 @@ class App(wx.Frame):
 			sizer = wx.BoxSizer()
 			sizer.Add(base,1,wx.EXPAND)
 			self.SetSizer(sizer)
-		self.set_accelerator()
-
-	def set_accelerator(self):
-		id = wx.NewId()
-		self.Bind(wx.EVT_MENU,self.close)
-		table = [(wx.ACCEL_NORMAL,wx.WXK_ESCAPE,id)]
-		self.SetAcceleratorTable(wx.AcceleratorTable(table))
-
-	def close(self,event):
-		self.Hide()
+		sizer.Fit(self)
 
 	def OnTool(self,event):
 		click_id = event.GetId()

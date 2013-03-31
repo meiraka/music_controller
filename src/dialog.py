@@ -2,10 +2,12 @@
 import wx
 from common import environment
 
+MIN_STYLE = wx.MINIMIZE_BOX | wx.MAXIMIZE_BOX | wx.SYSTEM_MENU | wx.CAPTION | wx.CLOSE_BOX | wx.CLIP_CHILDREN | wx.FRAME_NO_TASKBAR
+
 class Frame(wx.Frame):
 	""" Frames for dialog. close with Esc key."""
-	def __init__(self,parent=None):
-		wx.Frame.__init__(self,parent,-1)
+	def __init__(self,parent=None,style=MIN_STYLE):
+		wx.Frame.__init__(self,parent,-1,style=style)
 		id = wx.NewId()
 		self.Bind(wx.EVT_MENU,self.OnClose,id=id)
 		table = [(wx.ACCEL_NORMAL,wx.WXK_ESCAPE,id)]
@@ -18,7 +20,7 @@ class Frame(wx.Frame):
 
 class SongInfo(Frame):
 	def __init__(self,parent,songs):
-		Frame.__init__(self,None)
+		Frame.__init__(self)
 		self.songs = songs
 		self.must_tags = [u'artist',u'title',u'album']
 		must = wx.CollapsiblePane(self,-1,_('General Info')+':')
