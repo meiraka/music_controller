@@ -46,6 +46,7 @@ class LyricView(wx.Panel):
 		wx.EVT_TIMER(self.parent,-1,self.__update)
 		self.timer.Start(self.__update_interval)
 		self.client.playback.bind(self.client.playback.UPDATE_PLAYING,self.update_data)
+		self.client.connection.bind(self.client.connection.CONNECT,self.update_data)
 		self.database.bind(self.database.UPDATING,self.update)
 		self.database.bind(self.database.UPDATE,self.decode_raw_lyric)
 		self.Bind(wx.EVT_RIGHT_UP,self.OnRightClick)
