@@ -49,6 +49,9 @@ class GeciMe(Downloader):
 	"""
 	Download lyrics from geci.me
 	"""
+
+	def format(self,list_returns_line):
+		return u'geci.me #%(aid)s %(song)s - %(artist)s' %list_returns_line
 	def list(self,**kwargs):
 		if not 'title' in kwargs:
 			return []
