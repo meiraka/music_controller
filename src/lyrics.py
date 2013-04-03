@@ -281,6 +281,7 @@ class Editor(dialog.Frame):
 			else:
 				self.__tool.AddLabelTool(id,_(label),bmp)
 			self.__tool.Bind(wx.EVT_TOOL,getattr(self,'on_'+label.lower().replace(' ','_')),id=id)
+		self.__tool.Realize()
 		base = self
 		if environment.userinterface.fill_window_background:
 			base = wx.Panel(self,-1)
