@@ -63,7 +63,6 @@ class GeciMe(Downloader):
 		try:
 			json_text = urllib2.urlopen('http://geci.me/api/lyric/'+query).read()
 		except urllib2.URLError,err:
-			print 'can not access:','http://geci.me/api/lyric/'+query,err
 			return []
 		json_parsed = json.loads(json_text.decode('utf8'))
 		if u'result' in json_parsed:
@@ -75,7 +74,6 @@ class GeciMe(Downloader):
 		try:
 			lyric_page = urllib2.urlopen(list_returns_line[u'lrc'])
 		except urllib2.URLError,err:
-			print 'can not access:',list_returns_line[u'lrc'],err
 			return u''
 		lyric_encode = lyric_page.info()
 		lyric = lyric_page.read().decode('utf8')
@@ -97,7 +95,7 @@ class ArtworkLastfm(Downloader):
 				artist=urllib.quote(artist.encode('utf8')),
 				album=urllib.quote(album.encode('utf8')))
 		try:
-			json_text = urllib.urlopen(req).read().decode('utf8')
+			json_text = urllib2.urlopen(req).read().decode('utf8')
 		except urllib2.URLError,err:
 			self.download_errmsg(req,err)
 		json_parsed = json.loads(json_text)
