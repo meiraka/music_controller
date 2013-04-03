@@ -254,9 +254,9 @@ class Editor(dialog.Frame):
 		self.song = song
 		self.db = database
 		toolbar_item = [
-			(self.TOOLBAR_NORMAL,'Save',['',wx.ART_GO_HOME]),
-			(self.TOOLBAR_RADIO,'Text',['',wx.ART_GO_HOME]),
-			(self.TOOLBAR_RADIO,'Timetag',['',wx.ART_GO_HOME]),
+			(self.TOOLBAR_NORMAL,'Save',['',wx.ART_FILE_SAVE]),
+			(self.TOOLBAR_RADIO,'Text',['',wx.ART_CUT]),
+			(self.TOOLBAR_RADIO,'Timetag',['',wx.ART_PASTE]),
 			]
 		self.toolbar_item = [(wx.NewId(),t,l,i) for t,l,i in toolbar_item]
 		dialog.Frame.__init__(self,style=dialog.MIN_STYLE|wx.RESIZE_BORDER)
