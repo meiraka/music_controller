@@ -2,7 +2,7 @@
 import wx
 from common import environment
 
-MIN_STYLE = wx.MINIMIZE_BOX | wx.MAXIMIZE_BOX | wx.SYSTEM_MENU | wx.CAPTION | wx.CLOSE_BOX | wx.CLIP_CHILDREN | wx.FRAME_NO_TASKBAR
+MIN_STYLE = wx.SYSTEM_MENU | wx.CAPTION | wx.CLOSE_BOX | wx.CLIP_CHILDREN | wx.FRAME_NO_TASKBAR
 
 class Frame(wx.Frame):
 	""" Frames for dialog. close with Esc key."""
