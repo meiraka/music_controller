@@ -141,6 +141,7 @@ class Connection(Object):
 
 	def close(self):
 		self.connected = False
+		self.__current = None
 		try:
 			self.__connection.disconnect()
 		except:
@@ -179,6 +180,7 @@ class Connection(Object):
 					value = self.__decode(getattr(self.__connection,func_name)(*args,**kwargs))
 			except mpd.ProtocolError:
 				self.connected = False
+				self.__current = None
 				self.call(self.CLOSE_UNEXPECT)
 			except mpd.MPDError,err:
 				print 'err at',func_name,args,kwargs
@@ -188,6 +190,7 @@ class Connection(Object):
 				pass
 			except socket.error:
 				self.connected = False
+				self.__current = None
 				self.call(self.CLOSE_UNEXPECT)
 			except AttributeError,err:
 				pass
