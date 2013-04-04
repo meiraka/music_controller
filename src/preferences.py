@@ -146,6 +146,7 @@ class Connection(wx.BoxSizer):
 		self.port = wx.TextCtrl(parent,-1)
 		self.use_password = wx.CheckBox(parent,-1,_(u'Password')+':')
 		self.password = wx.TextCtrl(parent,-1)
+		self.status = wx.StaticText(parent,-1,'')
 		self.connect = wx.Button(parent,-1,_(u'Connect'))
 		sizer = wx.GridBagSizer()
 		params = dict(flag=wx.ALL|wx.ALIGN_CENTRE_VERTICAL,border=3)
@@ -163,7 +164,7 @@ class Connection(wx.BoxSizer):
 		sizer.Add(self.port,(3,4),(1,2),**params_expand)
 		sizer.Add(self.use_password,(4,3),**params_label)
 		sizer.Add(self.password,(4,4),(1,2),**params_expand)
-		
+		sizer.Add(self.status,(6,4),**params_expand)
 		sizer.Add(self.connect,(6,5),**params)
 		sizer.AddGrowableCol(4)
 		sizer.AddGrowableRow(5)
@@ -201,6 +202,15 @@ class Connection(wx.BoxSizer):
 		self.use_password.SetValue(self.selected[3])
 		self.password.Enable(self.selected[3])
 		self.password.ChangeValue(self.selected[4])
+		self.connect.Enable()
+		if self.connection.current:
+			if self.connection.current == self.selected:
+				self.connect.Disable()
+			p,host,port,up,pa = self.connection.current
+			self.status.SetLabel(_('Connected %s:%s') % (host,port))
+		else:
+			self.status.SetLabel(_('Not Connected'))
+				
 
 	def __update(self):
 		profiles = self.config.profiles
