@@ -203,16 +203,21 @@ class Connection(Object):
 		return value
 
 	def __decode(self,item):
+		""" Decodes given utf-8 object to unicode object.
+
+		decodes str and str in non-nested dict and list to
+		unicode each object.
+		"""
 		if type(item) == str:
 			return item.decode('utf8')
 		elif type(item) == dict:
 			returns = {}
 			for key,value in item.iteritems():
-				key = key.decode('utf8')
+				key = self.__decode(key)
 				if type(value) == str:
-					returns[key] = value.decode('utf8')
+					returns[key] = self.__decode(value)
 				elif type(value) == list:
-					returns[key] = ';'.join(value).decode('utf8')
+					returns[key] = self.__decode(';'.join(value))
 				else:
 					returns[key] = value
 			return Data(returns)
