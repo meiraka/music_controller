@@ -245,56 +245,41 @@ class Editor(dialog.Frame):
 
 	Supports normal text edit and timetag writer mode.
 	"""
-	TOOLBAR_TOGGLE = 'toggle'
-	TOOLBAR_RADIO = 'radio'
-	TOOLBAR_NORMAL = 'normal'
 	def __init__(self,parent,client,database,song):
 		self.client = client
 		self.parent = parent
 		self.song = song
 		self.db = database
-		toolbar_item = [
-			(self.TOOLBAR_NORMAL,'Save',['',wx.ART_FILE_SAVE]),
-			(self.TOOLBAR_RADIO,'Text',['',wx.ART_CUT]),
-			(self.TOOLBAR_RADIO,'Timetag',['',wx.ART_PASTE]),
-			]
-		self.toolbar_item = [(wx.NewId(),t,l,i) for t,l,i in toolbar_item]
 		dialog.Frame.__init__(self,style=dialog.MIN_STYLE|wx.RESIZE_BORDER)
 		self.SetTitle(_('Edit Lyric: %s') % song.format('%title% - %artist%'))
 		toolbar_style = wx.TB_TEXT
 		if environment.userinterface.toolbar_icon_horizontal:
 			toolbar_style = wx.TB_HORZ_TEXT
-		self.__tool = self.CreateToolBar(toolbar_style)
-		for id,button_type,label,icons in self.toolbar_item:
-			bmp = None
-			for icon in icons:
-				bmp = wx.ArtProvider.GetBitmap(icon)
-				if bmp.IsOk() and not bmp.GetSize() == (-1,-1):
-					break
-			if environment.userinterface.toolbar_toggle:
-				if button_type == self.TOOLBAR_TOGGLE:
-					self.__tool.AddCheckLabelTool(id,_(label),bmp)
-				elif button_type == self.TOOLBAR_RADIO:
-					self.__tool.AddRadioLabelTool(id,_(label),bmp)
-				else:
-					self.__tool.AddLabelTool(id,_(label),bmp)
-			else:
-				self.__tool.AddLabelTool(id,_(label),bmp)
-			self.__tool.Bind(wx.EVT_TOOL,getattr(self,'on_'+label.lower().replace(' ','_')),id=id)
-		self.__tool.Realize()
 		base = self
 		if environment.userinterface.fill_window_background:
 			base = wx.Panel(self,-1)
+		text = wx.RadioButton(base,-1,_('Text'))
+		text.Bind(wx.EVT_RADIOBUTTON,self.on_text)
+		timetag = wx.RadioButton(base,-1,_('Timetag'))
+		timetag.Bind(wx.EVT_RADIOBUTTON,self.on_timetag)
 		self.text = wx.TextCtrl(base,-1,self.db[song],style=wx.TE_MULTILINE)
 		self.text.Bind(wx.EVT_KEY_UP,self.on_keys)
 		self.text.SetFocus()
-		sizer = wx.BoxSizer()
-		sizer.Add(self.text,1,wx.EXPAND)
+		save = wx.Button(self,-1,_('Save'))
+		params = dict(flag=wx.ALL|wx.ALIGN_CENTRE_VERTICAL,border=3)
+		sizer = wx.GridBagSizer()
+		sizer.Add(text,(0,0),**params)
+		sizer.Add(timetag,(0,1),**params)
+		sizer.Add(self.text,(2,0),(1,4),flag=wx.EXPAND)
+		sizer.Add(save,(3,3),**params)
+		sizer.AddGrowableCol(2)
+		sizer.AddGrowableRow(2)
 		base.SetSizer(sizer)
 		if environment.userinterface.fill_window_background:
 			sizer = wx.BoxSizer()
 			sizer.Add(base,1,wx.EXPAND)
 			self.SetSizer(sizer)
+		self.on_text(None)
 
 	def get_current_time(self):
 		""" Returns LRC formatted current time.
