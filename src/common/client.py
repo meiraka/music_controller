@@ -16,8 +16,7 @@ import traceback
 
 from base import Object
 
-import lyrics
-import artwork
+import database
 
 class Data(dict):
 	__getattr__ = dict.__getitem__
@@ -66,8 +65,8 @@ class Client(Object):
 	def __init__(self,config_path='./'):
 		Object.__init__(self)
 		self.__config     = Config(config_path)
-		self.__artwork    = artwork.Database(self)
-		self.__lyrics     = lyrics.Database(self)
+		self.__artwork    = database.Artwork(self)
+		self.__lyrics     = database.Lyrics(self)
 		self.__connection = Connection(self.config)
 		self.__playback   = Playback(self.__connection,self.__config)
 		args = [self.__connection,self.__playback,self.__config,self.__artwork,self.__lyrics]
@@ -78,7 +77,7 @@ class Client(Object):
 		return self.__connection.connect(profile)
 
 	def start(self):
-		self.__playback.start()
+		self.__connection.start()
 
 	config = property(lambda self:self.__config)
 	playback = property(lambda self:self.__playback)
@@ -89,24 +88,79 @@ class Client(Object):
 	lyrics = property(lambda self:self.__lyrics)
 	
 
-class Connection(Object):
+class Connection(Object,threading.Thread):
 	'''
 	A connection object manages mpd connection and execute commands.
 	To connect to mpd, call the Connection.connect().
+
+	Event signals:
+		UPDATE -- when status has been changed.
+		UPDATE_DATABASE -- when database updating job was finished.
+		UPDATE_PLAYLIST -- when playlist has been changed.
+		UPDATE_PLAYING -- when current playing song was changed.
+
 	'''
 
 	CONNECT = 'connect'
 	CLOSE = 'close'
 	CLOSE_UNEXPECT = 'close_unexpect'
-
+	UPDATE = 'updated'
+	UPDATE_DATABASE = 'updated_database'
+	UPDATE_PLAYLIST = 'updated_playlist'
+	UPDATE_PLAYING = 'update_playing'
 	def __init__(self,config):
 		Object.__init__(self)
+		threading.Thread.__init__(self)
+		self.__running = False
+		self.daemon = True
 		self.__config = config
 		self.__current = None
 		self.__connection = None
 		self.__lock = thread.allocate_lock()
 		self.__status = ''
+		# server status checker.
+		self.__server_status = {}
+		self.__check_playlist = None
+		self.__check_library = None
+		self.__server_status_song = None
 		self.connected = False
+
+	def run(self):
+		""" crawling mpd to check update.
+		"""
+		while True:
+			self.__running = True
+			try:
+				self.update()
+				time.sleep(1)
+			except:
+				print 'daemom err:', traceback.format_exc()
+
+	def check_library(self):
+		""" Check library updates.
+		"""
+		self.__check_library = True
+
+	def update(self):
+		status = self.execute('status')
+		if status and not self.__server_status == status:
+			self.__server_status = status
+			self.call(self.UPDATE)
+			# check playlist
+			if not self.__check_playlist == self.__server_status[u'playlist']:
+				self.__check_playlist = self.__server_status[u'playlist']
+				self.call(self.UPDATE_PLAYLIST)
+			# check playing song
+			if u'song' in self.__server_status and self.__server_status[u'song'] is not None and not self.__server_status_song == self.__server_status[u'song']:
+				self.__server_status_song = self.__server_status[u'song']
+				self.call(self.UPDATE_PLAYING)
+		if not self.__check_library == False and \
+			not self.__server_status.has_key('updating_db'):
+			self.__check_library = False
+			self.call(self.UPDATE_DATABASE)
+		elif self.__server_status.has_key('updating_db'):
+			self.__check_library = self.__server_status['updating_db']
+			print (self.__check_library)
 
 	def connect(self,profile=None):
 		'''connect to mpd daemon.
@@ -129,6 +183,7 @@ class Connection(Object):
 			self.__connection = connection
 			self.__current = copy.copy(profile)
 			self.connected = True
+			self.update()
 			self.call(self.CONNECT)
 		except mpd.MPDError,err:
 			self.__status = err
@@ -225,67 +280,29 @@ class Connection(Object):
 			return [self.__decode(info) for info in item]
 		else:
 			return item
+
+	def __get_server_status():
+		def get(self):
+			if self.__running:
+				return self.__server_status
+			else:
+				self.update()
+				return self.__server_status
+		return get
 	
 	current = property(lambda self:self.__current)
+	server_status = property(__get_server_status())
 	
-class Playback(Object,threading.Thread):
+class Playback(Object):
 	'''
 	Controlls playback interface.
 
-	Event signals:
-		UPDATE -- when status has been changed.
-		UPDATE_DATABASE -- when database updating job was finished.
-		UPDATE_PLAYLIST -- when playlist has been changed.
-		UPDATE_PLAYING -- when current playing song was changed.
 	'''
-	UPDATE = 'updated'
-	UPDATE_DATABASE = 'updated_database'
-	UPDATE_PLAYLIST = 'updated_playlist'
-	UPDATE_PLAYING = 'update_playing'
+
 	def __init__(self,connection,config):
 		Object.__init__(self)
-		threading.Thread.__init__(self)
-		self.daemon = True
 		self.connection = connection
 		self.config = config
-		self.__status = {}
-		self.__check_playlist = False
-		self.__check_library = False
-		self.__playing = None
-		self.__running = False
-		self.connection.bind(self.connection.CONNECT,self.update)
-
-	def check_library(self):
-		self.__check_library = True
-
-	def run(self):
-		""" crawling mpd to check update.
-		"""
-		while True:
-			self.__running = True
-			try:
-				self.update()
-				time.sleep(1)
-			except:
-				print 'daemom err:', traceback.format_exc()
-
-	def update(self):
-		status = self.connection.execute('status')
-		if status and not self.__status == status:
-			self.__status = status
-			self.call(self.UPDATE)
-			if not self.__check_playlist == self.__status[u'playlist']:
-				self.__check_playlist = self.__status[u'playlist']
-				self.call(self.UPDATE_PLAYLIST)
-			if self.song is not None and not self.__playing == self.song:
-				self.__playing = self.song
-				self.call(self.UPDATE_PLAYING)
-		if not self.__check_library == False and \
-			not self.__status.has_key('updating_db'):
-			self.__check_library = False
-			self.call(self.UPDATE_DATABASE)
-		elif self.__status.has_key('updating_db'):
-			self.__check_library = self.__status['updating_db']
 
 	def play(self,song=None,block=False):
 		if song:
@@ -322,26 +339,16 @@ class Playback(Object,threading.Thread):
 		if song_id is not None:
 			self.connection.execute('seek',True,song_id,second)
 
-	def __get_status(self):
-		if self.__running:
-			return self.__status
-		else:
-			self.update()
-			return self.__status
-
 	def __get(key,value_type,default):
 		def get(self):
-			if not self.__running:
-				self.update()
-			if self.__status and key in self.__status:
-				return value_type(self.__status[key])
+			status = self.connection.server_status
+			if status and key in status:
+				return value_type(status[key])
 			else:
 				return default
 		return get
 
-	status = property(lambda self:self.__get_status())
 	time = property(__get(u'time',int,0))
-	song = property(__get(u'song',int,None))
 		
 class Playlist(Object):
 	""" This class provides current MPD play queue.
@@ -363,6 +370,8 @@ class Playlist(Object):
 			self.__connection.execute(u'play',True,self[u'pos'])
 
 		def remove(self):
+			""" Removes from playlist.
+			"""
 			self.__connection.execute(u'deleteid',False,self[u'id'])
 			
 	def __init__(self,connection,playback,config,artwork,lyrics):
@@ -377,9 +386,8 @@ class Playlist(Object):
 		self.__focused = None
 		self.__current = None
 		self.__connection.bind(self.__connection.CONNECT,self.__update_cache)
-		self.__playback.bind(self.__playback.UPDATE_PLAYLIST,self.__update_cache)
-		self.__playback.bind(self.__playback.UPDATE,self.__focus_playing)
-		self.__connection.bind(self.__connection.CONNECT,self.__update_cache)
+		self.__connection.bind(self.__connection.UPDATE_PLAYLIST,self.__update_cache)
+		self.__connection.bind(self.__connection.UPDATE,self.__focus_playing)
 
 	def __iter__(self):
 		return list.__iter__(self.__data)
@@ -390,11 +398,11 @@ class Playlist(Object):
 	def __delitem__(self,index):
 		pos = self.__data[index][u'pos']
 		self.__connection.execute('delete',False,pos)
-		self.__playback.update()
+		self.__connection.update()
 
 	def __delslice__(self,start,end):
 		self.__connection.execute('delete',False,'%i:%i' % (start,end))
-		self.__playback.update()
+		self.__connection.update()
 
 	def __getslice__(self,start,end):
 		return self.__data[start:end]
@@ -414,7 +422,9 @@ class Playlist(Object):
 	def focus_playing(self):
 		""" set focus and select value to current playing song.
 		"""
-		song_id = self.__playback.song
+		if not u'song' in self.__connection.server_status:
+			return False
+		song_id = int(self.__connection.server_status[u'song'])
 		if song_id is None:
 			return False
 		if not len(self.__data) > song_id:
@@ -442,7 +452,7 @@ class Playlist(Object):
 		add = 'add'
 		filepath = song[u'file'].encode('utf8')
 		self.__connection.execute(add,False,filepath)
-		self.__playback.update()
+		self.__connection.update()
 
 	def extend(self,songs):
 		"""marge the playlist and given songs into the playlist.
@@ -452,13 +462,13 @@ class Playlist(Object):
 		with self.__connection:
 			for i in filepath:
 				self.__connection.execute('add',False,i)
-		self.__playback.update()
+		self.__connection.update()
 
 	def clear(self):
 		"""Clear current playlist.
 		"""
 		self.__connection.execute('clear',False)
-		self.__playback.update()
+		self.__connection.update()
 
 	def replace(self,songs):
 		""" Replaces playlist by given songs.
@@ -469,11 +479,11 @@ class Playlist(Object):
 		Arguments:
 			songs - list of Song object.
 		"""
-		status = self.__playback.status
+		status = self.__connection.server_status
 		# set seek pos
 		seek = False
 		id = 0
-		song_id = self.__playback.song
+		song_id = int(status[u'song'])
 		if song_id is not None:
 			if len(self.__data) > song_id:
 				play_song = self.__data[song_id]
@@ -497,12 +507,12 @@ class Playlist(Object):
 			if seek:
 				self.__connection.execute('seek',False,str(id),time)
 			self.__connection.execute('play')
-		self.__playback.update()
+		self.__connection.update()
 
 	
 
 	current = property(lambda self:copy.copy(self.__data[self.current_index]))
-	current_index = property(lambda self:int(self.__playback.status.song))
+	current_index = property(lambda self:int(self.__connection.server_status[u'song']))
 	selected = property(lambda self:[self.__data[pos] for pos in self.__selected if len(self.__data) > pos],__set_select)
 	focused = property(lambda self:self.__data[self.__focused] if not self.__focused == None and len(self.__data) > self.__focused else None,__set_focus)
 		
@@ -520,7 +530,7 @@ class Library(Object):
 		self.__lyrics = lyrics
 		self.__data = []
 		self.__connection.bind(self.__connection.CONNECT,self.__update_cache)
-		self.__playback.bind(self.__playback.UPDATE_DATABASE,self.__update_cache)
+		self.__connection.bind(self.__connection.UPDATE_DATABASE,self.__update_cache)
 
 	def __iter__(self):
 		return list.__iter__(self.__data)
@@ -539,7 +549,7 @@ class Library(Object):
 
 		to catch updated event, bind Library.UPDATE.
 		"""
-		self.__playback.check_library()
+		self.__connection.check_library()
 		self.__connection.execute('update')
 
 	def __update_cache(self):
@@ -547,7 +557,10 @@ class Library(Object):
 		"""
 		data = self.__connection.execute('listallinfo')
 		# remove invalid songs.
-		self.__data = [Song(songinfo,self.__artwork,self.__lyrics) for songinfo in data if songinfo.has_key(u'file')]
+		if data:
+			self.__data = [Song(songinfo,self.__artwork,self.__lyrics) for songinfo in data if songinfo.has_key(u'file')]
+		else:
+			self.__data = []
 		self.call(self.UPDATE)
 
 

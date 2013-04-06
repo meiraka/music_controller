@@ -78,7 +78,7 @@ class Frame(wx.Frame,Object):
 		self.Bind(wx.EVT_SIZE,self.OnSize)
 		self.Show()
 		if debug: print 'sized.'
-		self.client.playback.bind(self.client.playback.UPDATE_PLAYING,self.change_title)
+		self.client.connection.bind(self.client.connection.UPDATE_PLAYING,self.change_title)
 		if debug: print 'binded.'
 
 	def can_get_info(self):
@@ -183,7 +183,7 @@ class Frame(wx.Frame,Object):
 		wx.CallAfter(self.__change_title)
 
 	def __change_title(self):
-		status = self.client.playback.status
+		status = self.client.connection.server_status
 		title = self.TITLE
 		if status and status.has_key(u'song'):
 			song_id = int(status[u'song'])

@@ -16,6 +16,7 @@ class HeaderPlaylistBase(wx.VListBox):
 			list_height,list_head_size,list_min_low,debug=False):
 		wx.VListBox.__init__(self,parent,-1,style=wx.LB_MULTIPLE)
 		# set client objects.
+		self.connection = client.connection
 		self.playlist = client.playlist
 		self.playback = client.playback
 		# generates by this ui.
@@ -37,7 +38,7 @@ class HeaderPlaylistBase(wx.VListBox):
 
 		self.playlist.bind(self.playlist.UPDATE, self.update_playlist)
 		self.playlist.bind(self.playlist.FOCUS,  self.focus)
-		self.playback.bind(self.playback.UPDATE, self.refresh)
+		self.connection.bind(self.connection.UPDATE, self.refresh)
 		self.Bind(wx.EVT_LEFT_DCLICK,self.OnActivate)
 		self.Bind(wx.EVT_LEFT_UP,    self.OnClick)
 		self.Bind(wx.EVT_RIGHT_UP,   self.OnRightClick)
@@ -50,7 +51,7 @@ class HeaderPlaylistBase(wx.VListBox):
 
 	def __refresh(self):
 		""" Refreashes current playing song pos."""
-		status = self.playback.status
+		status = self.connection.server_status
 		if status and status.has_key(u'song'):
 			song_id = status[u'song']
 		else:
@@ -189,20 +190,17 @@ class HeaderPlaylistBase(wx.VListBox):
 		songs_pos = rect.GetPosition()
 		songs_pos[1] = songs_pos[1] - self.OnMeasureItem(index) * group_index
 		songs_rect = wx.Rect(*(list(songs_pos)+list(rect.GetSize())))
-		try:
-			if type == 'nop':
-				self.draw_songs(dc,songs_rect,song)
-				self.draw_nothing(dc,rect,index,song,group_index)
-			elif type == 'song':
-				self.draw_songs(dc,songs_rect,song)
-				if self.playback.status.has_key(u'song') and song[u'pos'] == self.playback.status[u'song']:
-					self.draw_current_song(dc,rect,index,song,group_index)
-				else:
-					self.draw_song(dc,rect,index,song,group_index)
+		if type == 'nop':
+			self.draw_songs(dc,songs_rect,song)
+			self.draw_nothing(dc,rect,index,song,group_index)
+		elif type == 'song':
+			self.draw_songs(dc,songs_rect,song)
+			if self.connection.server_status.has_key(u'song') and song[u'pos'] == self.connection.server_status[u'song']:
+				self.draw_current_song(dc,rect,index,song,group_index)
 			else:
-				self.draw_head(dc,rect,index,song)
-		except Exception,err:
-			print err
+				self.draw_song(dc,rect,index,song,group_index)
+		else:
+			self.draw_head(dc,rect,index,song)
 
 	def OnActivate(self,event):
 		""" catch double-click event.
@@ -561,7 +559,7 @@ class HeaderPlaylist(HeaderPlaylistBase):
 
 		left_text = u'>>>' + song.format(u'%title%')
 		time = int(song[u'time'])
-		status = self.playback.status
+		status = self.connection.server_status
 		if status and status.has_key(u'time'):
 			right_text = '/'.join([ u'%i:%s' % (int(i)/60,str(int(i)%60).zfill(2)) for i in status[u'time'].split(u':')])
 		else:

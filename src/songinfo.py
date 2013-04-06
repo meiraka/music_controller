@@ -50,8 +50,8 @@ class Info(wx.BoxSizer):
 		self.sizer.Add(self.slider,0,wx.ALIGN_CENTRE)
 		self.sizer.Add(doublesizer,0,wx.ALIGN_CENTRE|wx.BOTTOM,border=h*2)
 		self.Add(self.sizer,1,wx.EXPAND)
-		self.__update(self.client.playback.status)
-		self.client.playback.bind(self.client.playback.UPDATE,self.update)
+		self.__update(self.client.connection.server_status)
+		self.client.connection.bind(self.client.connection.UPDATE,self.update)
 		self.client.connection.bind(self.client.connection.CONNECT,self.update)
 
 	def Hide(self):
@@ -63,7 +63,7 @@ class Info(wx.BoxSizer):
 		self.parent.Layout()
 
 	def update(self,*args,**kwargs):
-		wx.CallAfter(self.__update,self.client.playback.status)
+		wx.CallAfter(self.__update,self.client.connection.server_status)
 
 	def resize_image(self,*args,**kwargs):
 		self.__resize_image()

@@ -121,7 +121,7 @@ class MenuBar(wx.MenuBar):
 		if self.accele:
 			self.set_accelerator_table(self.__keys)
 		self.set_menu_accelerator(self.__keys,self.accele)
-		self.client.playback.bind(self.client.playback.UPDATE,self.OnUpdate)
+		self.client.connection.bind(self.client.connection.UPDATE,self.OnUpdate)
 		self.parent.bind(self.parent.VIEW,self.update_by_frame)
 		self.parent.Bind(wx.EVT_IDLE,self.update_by_idle)
 		self.client.connection.bind(self.client.connection.CONNECT,self.update_by_connection)
@@ -250,7 +250,7 @@ class MenuBar(wx.MenuBar):
 					
 	def update_by_status(self):
 		""" change menubar items by playback status. """
-		status = self.client.playback.status
+		status = self.client.connection.server_status
 		if not status:
 			return
 		for index,(head,items) in enumerate(self.menu_list):
@@ -295,7 +295,7 @@ class MenuBar(wx.MenuBar):
 			
 	def set_play(self):
 		playback = self.client.playback
-		status = playback.status
+		status = self.client.connection.server_status
 		if status and u'state' in status:
 			playback.pause() if status[u'state'] == u'play' else playback.play()
 

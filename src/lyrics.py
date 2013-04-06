@@ -45,7 +45,7 @@ class LyricView(wx.Panel):
 		self.timer = wx.Timer(self.parent,-1)
 		wx.EVT_TIMER(self.parent,-1,self.__update)
 		self.timer.Start(self.__update_interval)
-		self.client.playback.bind(self.client.playback.UPDATE_PLAYING,self.update_data)
+		self.client.connection.bind(self.client.connection.UPDATE_PLAYING,self.update_data)
 		self.client.connection.bind(self.client.connection.CONNECT,self.update_data)
 		self.database.bind(self.database.UPDATING,self.update)
 		self.database.bind(self.database.UPDATE,self.decode_raw_lyric)
@@ -58,7 +58,7 @@ class LyricView(wx.Panel):
 	def update_time(self):
 		""" updates LyricView managed time.
 		"""
-		status = self.client.playback.status
+		status = self.client.connection.server_status
 		if status and u'time' in status:
 			time = status[u'time']
 			time = int(time.split(u':')[0])
@@ -78,7 +78,7 @@ class LyricView(wx.Panel):
 		call update_time(), set current song and decode song lyric.
 		"""
 		self.update_time()
-		status = self.client.playback.status
+		status = self.client.connection.server_status
 		if status and u'song' in status:
 			song_id = int(status[u'song'])
 			if len(self.client.playlist) > song_id:

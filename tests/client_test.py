@@ -37,12 +37,12 @@ class TestClientController(unittest.TestCase):
 	
 	def test_play_current(self):
 		self.mpd.playback.stop()
-		self.mpd.playback.update()
-		value = self.mpd.playback.status['state']
+		self.mpd.connection.update()
+		value = self.mpd.connection.server_status['state']
 		self.assertEqual(value,u'stop')
 		self.mpd.playback.play()
-		self.mpd.playback.update()
-		value = self.mpd.playback.status['state']
+		self.mpd.connection.update()
+		value = self.mpd.connection.server_status['state']
 		self.assertEqual(value,u'play')
 		self.mpd.playback.stop()
 
@@ -62,7 +62,7 @@ class TestClientLibrary(unittest.TestCase):
 		self.mpd.library.update()
 		limit = 10
 		while not self.__updated and limit > 0:
-			self.mpd.playback.update()
+			self.mpd.connection.update()
 			time.sleep(1)
 			limit = limit -1
 

@@ -37,7 +37,7 @@ def get_rev():
 		return ''
 
 def test():
-	sys.path.append(os.path.abspath('src'))
+	sys.path.append(os.path.abspath('src/common/'))
 	sys.path.append(os.path.abspath('tests'))
 	import unittest
 	import client_test

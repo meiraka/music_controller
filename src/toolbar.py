@@ -77,7 +77,7 @@ class Toolbar(object):
 	
 		self.__tool.Bind(wx.EVT_TOOL,self.OnTool)
 		self.__tool.Realize()
-		self.playback.bind(self.playback.UPDATE,self.update_playback)
+		self.connection.bind(self.connection.UPDATE,self.update_playback)
 		self.connection.bind(self.connection.CONNECT,self.update_connection)
 		self.connection.bind(self.connection.CLOSE,self.update_connection)
 		self.connection.bind(self.connection.CLOSE_UNEXPECT,self.update_connection)
@@ -95,7 +95,7 @@ class Toolbar(object):
 					break
 			else:
 				return
-			if u'state' in self.playback.status and self.playback.status[u'state'] == u'play':
+			if u'state' in self.connection.server_status and self.connection.server_status[u'state'] == u'play':
 				if obj.GetLabel() == _(u'Play'):
 					obj.SetLabel(_(u'Pause'))
 					if environment.userinterface.toolbar_toggle:
