@@ -304,17 +304,34 @@ class Playback(Object):
 		self.connection = connection
 		self.config = config
 
+	def __check_status(self,key,value):
+		status = self.connection.server_status
+		if key in status and status[key] == value:
+			return True
+		else:
+			return False
+		
+
 	def play(self,song=None,block=False):
 		if song:
 			self.connection.execute('play',not(block),song[u'pos'])
 		else:
 			self.connection.execute('play',not(block))
 
+	def is_play(self):
+		return self.__check_status(u'state',u'play')
+
 	def stop(self,block=False):
 		self.connection.execute('stop',not(block))
 
+	def is_stop(self):
+		return self.__check_status(u'state',u'stop')
+
 	def pause(self,block=False):
 		self.connection.execute('pause',not(block))
+
+	def is_pause(self):
+		return self.__check_status(u'state',u'pause')
 
 	def next(self,block=False):
 		self.connection.execute('next',not(block))
@@ -326,13 +343,22 @@ class Playback(Object):
 		arg = '1' if activate else '0'
 		self.connection.execute('random',not(block),arg)
 
+	def is_random(self):
+		return self.__check_status(u'random',u'1')
+
 	def repeat(self,activate,block=False):
 		arg = '1' if activate else '0'
 		self.connection.execute('repeat',not(block),arg)
 
+	def is_repeat(self):
+		return self.__check_status(u'repeat',u'1')
+
 	def single(self,activate,block=False):
 		arg = '1' if activate else '0'
 		self.connection.execute('single',not(block),arg)
+
+	def is_single(self):
+		return self.__check_status(u'single',u'1')
 
 	def seek(self,second):
 		song_id = self.song
@@ -388,7 +414,7 @@ class Playlist(Object):
 		self.__current = None
 		self.__connection.bind(self.__connection.CONNECT,self.__update_cache)
 		self.__connection.bind(self.__connection.UPDATE_PLAYLIST,self.__update_cache)
-		self.__connection.bind(self.__connection.UPDATE_PLAYING,self.__focus_playing)
+		self.__connection.bind(self.__connection.UPDATE,self.__focus_playing)
 
 	def __iter__(self):
 		return list.__iter__(self.__data)
@@ -431,7 +457,7 @@ class Playlist(Object):
 		if not len(self.__data) > song_id:
 			return False
 		song = self.__data[song_id]
-		if not song == self.__current:
+		if not self.__current == song:
 			self.__current = song
 			self.__set_select([song])
 			self.__set_focus(song)
