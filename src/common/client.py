@@ -483,7 +483,9 @@ class Playlist(Object):
 		# set seek pos
 		seek = False
 		id = 0
-		song_id = int(status[u'song'])
+		song_id = None
+		if u'song' in status:
+			song_id = int(status[u'song'])
 		if song_id is not None:
 			if len(self.__data) > song_id:
 				play_song = self.__data[song_id]
