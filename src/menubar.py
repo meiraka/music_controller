@@ -250,29 +250,27 @@ class MenuBar(wx.MenuBar):
 					
 	def update_by_status(self):
 		""" change menubar items by playback status. """
-		status = self.client.connection.server_status
-		if not status:
-			return
+		playback = self.client.playback
 		for index,(head,items) in enumerate(self.menu_list):
 			for id,label,menu_type in items:
 				menu = self.GetMenu(index)
 				if label == u'Shuffle':
 					key = u'random'
 					current = menu.IsChecked(id)
-					new = True if key in status and status[key] == u'1' else False
+					new = playback.is_random()
 					if not current == new:
 						menu.Check(id,new)
 				if label == u'Repeat':
 					key = u'repeat'
 					current = menu.IsChecked(id)
-					new = True if key in status and status[key] == u'1' else False
+					new = playback.is_repeat()
 					if not current == new:
 						menu.Check(id,new)
 							
 				if label == u'Single':
 					key = u'single'
 					current = menu.IsChecked(id)
-					new = True if key in status and status[key] == u'1' else False
+					new = playback.is_single()
 					if not current == new:
 						menu.Check(id,new)
 
@@ -295,9 +293,7 @@ class MenuBar(wx.MenuBar):
 			
 	def set_play(self):
 		playback = self.client.playback
-		status = self.client.connection.server_status
-		if status and u'state' in status:
-			playback.pause() if status[u'state'] == u'play' else playback.play()
+		playback.pause() if playback.is_play() else playback.play()
 
 	def toggle_config_value(self,attr,callback=None):
 		def set():

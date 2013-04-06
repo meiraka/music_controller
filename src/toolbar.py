@@ -95,7 +95,7 @@ class Toolbar(object):
 					break
 			else:
 				return
-			if u'state' in self.connection.server_status and self.connection.server_status[u'state'] == u'play':
+			if self.playback.is_play():
 				if obj.GetLabel() == _(u'Play'):
 					obj.SetLabel(_(u'Pause'))
 					if environment.userinterface.toolbar_toggle:

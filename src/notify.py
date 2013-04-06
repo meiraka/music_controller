@@ -19,21 +19,15 @@ class NotifyBase(object):
 			send=False,
 			active=active
 			)
-		self.__song = None
 		if active:
-			client.connection.bind(client.connection.UPDATE,self.update)
+			client.playlist.bind(client.playlist.UPDATE_CURRENT,self.update)
 
-	def update(self):
+	def update(self,song):
 		""" Update song notify.
 
 		get current playing song and call song().
 		"""
-		status = self.client.connection.server_status
-		if status and u'song' in status and len(self.client.playlist)> int(status[u'song']):
-			song = self.client.playlist[int(status[u'song'])]
-			if not self.__song == song:
-				self.__song = song
-				self.song(song)
+		self.song(song)
 
 
 
