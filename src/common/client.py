@@ -354,6 +354,7 @@ class Playlist(Object):
 	""" This class provides current MPD play queue.
 	"""
 	UPDATE = 'update'
+	UPDATE_CURRENT = 'update_current'
 	FOCUS = 'focus'
 	SELECT = 'select'
 
@@ -387,7 +388,7 @@ class Playlist(Object):
 		self.__current = None
 		self.__connection.bind(self.__connection.CONNECT,self.__update_cache)
 		self.__connection.bind(self.__connection.UPDATE_PLAYLIST,self.__update_cache)
-		self.__connection.bind(self.__connection.UPDATE,self.__focus_playing)
+		self.__connection.bind(self.__connection.UPDATE_PLAYING,self.__focus_playing)
 
 	def __iter__(self):
 		return list.__iter__(self.__data)
@@ -434,6 +435,7 @@ class Playlist(Object):
 			self.__current = song
 			self.__set_select([song])
 			self.__set_focus(song)
+			self.call(self.UPDATE_CURRENT,song)
 
 	def __focus_playing(self,*args,**kwargs):
 		self.focus_playing()
