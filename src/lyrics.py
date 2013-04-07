@@ -101,7 +101,7 @@ class LyricView(wx.Panel):
 			for i in self.__decode_line(line):
 				result.append(i)
 		result.sort()
-		if 'time' in song and song['time'].isdigit():
+		if 'time' in song and song['time'].isdigit() and result:
 			result.append((float(song['time']),''))
 		self.__lyric = result
 
