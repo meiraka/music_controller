@@ -289,9 +289,15 @@ class Connection(Object,threading.Thread):
 				self.update()
 				return self.__server_status
 		return get
+
+	def __get_server_stats():
+		def get(self):
+			return self.execute('stats')
+		return get
 	
 	current = property(lambda self:self.__current)
 	server_status = property(__get_server_status())
+	server_stats = property(__get_server_stats())
 	
 class Playback(Object):
 	'''

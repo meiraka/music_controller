@@ -52,6 +52,7 @@ class MenuBar(wx.MenuBar):
 			('Help',[
 				(wx.ID_ABOUT,u'About',self.NORMAL),
 				(wx.NewId(),u'MusicController Website',self.NORMAL),
+				(wx.NewId(),u'Server Stats',self.NORMAL)
 				])
 			]
 
@@ -76,6 +77,7 @@ class MenuBar(wx.MenuBar):
 				u'View_Focus Current Song':self.focus_song,
 				u'Help_About':AboutDialog,
 				u'Help_MusicController Website':self.show_repository,
+				u'Help_Server Stats':self.show_stats,
 				}
 		self.__keys = {
 				u'File_Quit':'Ctrl+Q',
@@ -345,6 +347,23 @@ class MenuBar(wx.MenuBar):
 
 	def show_repository(self):
 		webbrowser.open('https://bitbucket.org/meiraka/music_controller')
+
+	def show_stats(self):
+		dialog = wx.Dialog(None,-1,_('Server Stats'))
+		stats = self.client.connection.server_stats
+		sizer = wx.GridBagSizer()
+		for i,(k,v) in enumerate(stats.iteritems()):
+			sizer.Add(wx.StaticText(dialog,-1,k),(i,0))
+			sizer.Add(wx.StaticText(dialog,-1,v),(i,1))
+		outer = wx.BoxSizer(wx.VERTICAL)
+		p,host,port,up,ps = self.client.connection.current
+		outer_flag = wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_CENTRE|wx.ALL
+		outer.Add(wx.StaticText(dialog,-1,'%s:%s' % (host,port)),0,outer_flag,border=6)
+		outer.Add(sizer,1,outer_flag,border=6)
+		dialog.SetSizer(outer)
+		dialog.ShowModal()
+		dialog.Destroy()
+		
 
 
 class AboutDialog(object):
