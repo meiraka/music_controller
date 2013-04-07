@@ -1,6 +1,8 @@
 
 import sys
+import datetime
 import webbrowser
+
 import wx
 
 from common import environment
@@ -349,21 +351,33 @@ class MenuBar(wx.MenuBar):
 		webbrowser.open('https://bitbucket.org/meiraka/music_controller')
 
 	def show_stats(self):
-		dialog = wx.Dialog(None,-1,_('Server Stats'))
+		def get_str_delta(uptime):
+			uptime = datetime.timedelta(seconds=uptime)
+			day = uptime.days
+			hour = uptime.seconds/60/60
+			minute = uptime.seconds/60 - hour * 60
+			second = uptime.seconds - hour*60*60 - minute*60
+			uptime = u'%i days %i hours %i minutes %i seconds' % (
+				day,hour,minute,second)
+			return uptime
+		dialog = wx.AboutDialogInfo()
 		stats = self.client.connection.server_stats
-		sizer = wx.GridBagSizer()
-		for i,(k,v) in enumerate(stats.iteritems()):
-			sizer.Add(wx.StaticText(dialog,-1,k),(i,0))
-			sizer.Add(wx.StaticText(dialog,-1,v),(i,1))
-		outer = wx.BoxSizer(wx.VERTICAL)
 		p,host,port,up,ps = self.client.connection.current
-		outer_flag = wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_CENTRE|wx.ALL
-		outer.Add(wx.StaticText(dialog,-1,'%s:%s' % (host,port)),0,outer_flag,border=6)
-		outer.Add(sizer,1,outer_flag,border=6)
-		dialog.SetSizer(outer)
-		dialog.ShowModal()
-		dialog.Destroy()
-		
+		dialog.SetName('%s:%s' % (host,port))
+		labels = {
+			u'artists':u'Number of Artists', 
+			u'albums':u'Number of Albums', 
+			u'songs':u'Number of Songs',
+			u'uptime':u'Daemon Uptime',
+			u'playtime':u'Time Playing',
+			u'db_playtime':u'Total Playtime', 
+			u'db_update':u'last db update',
+			}
+		stats[u'uptime'] = get_str_delta(int(stats[u'uptime']))
+		stats[u'db_playtime'] = get_str_delta(int(stats[u'db_playtime']))
+		description = '\n'.join([_(labels[k])+':'+v for k,v in stats.iteritems()])
+		dialog.SetDescription(description)
+		wx.AboutBox(dialog)	
 
 
 class AboutDialog(object):
