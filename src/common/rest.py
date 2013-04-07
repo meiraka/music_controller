@@ -97,7 +97,7 @@ class ArtworkLastfm(Downloader):
 		try:
 			json_text = urllib2.urlopen(req).read().decode('utf8')
 		except urllib2.URLError,err:
-			self.download_errmsg(req,err)
+			return []
 		json_parsed = json.loads(json_text)
 		if 'album' in json_parsed and 'image' in json_parsed['album']:
 			url_list = [i for i in json_parsed['album']['image'] if '#text' in i and i['#text']]
@@ -115,5 +115,4 @@ class ArtworkLastfm(Downloader):
 				image_bin = urllib2.urlopen(url).read()
 				return image_bin
 			except urllib2.URLError,err:
-				self.download_errmsg(url,err)
 		return ''
