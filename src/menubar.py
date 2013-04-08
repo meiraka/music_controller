@@ -357,9 +357,16 @@ class MenuBar(wx.MenuBar):
 			hour = uptime.seconds/60/60
 			minute = uptime.seconds/60 - hour * 60
 			second = uptime.seconds - hour*60*60 - minute*60
-			uptime = u'%i days %i hours %i minutes %i seconds' % (
+			uptime = _(u'%i days %i hours %i minutes %i seconds') % (
 				day,hour,minute,second)
 			return uptime
+		def get_str_date(time):
+			date = datetime.datetime.fromtimestamp(time)
+			return _(u'%(day)s, %(month)s, %(year)s') % dict(
+				day = date.day,
+				month = date.month,
+				year = date.year,
+				)
 		dialog = wx.AboutDialogInfo()
 		stats = self.client.connection.server_stats
 		p,host,port,up,ps = self.client.connection.current
@@ -368,13 +375,14 @@ class MenuBar(wx.MenuBar):
 			u'artists':u'Number of Artists', 
 			u'albums':u'Number of Albums', 
 			u'songs':u'Number of Songs',
-			u'uptime':u'Daemon Uptime',
+			u'uptime':u'Server Uptime',
 			u'playtime':u'Time Playing',
 			u'db_playtime':u'Total Playtime', 
-			u'db_update':u'last db update',
+			u'db_update':u'Last DB Update',
 			}
 		stats[u'uptime'] = get_str_delta(int(stats[u'uptime']))
 		stats[u'db_playtime'] = get_str_delta(int(stats[u'db_playtime']))
+		stats[u'db_update'] = get_str_date(int(stats[u'db_update']))
 		description = '\n'.join([_(labels[k])+':'+v for k,v in stats.iteritems()])
 		dialog.SetDescription(description)
 		wx.AboutBox(dialog)	
