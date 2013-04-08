@@ -314,10 +314,11 @@ class AlbumListBase(wx.ScrolledWindow):
 
 	def update_canvas(self,dc):
 		w,h = self.box_size
+		hidden = w*2
 		size_w,size_h = self.GetSize()
 		for index,song in enumerate(self.albums):
 			x,y = self.CalcScrolledPosition(index*w,0)
-			if 0-w < x < size_w and 0-h < y < size_h:
+			if 0-w-hidden < x < size_w+hidden  and 0-h < y < size_h:
 				rect = (x,y,w,h)
 				self.draw_background(index,song,dc,rect)
 				self.draw_album(index,song,dc,rect)
