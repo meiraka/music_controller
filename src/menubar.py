@@ -381,9 +381,19 @@ class MenuBar(wx.MenuBar):
 			u'db_update':u'Last DB Update',
 			}
 		stats[u'uptime'] = get_str_delta(int(stats[u'uptime']))
+		stats[u'playtime'] = get_str_delta(int(stats[u'playtime']))
 		stats[u'db_playtime'] = get_str_delta(int(stats[u'db_playtime']))
 		stats[u'db_update'] = get_str_date(int(stats[u'db_update']))
-		description = '\n'.join([_(labels[k])+':'+v for k,v in stats.iteritems()])
+		sorter = [
+			u'artists',
+			u'albums',
+			u'songs',
+			u'',
+			u'playtime',
+			u'db_playtime',
+			u'db_update',
+			]
+		description = '\n'.join([_(labels[label]) +':'+stats[label] if label in labels else '' for label in sorter])
 		dialog.SetDescription(description)
 		wx.AboutBox(dialog)	
 
