@@ -27,41 +27,7 @@ REQUIREMENTS
 INSTALL
 =======
 
-::
-
-  python setup.py install
-
-RUNNING
-=======
-
-::
-
-  music-controller
-
-or run in source dir:
-
-::
-
-  ./music-controller
-
-BUILD PACKAGE
-=============
-
-debian
-------
-
-::
-
-  $ sudo apt-get install debscripts debhelper cdbs coreutils hostname mercurial \
-  python python-central python-setuptools python-docutils python-mpd
-  $ debuild -us -uc -I
-
-Mac OSX
--------
-
-::
-
-  python setup.py py2app
+see `setup.py <setup.py>`_
 
 :AUTHOR:
   mei raka
