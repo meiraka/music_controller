@@ -142,6 +142,8 @@ class LyricView(wx.Panel):
 
 	def __update(self,event=None):
 		""" update lyric file"""
+		if not self.IsShown():
+			return
 		dc = wx.ClientDC(self)
 		if environment.userinterface.draw_double_buffered:
 			dc = wx.BufferedDC(dc)
@@ -167,8 +169,6 @@ class LyricView(wx.Panel):
 		self.update_msec()
 
 	def draw(self,dc,rect):
-		if not self.IsShown():
-			return
 		dc.SetPen(wx.Pen(self.hbg))
 		dc.SetBrush(wx.Brush(self.hbg))
 
