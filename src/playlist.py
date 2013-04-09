@@ -516,6 +516,7 @@ class HeaderPlaylist(HeaderPlaylistBase):
 		right_pos[0] = right_pos[0] - dc.GetTextExtent(right_text)[0] + dc.GetSize()[0]
 		left_pos[0] = left_pos[0] + margin
 		right_pos[0] = right_pos[0] - margin
+		left_text = self.ellipsetext(dc,left_text,right_pos[0]-left_pos[0])
 		dc.DrawText(left_text,*left_pos)
 		dc.DrawText(right_text,*right_pos)
 
