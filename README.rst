@@ -27,7 +27,7 @@ REQUIREMENTS
 INSTALL
 =======
 
-see `setup.py <setup.py>`_
+see setup.py
 
 :AUTHOR:
   mei raka

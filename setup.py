@@ -1,11 +1,28 @@
 """
+================================
 setup script for MusicController
+================================
 
-build .app for Mac OSX:
+Requirements
+============
+
+* wxPython 2.8 or later
+* python-mpd
+* pynotify (optional)
+* gntp (optional)
+
+Build or Install
+================
+
+Build .app for Mac OSX:
 	python setup.py py2app
 
-build .deb for debian or Ubuntu:
-	debuild -us uc -I
+Build .deb for debian or Ubuntu:
+	python setup.py debian
+
+Install as a python package:
+	python setup.py install
+
 """
 import os
 import sys
