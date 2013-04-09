@@ -167,7 +167,8 @@ class LyricView(wx.Panel):
 		self.update_msec()
 
 	def draw(self,dc,rect):
-
+		if not self.IsShown():
+			return
 		dc.SetPen(wx.Pen(self.hbg))
 		dc.SetBrush(wx.Brush(self.hbg))
 
@@ -266,6 +267,7 @@ class Editor(dialog.Frame):
 		self.text.Bind(wx.EVT_KEY_UP,self.on_keys)
 		self.text.SetFocus()
 		save = wx.Button(self,-1,_('Save'))
+		save.Bind(wx.EVT_BUTTON,self.on_save)
 		params = dict(flag=wx.ALL|wx.ALIGN_CENTRE_VERTICAL,border=3)
 		sizer = wx.GridBagSizer()
 		sizer.Add(text,(0,0),**params)
