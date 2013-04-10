@@ -371,6 +371,7 @@ class MenuBar(wx.MenuBar):
 		stats = self.client.connection.server_stats
 		p,host,port,up,ps = self.client.connection.current
 		dialog.SetName('%s:%s' % (host,port))
+		dialog.SetVersion('mpd '+self.client.connection.server_version)
 		labels = {
 			u'artists':u'Number of Artists', 
 			u'albums':u'Number of Albums', 
@@ -388,13 +389,13 @@ class MenuBar(wx.MenuBar):
 			u'artists',
 			u'albums',
 			u'songs',
-			u'',
 			u'playtime',
 			u'db_playtime',
 			u'db_update',
 			]
 		description = '\n'.join([_(labels[label]) +':'+stats[label] if label in labels else '' for label in sorter])
 		dialog.SetDescription(description)
+		dialog.SetCopyright('')
 		wx.AboutBox(dialog)	
 
 
