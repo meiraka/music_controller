@@ -194,7 +194,11 @@ class Frame(wx.Frame,Object):
 
 	def show_preferences(self):
 		if not self.preferences:
+			def hide(event):
+				event.GetEventObject().Hide()
 			self.preferences = preferences.App(None,self.client)
+			self.preferences.Bind(wx.EVT_CLOSE,hide)
+			
 		self.preferences.Show()
 
 	def OnSize(self,event):

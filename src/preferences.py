@@ -183,6 +183,9 @@ class Connection(wx.BoxSizer):
 			text.Bind(wx.EVT_TEXT,self.OnText)
 		self.use_password.Bind(wx.EVT_CHECKBOX,self.OnCheck)
 		self.Layout()
+		self.connection.bind(self.connection.CONNECT,self.update)
+		self.connection.bind(self.connection.CLOSE,self.update)
+		self.connection.bind(self.connection.CLOSE_UNEXPECT,self.update)
 
 	def Hide(self):
 		self.ShowItems(False)
