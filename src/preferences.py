@@ -350,22 +350,24 @@ class Playback(wx.BoxSizer):
 	def update(self):
 		if not self.parent.IsShown():
 			return
-		for name,attr,label,slider,control in self.sliders:
-			value = getattr(self.playback,attr)
-			if not control.GetValue() == value:
-				slider.SetValue(value)
-				control.SetValue(value)
+		def update(devices):
+			for name,attr,label,slider,control in self.sliders:
+				value = getattr(self.playback,attr)
+				if not control.GetValue() == value:
+					slider.SetValue(value)
+					control.SetValue(value)
+			if not self.__devices_list == devices:
+				self.__devices_list = devices
+				if not self.devices.GetCount() == len(self.__devices_list):
+					self.devices.Clear()
+					self.devices.Set([d.name for d in self.__devices_list])
+				for i,d in enumerate(self.__devices_list):
+					if not self.devices.GetString(i) == d.name:
+						self.devices.SetString(i,d.name)
+					if not self.devices.IsChecked(i) == d.is_enable():
+						self.devices.Check(i,d.is_enable())
 		devices = self.playback.devices
-		if not self.__devices_list == devices:
-			self.__devices_list = devices
-			if not self.devices.GetCount() == len(self.__devices_list):
-				self.devices.Clear()
-				self.devices.Set([d.name for d in self.__devices_list])
-			for i,d in enumerate(self.__devices_list):
-				if not self.devices.GetString(i) == d.name:
-					self.devices.SetString(i,d.name)
-				if not self.devices.IsChecked(i) == d.is_enable():
-					self.devices.Check(i,d.is_enable())
+		wx.CallAfter(update,devices)
 
 	def on_devices(self,event):
 		index = event.GetInt()
