@@ -396,9 +396,34 @@ class Playback(Object):
 			self.connection.execute(command,True,value)
 		return set
 
+	def __get_devices():
+		class Device(object):
+			def __init__(self,connection,kwargs):
+				self.connection = connection
+				self.__id = kwargs[u'outputid']
+				self.name = kwargs[u'outputname']
+				self.__enable = True if kwargs[u'outputenabled'] == u'1' else False
+
+			def enable(self):
+				self.connection.execute('enableoutput',True,self.__id)
+				self.__enable = True
+
+			def disable(self):
+				self.connection.execute('disableoutput',True,self.__id)
+				self.__enable = False
+
+			def is_enable(self):
+				return self.__enable
+
+		def get(self):
+			return [Device(self.connection,i) for i in self.connection.execute(u'outputs')]
+
+		return get
 	time = property(__get(u'time',int,0))
 	volume = property(__get(u'volume',int,100),__set(u'setvol'))
 	crossfade = property(__get(u'xfade',int,0),__set(u'crossfade'))
+	devices = property(__get_devices())
+	
 		
 class Playlist(Object):
 	""" This class provides current MPD play queue.

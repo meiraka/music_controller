@@ -312,7 +312,7 @@ class Playback(wx.BoxSizer):
 		self.connection = client.connection
 		self.playback = client.playback
 		self.config = client.config
-		self.connection.bind(self.connection.UPDATE,self.update)
+		self.__devices_list = []
 
 		gauges = [
 			(u'Volume',u'volume',0,100),
@@ -336,16 +336,41 @@ class Playback(wx.BoxSizer):
 			sizer.Add(control,(index*2+1,2),**params)
 			return name,attr,label,slider,control
 		self.sliders = [get_slider(sizer,index,*gauge) for index,gauge in enumerate(gauges)]
+		sizer.Add(wx.StaticText(parent,-1,_(u'Devices')),(len(self.sliders)*2,0),**params_label)
+		self.devices = wx.CheckListBox(parent,-1)
+		self.devices.Bind(wx.EVT_CHECKLISTBOX,self.on_devices)
+		sizer.Add(self.devices,(len(self.sliders)*2+1,0),(1,3),**params_expand)
 		sizer.AddGrowableCol(1)
+		sizer.AddGrowableRow(len(self.sliders)*2+1)
 		self.Add(sizer,1,wx.ALL|wx.EXPAND,9)
 		self.Layout()
+		self.update()
+		self.connection.bind(self.connection.UPDATE,self.update)
 
 	def update(self):
+		if not self.parent.IsShown():
+			return
 		for name,attr,label,slider,control in self.sliders:
 			value = getattr(self.playback,attr)
 			if not control.GetValue() == value:
 				slider.SetValue(value)
 				control.SetValue(value)
+		devices = self.playback.devices
+		if not self.__devices_list == devices:
+			self.__devices_list = devices
+			if not self.devices.GetCount() == len(self.__devices_list):
+				self.devices.Clear()
+				self.devices.Set([d.name for d in self.__devices_list])
+			for i,d in enumerate(self.__devices_list):
+				if not self.devices.GetString(i) == d.name:
+					self.devices.SetString(i,d.name)
+				if not self.devices.IsChecked(i) == d.is_enable():
+					self.devices.Check(i,d.is_enable())
+
+	def on_devices(self,event):
+		index = event.GetInt()
+		attr = 'enable' if self.devices.IsChecked(index) else 'disable'
+		getattr(self.__devices_list[index],attr)()
 
 	def Hide(self):
 		self.ShowItems(False)
@@ -354,5 +379,6 @@ class Playback(wx.BoxSizer):
 	def Show(self):
 		self.ShowItems(True)
 		self.parent.Layout()
+		self.update()
 
 
