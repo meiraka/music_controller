@@ -132,6 +132,7 @@ class MenuBar(wx.MenuBar):
 		self.client.connection.bind(self.client.connection.CLOSE,self.update_by_connection)
 		self.client.connection.bind(self.client.connection.CLOSE_UNEXPECT,self.update_by_connection)
 		self.update_by_config()
+		self.update_by_connection()
 
 	def set_accelerator_table(self,keys):
 		flag_tables = dict(Ctrl=wx.ACCEL_CTRL)

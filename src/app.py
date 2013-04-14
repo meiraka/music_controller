@@ -69,6 +69,7 @@ class App(wx.App):
 
 	def __connect_default(self):
 		""" Connects to default host and runs mpd monitor daemon."""
+		self.client.start()
 		if self.__debug: print 'connect to default host..'
 		if self.client.connect():
 			if self.__debug: print 'connected.'
@@ -84,8 +85,6 @@ class App(wx.App):
 					if self.__debug: print 'fail! (>_<)'
 			else:
 				wx.CallAfter(self.frame.show_connection)
-		# run monitor daemon
-		self.client.start()
 
 	def reconnect(self):
 		""" Reconnects to previously connected host in background."""
