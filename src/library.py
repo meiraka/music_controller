@@ -138,7 +138,7 @@ class ViewBase(wx.VListBox):
 
 	def OnMeasureItem(self,index):
 		x,y = self.state
-		if len(self.items[y]) <= index:
+		if y < len(self.items) and len(self.items[y]) <= index:
 			return 0
 		key,key_y = self.items[y][index]
 		style = self.styles[x][key_y]
