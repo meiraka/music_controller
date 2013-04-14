@@ -12,7 +12,8 @@ class App(dialog.Frame):
 		self.client = client
 		self.__windows = [
 			(u'Connection',Connection,['server',wx.ART_GO_HOME]),
-			(u'Lyrics',Lyrics,['applications-office',wx.ART_PASTE])
+			(u'Playback',Playback,[wx.ART_GO_HOME]),
+			(u'Lyrics',Lyrics,['applications-office',wx.ART_PASTE]),
 			]
 
 		self.__ids = {}
@@ -152,9 +153,9 @@ class Connection(wx.BoxSizer):
 		params = dict(flag=wx.ALL|wx.ALIGN_CENTRE_VERTICAL,border=3)
 		params_label = dict(flag=wx.ALL|wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT,border=3)
 		params_expand = dict(flag=wx.ALL|wx.EXPAND|wx.ALIGN_CENTRE_VERTICAL,border=3)
-		sizer.Add(self.box,(0,0),(6,3),**params_expand)
-		sizer.Add(self.add,(6,0),**params)
-		sizer.Add(self.delete,(6,1),**params)
+		sizer.Add(self.box,(0,0),(7,3),**params_expand)
+		sizer.Add(self.add,(7,0),**params)
+		sizer.Add(self.delete,(7,1),**params)
 		sizer.Add(self.mpd,(0,3),**params)
 		sizer.Add(self.profile_label,(1,3),**params_label)
 		sizer.Add(self.profile,(1,4),(1,2),**params_expand)
@@ -164,11 +165,10 @@ class Connection(wx.BoxSizer):
 		sizer.Add(self.port,(3,4),(1,2),**params_expand)
 		sizer.Add(self.use_password,(4,3),**params_label)
 		sizer.Add(self.password,(4,4),(1,2),**params_expand)
-		sizer.Add(self.status,(6,4),**params_expand)
-		sizer.Add(self.connect,(6,5),**params)
+		sizer.Add(self.status,(6,3),(1,3),**params_expand)
+		sizer.Add(self.connect,(7,5),**params)
 		sizer.AddGrowableCol(4)
 		sizer.AddGrowableRow(5)
-		self.sizer = wx.BoxSizer()
 		self.Add(sizer,1,wx.ALL|wx.EXPAND,9)
 	
 		self.selected = None
@@ -300,5 +300,59 @@ class Connection(wx.BoxSizer):
 	def OnDel(self,event):
 		index = self.box.GetSelection()
 		self.__del(index)
+
+
+class Playback(wx.BoxSizer):
+	def __init__(self,parent,client):
+		params = dict(flag=wx.ALL|wx.ALIGN_CENTRE_VERTICAL,border=3)
+		params_label = dict(flag=wx.ALL|wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT,border=3)
+		params_expand = dict(flag=wx.ALL|wx.EXPAND|wx.ALIGN_CENTRE_VERTICAL,border=3)
+		wx.BoxSizer.__init__(self)
+		self.parent = parent
+		self.connection = client.connection
+		self.playback = client.playback
+		self.config = client.config
+		self.connection.bind(self.connection.UPDATE,self.update)
+
+		gauges = [
+			(u'Volume',u'volume',0,100),
+			(u'Crossfade',u'crossfade',0,10),
+			]
+		sizer = wx.GridBagSizer()
+		def get_slider(sizer,index,name,attr,min,max):
+			label = wx.StaticText(parent,-1,_(name))
+			slider = wx.Slider(parent,-1,min,min,max)
+			control = wx.SpinCtrl(parent,min=min,max=max,initial=min)
+			def OnSlider(event):
+				control.SetValue(slider.GetValue())
+				setattr(self.playback,str(attr),slider.GetValue())
+			def OnControl(event):
+				slider.SetValue(control.GetValue())
+				setattr(self.playback,str(attr),control.GetValue())
+			slider.Bind(wx.EVT_SCROLL,OnSlider)
+			control.Bind(wx.EVT_SPINCTRL,OnControl)
+			sizer.Add(label,(index*2,0),**params_label)
+			sizer.Add(slider,(index*2+1,1),**params_expand)
+			sizer.Add(control,(index*2+1,2),**params)
+			return name,attr,label,slider,control
+		self.sliders = [get_slider(sizer,index,*gauge) for index,gauge in enumerate(gauges)]
+		sizer.AddGrowableCol(1)
+		self.Add(sizer,1,wx.ALL|wx.EXPAND,9)
+		self.Layout()
+
+	def update(self):
+		for name,attr,label,slider,control in self.sliders:
+			value = getattr(self.playback,attr)
+			if not control.GetValue() == value:
+				slider.SetValue(value)
+				control.SetValue(value)
+
+	def Hide(self):
+		self.ShowItems(False)
+		self.parent.Layout()
+
+	def Show(self):
+		self.ShowItems(True)
+		self.parent.Layout()
 
 

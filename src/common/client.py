@@ -160,7 +160,6 @@ class Connection(Object,threading.Thread):
 			self.call(self.UPDATE_DATABASE)
 		elif self.__server_status.has_key('updating_db'):
 			self.__check_library = self.__server_status['updating_db']
-			print (self.__check_library)
 
 	def connect(self,profile=None):
 		'''connect to mpd daemon.
@@ -281,13 +280,17 @@ class Connection(Object,threading.Thread):
 		else:
 			return item
 
-	def __get_server_status():
+	def __get_server_status(key=None,cast=None):
 		def get(self):
-			if self.__running:
+			if not self.__running:
+				self.update()
+			if key is None:
 				return self.__server_status
 			else:
-				self.update()
-				return self.__server_status
+				if type is None:
+					return self.__server_status[key]
+				else:
+					return cast(self.__server_status[key])
 		return get
 
 	def __get_server_stats():
@@ -386,7 +389,16 @@ class Playback(Object):
 				return default
 		return get
 
+	def __set(command,default=0):
+		def set(self,value):
+			if value is None:
+				value = default
+			self.connection.execute(command,True,value)
+		return set
+
 	time = property(__get(u'time',int,0))
+	volume = property(__get(u'volume',int,100),__set(u'setvol'))
+	crossfade = property(__get(u'xfade',int,0),__set(u'crossfade'))
 		
 class Playlist(Object):
 	""" This class provides current MPD play queue.
