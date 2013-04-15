@@ -167,3 +167,7 @@ msgstr "ジャンル"
 msgid "id"
 msgstr "id"
 
+msgid "MPD Server Error (%s)"
+msgstr "MPD サーバーエラー (%s)"
+msgid "problems opening audio device"
+msgstr "オーディオデバイスが使えません"

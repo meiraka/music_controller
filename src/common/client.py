@@ -108,6 +108,7 @@ class Connection(Object,threading.Thread):
 	UPDATE_DATABASE = 'updated_database'
 	UPDATE_PLAYLIST = 'updated_playlist'
 	UPDATE_PLAYING = 'update_playing'
+	SERVER_ERROR = 'server_error'
 	def __init__(self,config):
 		Object.__init__(self)
 		threading.Thread.__init__(self)
@@ -160,6 +161,9 @@ class Connection(Object,threading.Thread):
 			self.call(self.UPDATE_DATABASE)
 		elif self.__server_status.has_key('updating_db'):
 			self.__check_library = self.__server_status['updating_db']
+		if u'error' in self.__server_status and self.__server_status[u'error']:
+			self.call(self.SERVER_ERROR,self.__server_status[u'error'])
+			self.execute('clearerror')
 
 	def connect(self,profile=None):
 		'''connect to mpd daemon.

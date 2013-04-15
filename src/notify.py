@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import string
+
 """
 notifies MusicController status by on screen display.
 """
@@ -21,6 +23,7 @@ class NotifyBase(object):
 			)
 		if active:
 			client.playlist.bind(client.playlist.UPDATE_CURRENT,self.update)
+			client.connection.bind(client.connection.SERVER_ERROR,self.error)
 
 	def update(self,song):
 		""" Update song notify.
@@ -29,12 +32,13 @@ class NotifyBase(object):
 		"""
 		self.song(song)
 
-
-
 	def test(self):
 		pass
 
 	def song(self,song):
+		pass
+
+	def error(self,status):
 		pass
 
 	def __readwrite(key):
@@ -64,11 +68,27 @@ class NotifyOSD(NotifyBase):
 		desc = song.format('%artist%\n%album% %date%')
 		img = song.artwork
 		self.notify.update(title,desc,img)
-		self.notify.set_timeout(4000)
 		try:
 			self.notify.show()
 		except Exception,err:
-			print err
+			pass
+
+	def error(self,error):
+		try:
+			self.notify.close()
+		except:
+			pass
+		p,host,port,up,pa = self.client.connection.current
+		title = _('MPD Server Error (%s)') % (host+':'+port)
+		desc = _(error)
+		self.notify.update(title,desc)
+		if desc == error:
+			desc = string.capwords(error)
+		try:
+			self.notify.show()
+		except Exception,err:
+			pass
+
 
 class GrowlNotify(NotifyBase):
 	def __init__(self,client):
