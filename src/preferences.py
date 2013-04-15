@@ -322,7 +322,8 @@ class Playback(wx.BoxSizer):
 		def get_slider(sizer,index,name,attr,min,max):
 			label = wx.StaticText(parent,-1,_(name))
 			slider = wx.Slider(parent,-1,min,min,max)
-			control = wx.SpinCtrl(parent,min=min,max=max,initial=min)
+			control = wx.SpinCtrl(parent,min=min,max=max)
+			control.SetValue(min)
 			def OnSlider(event):
 				control.SetValue(slider.GetValue())
 				setattr(self.playback,str(attr),slider.GetValue())
