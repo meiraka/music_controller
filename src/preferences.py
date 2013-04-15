@@ -12,7 +12,7 @@ class App(dialog.Frame):
 		self.client = client
 		self.__windows = [
 			(u'Connection',Connection,['server',wx.ART_GO_HOME]),
-			(u'Playback',Playback,[wx.ART_GO_HOME]),
+			(u'Playback',Playback,['gtk-media-play-ltr',wx.ART_GO_FORWARD]),
 			(u'Lyrics',Lyrics,['applications-office',wx.ART_PASTE]),
 			]
 
