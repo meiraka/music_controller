@@ -227,6 +227,7 @@ class MenuBar(wx.MenuBar):
 			u'Albumlist',
 			u'Info',
 			u'Focus Current Song',
+			u'Server Stats'
 			]
 		def __update():
 			for index,(head,items) in enumerate(self.menu_list):
