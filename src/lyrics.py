@@ -217,7 +217,7 @@ class LyricView(wx.Panel):
 			else:
 				last_time = time
 		try:
-			pos =  self.GetSize()[0] / height / 2
+			pos =  self.GetSize()[1] / height / 2
 			for index,(time,line) in enumerate(self.__lyric):
 				# do not draw line text is empty.
 				if line.strip():
