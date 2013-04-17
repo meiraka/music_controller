@@ -40,6 +40,7 @@ class LyricView(wx.Panel):
 		self.__raw_lyric = u''
 		self.__lyric = []
 		self.__update_interval = 100
+		self.__last_speed = 0.0 # last speed in draw() add_offset
 		wx.Panel.__init__(self,parent,-1)
 		self.font = environment.userinterface.font
 		self.timer = wx.Timer(self.parent,-1)
@@ -179,18 +180,39 @@ class LyricView(wx.Panel):
 		text_height = environment.userinterface.text_height
 		height = text_height * 3 / 2
 		current_line = -1
+		break_length = text_height
+		break_mux = 0.8
+		break_min = 0.1
+
 		for index,(time,line) in enumerate(self.__lyric):
 			if last_time < self.time < time:
 				# we draw *guess_count* times to get next line pos
 				guess_count = (time-self.time-self.time_msec)/(float(self.__update_interval)/1000)
 				current_line = index-1
 				if guess_count>0:
-					add_offset = (index*height-self.__offset)/guess_count
-					if add_offset > height or abs(index*height - self.__offset) > h:
+					current_diff = index*height-self.__offset
+					if current_diff < break_length:
+						if self.__last_speed:
+							add_offset = self.__last_speed * break_mux
+						else:
+							add_offset = self.__last_speed
+						if add_offset < break_min and break_min < current_diff:
+							add_offset = break_min
+							
+					else:
+						add_offset = current_diff/guess_count
+					self.__last_speed = add_offset
+					if add_offset*2 > height or abs(index*height - self.__offset) > h:
 						# too far from current pos, jump.
 						self.__offset = index*height
 					else:
 						self.__offset = self.__offset + add_offset 
+				elif guess_count >= -1:
+					# overrun
+					self.__offset = self.__offset + break_min
+					self.__last_speed = break_min
+				else:
+					self.__last_speed = 0.0
 				break
 			else:
 				last_time = time
