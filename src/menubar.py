@@ -397,7 +397,7 @@ class MenuBar(wx.MenuBar):
 			]
 		description = '\n'.join([_(labels[label]) +':'+stats[label] if label in labels else '' for label in sorter])
 		dialog.SetDescription(description)
-		dialog.SetCopyright('')
+		dialog.SetCopyright(' ')
 		wx.AboutBox(dialog)	
 
 
