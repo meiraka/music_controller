@@ -387,77 +387,11 @@ class Editor(dialog.Frame):
 		self.text.SetEditable(False)
 
 
-class Downloader(dialog.Frame):
+class Downloader(dialog.Downloader):
 	"""
 	Lyric Download dialog.
 	"""
 	def __init__(self,parent,client,song):
-		self.parent = parent
-		self.client = client
-		self.database = self.client.lyrics
-		self.song = song
-		self.items = []
-		dialog.Frame.__init__(self,parent,style=dialog.MIN_STYLE|wx.RESIZE_BORDER)
+		dialog.Downloader.__init__(self,parent,client.lyrics,song,['title','artist'])
 		self.SetTitle(_('Download Lyric: %s') % song.format('%title% - %artist%'))
-		sizer = wx.GridBagSizer()
-		sizer_flag = dict(flag=wx.ALL|wx.ALIGN_CENTRE_VERTICAL,border=3)
-		sizer_flag_right = dict(flag=wx.ALL|wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT,border=3)
-		expand_sizer_flag = dict(flag=wx.ALL|wx.EXPAND|wx.ALIGN_CENTRE_VERTICAL,border=3)
-		labels = ['title','artist']
-		self.values = {}
-		index = 0
-		base = self
-		if environment.userinterface.fill_window_background:
-			base = wx.Panel(self,-1)
-		for index,label in enumerate(labels):
-			sizer.Add(wx.StaticText(base,-1,_(label)+u':'),(index,0),**sizer_flag_right)
-			value = wx.TextCtrl(base,-1,getattr(self.song,label))
-			self.values[label] = value
-			sizer.Add(value,(index,1),(1,2),**expand_sizer_flag)
-		self.listview = wx.ListBox(base,-1)
-		index = index + 1
-		sizer.Add(self.listview,(index,0),(1,3),flag=wx.EXPAND)
-		sizer.AddGrowableRow(index)
-		sizer.AddGrowableCol(1)
-		index = index + 1
-		self.status_label = wx.StaticText(base,-1)
-		self.search_button = wx.Button(base,-1,_('Search'))
-		sizer.Add(self.status_label,(index,0),**sizer_flag)
-		sizer.Add(self.search_button,(index,2),**sizer_flag)
-		base.SetSizer(sizer)
 
-		self.search_button.Bind(wx.EVT_BUTTON,self.on_search_button)
-		self.listview.Bind(wx.EVT_LISTBOX_DCLICK,self.on_activate_item)
-		if environment.userinterface.fill_window_background:
-			sizer = wx.BoxSizer()
-			sizer.Add(base,1,wx.EXPAND)
-			self.SetSizer(sizer)
-
-	def on_search_button(self,event):
-		self.listview.Clear()
-		keywords = dict((label,value.GetValue()) for label,value in self.values.iteritems())
-		def download():
-			wx.CallAfter(self.status_label.SetLabel,_('Searching'))
-			def download_callback(get,format,list):
-				for i in list:
-					wx.CallAfter(self.listview.Append,format(i))
-					self.items.append((get,i))
-				wx.CallAfter(self.Layout)
-			self.database.list(keywords,callback=download_callback)
-			if self.items:
-				wx.CallAfter(self.status_label.SetLabel,_('%i Items Found' % len(self.items)))
-			else:
-				wx.CallAfter(self.status_label.SetLabel,_('No Items Found'))
-		thread.start_new_thread(download,())
-
-	def on_activate_item(self,event):
-		index = event.GetSelection()
-		get,urlinfo = self.items[index]
-		lyric = get(urlinfo)
-		self.database[self.song] = lyric
-		def download():
-			wx.CallAfter(self.status_label.SetLabel,_('Downloading'))
-			data = get(urlinfo)
-			self.database[self.song] = data
-			wx.CallAfter(self.status_label.SetLabel,_(''))
-		thread.start_new_thread(download,())

@@ -19,6 +19,7 @@ FEATURES
 
 REQUIREMENTS
 ============
+
 * python 2.6 or 2.7
 * wxPython (tested with wxGTK and wxMac (cocoa))
 * gntp (optional)
