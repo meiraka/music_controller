@@ -1,3 +1,8 @@
+"""
+Dialog windows.
+
+"""
+
 import thread
 import wx
 from common import environment
@@ -5,8 +10,15 @@ from common import environment
 MIN_STYLE = wx.SYSTEM_MENU | wx.CAPTION | wx.CLOSE_BOX | wx.CLIP_CHILDREN | wx.FRAME_NO_TASKBAR
 
 class Frame(wx.Frame):
-	""" Frames for dialog. close with Esc key."""
+	"""
+	Frames for dialog. close with Esc key.
+
+	"""
 	def __init__(self,parent=None,style=MIN_STYLE):
+		""" Generates Dialog Frame.
+
+		Binds Escape key to close.
+		"""
 		wx.Frame.__init__(self,parent,-1,style=style)
 		id = wx.NewId()
 		self.Bind(wx.EVT_MENU,self.OnClose,id=id)
@@ -19,7 +31,18 @@ class Frame(wx.Frame):
 
 
 class SongInfo(Frame):
+	"""
+	Song information dialog.
+
+	"""
 	def __init__(self,parent,songs):
+		""" Generates song info dialog.
+
+		Arguments:
+			parent -- parent window.
+			songs -- song list.
+
+		"""
 		Frame.__init__(self)
 		self.songs = songs
 		self.must_tags = [u'artist',u'title',u'album']
@@ -86,6 +109,11 @@ class SongInfo(Frame):
 		self.Show()
 
 	def show(self,song):
+		""" Show given song info.
+
+		Arguments:
+			song -- Song object.
+		"""
 		self.title.SetLabel(song.format('%title% - %artist% %length%'))
 		self.description.SetLabel(song.format('%album% %genre%'))
 		for index,tag in enumerate(self.must_tags):
@@ -126,11 +154,13 @@ class Downloader(Frame):
 	"""
 	def __init__(self,parent,database,song,labels):
 		"""
+		Generates Downloader dialog.
+
 		Arguments:
 			parent -- parent window.
 			database -- common.database.Database
 			song -- Song for search method.
-			labels -- Search query.
+			labels -- Search query textctrl labels.
 		"""
 		self.parent = parent
 		self.database = database
@@ -171,11 +201,17 @@ class Downloader(Frame):
 			self.SetSizer(sizer)
 
 	def on_search_button(self,event):
+		""" Event function on 'Search' wx.Button.
+
+		Queries api and show results.
+		"""
 		self.listview.Clear()
 		keywords = dict((label,value.GetValue()) for label,value in self.values.iteritems())
 		def download():
+			# requests api
 			wx.CallAfter(self.status_label.SetLabel,_('Searching'))
 			def download_callback(get,format,list):
+				# appends results.
 				for i in list:
 					wx.CallAfter(self.listview.Append,format(i))
 					self.items.append((get,i))
@@ -188,9 +224,14 @@ class Downloader(Frame):
 		thread.start_new_thread(download,())
 
 	def on_activate_item(self,event):
+		""" Event function on wx.ListBox item.
+
+		Downloads selected item.
+		"""
 		index = event.GetSelection()
 		get,urlinfo = self.items[index]
 		def download():
+			# requests api and saves to database
 			wx.CallAfter(self.status_label.SetLabel,_('Downloading'))
 			data = get(urlinfo)
 			self.database[self.song] = data
