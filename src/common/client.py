@@ -109,6 +109,7 @@ class Connection(Object,threading.Thread):
 	UPDATE_PLAYLIST = 'updated_playlist'
 	UPDATE_PLAYING = 'update_playing'
 	SERVER_ERROR = 'server_error'
+	CLOCK = 'clock'
 	def __init__(self,config):
 		Object.__init__(self)
 		threading.Thread.__init__(self)
@@ -164,6 +165,7 @@ class Connection(Object,threading.Thread):
 		if u'error' in self.__server_status and self.__server_status[u'error']:
 			self.call(self.SERVER_ERROR,self.__server_status[u'error'])
 			self.execute('clearerror')
+		self.call(self.CLOCK)
 
 	def connect(self,profile=None):
 		'''connect to mpd daemon.
@@ -306,11 +308,20 @@ class Connection(Object,threading.Thread):
 		def get(self):
 			return self.__connection.mpd_version if self.connected else ''
 		return get
+
+	def __get_server_decoders():
+		def get(self):
+			return self.execute('decoders')
+		return get
+
+
 	
 	current = property(lambda self:self.__current)
 	server_status = property(__get_server_status())
 	server_stats = property(__get_server_stats())
 	server_version = property(__get_server_version())
+	server_decoders = property(__get_server_decoders())
+	
 	
 class Playback(Object):
 	'''
@@ -782,6 +793,8 @@ class Config(Object):
 	info =               property(*__get_bool(u'info',True))
 	lyrics_download =    property(*__get_bool(u'lyrics_download',False))
 	lyrics_api_geci_me = property(*__get_bool(u'lyrics_api_geci_me',False))
+	artwork_download =   property(*__get_bool(u'artwork_download',True))
+	artwork_api_lastfm = property(*__get_bool(u'artwork_api_lastfm',True))
 	window_size =        property(*__get_tuple(u'window_size',(-1,-1)))
 	notify_growl =       property(*__get_bool(u'notify_growl',True))
 	notify_growl_host =  property(*__get_unicode(u'notify_growl_host',u'localhost'))

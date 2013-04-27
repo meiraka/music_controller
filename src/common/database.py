@@ -135,6 +135,7 @@ class Lyrics(Object):
 		self.call(self.UPDATE,song,lyric)
 		
 	def download(self,song):
+		# load client config and enable/disable api
 		if self.client.config.lyrics_download:
 			downloaders = {}
 			for label,isd in self.downloaders.iteritems():
@@ -142,7 +143,7 @@ class Lyrics(Object):
 				downloaders[label] = getattr(self.client.config,attr)
 			self.downloaders = downloaders
 		else:
-			return
+			return ''
 		self.__downloading.append(song)
 		self.call(self.UPDATING)
 		lyric = u''
@@ -349,6 +350,15 @@ class Artwork(Object):
 		
 	def download(self,song):
 		if not song in self.__downloading:
+			# load client config and enable/disable api
+			if self.client.config.artwork_download:
+				downloaders = {}
+				for label,isd in self.downloaders.iteritems():
+					attr = u'artwork_api_'+label
+					downloaders[label] = getattr(self.client.config,attr)
+				self.downloaders = downloaders
+			else:
+				return ''
 			self.__downloading.append(song)
 			self.__setitem__(song,u'')  # flush for terrible lock.
 			self.call(self.UPDATING)
