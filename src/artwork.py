@@ -255,7 +255,7 @@ class Downloader(dialog.Frame):
 				wx.CallAfter(self.Layout)
 			self.database.list(keywords,callback=download_callback)
 			if self.items:
-				wx.CallAfter(self.status_label.SetLabel,_('%i Items Found' % len(self.items)))
+				wx.CallAfter(self.status_label.SetLabel,_('%i Items Found') % len(self.items))
 			else:
 				wx.CallAfter(self.status_label.SetLabel,_('No Items Found'))
 		thread.start_new_thread(download,())

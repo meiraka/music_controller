@@ -106,6 +106,14 @@ class ArtworkLastfm(Downloader):
 		else:
 			return []
 
+	def format(self,list_returns_line):
+		size = list_returns_line[u'#text'].split('/')[4]
+		if size == u'_':
+			size = ''
+		else:
+			size = ': '+size
+		return 'last.fm %s' % (list_returns_line[u'size']+size)
+
 	def get(self,list_returns_line):
 		""" Returns image binary text. not image path.
 		"""
