@@ -244,7 +244,7 @@ class Menu(wx.Menu):
 		wx.Menu.__init__(self)
 		self.parent = parent
 		self.song = song
-		items = [u'Edit...',u'Download...',u'Get Info']
+		items = [u'Get Info',u'Edit...',u'Download...']
 		self.__items = dict([(item,wx.NewId()) for item in items])
 		for item in items:
 			self.Append(self.__items[item],_(item),_(item))
@@ -256,7 +256,7 @@ class Menu(wx.Menu):
 		editor.Show()
 
 	def download_item(self,event):
-		downloader = Downloader(self.parent,self.parent.client,self.parent.database,self.song)
+		downloader = Downloader(self.parent,self.parent.client,self.song)
 		downloader.Show()
 
 	def get_info_item(self,event):
@@ -391,10 +391,10 @@ class Downloader(dialog.Frame):
 	"""
 	Lyric Download dialog.
 	"""
-	def __init__(self,parent,client,database,song):
+	def __init__(self,parent,client,song):
 		self.parent = parent
 		self.client = client
-		self.database = database
+		self.database = self.client.lyrics
 		self.song = song
 		self.items = []
 		dialog.Frame.__init__(self,parent,style=dialog.MIN_STYLE|wx.RESIZE_BORDER)
@@ -455,3 +455,9 @@ class Downloader(dialog.Frame):
 		get,urlinfo = self.items[index]
 		lyric = get(urlinfo)
 		self.database[self.song] = lyric
+		def download():
+			wx.CallAfter(self.status_label.SetLabel,_('Downloading'))
+			data = get(urlinfo)
+			self.database[self.song] = data
+			wx.CallAfter(self.status_label.SetLabel,_(''))
+		thread.start_new_thread(download,())

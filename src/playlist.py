@@ -16,6 +16,7 @@ class HeaderPlaylistBase(wx.VListBox):
 			list_height,list_head_size,list_min_low,debug=False):
 		wx.VListBox.__init__(self,parent,-1,style=wx.LB_MULTIPLE)
 		# set client objects.
+		self.client = client
 		self.connection = client.connection
 		self.playlist = client.playlist
 		self.playback = client.playback
@@ -286,6 +287,7 @@ class AlbumListBase(wx.ScrolledWindow):
 	"""
 	def __init__(self,parent,client,box_size,scroll_block,debug=False):
 		wx.ScrolledWindow.__init__(self,parent,style=wx.TAB_TRAVERSAL)
+		self.client = client
 		self.playlist = client.playlist
 		self.albums = []
 		self.group_songs = []
@@ -464,12 +466,16 @@ class Menu(wx.Menu):
 	def __init__(self,parent):
 		wx.Menu.__init__(self)
 		self.parent = parent
-		items = [u'Get Info',u'Remove']
+		items = [u'Get Info',u'Remove',u'Download Artwork...']
 		self.__items = dict([(item,wx.NewId()) for item in items])
 		for item in items:
 			self.Append(self.__items[item],_(item),_(item))
-			func_name = item.lower().replace(' ','_')+'_item'
+			func_name = item.lower().replace(' ','_').replace('.','')+'_item'
 			self.Bind(wx.EVT_MENU,getattr(self,func_name),id=self.__items[item])
+
+	def download_artwork_item(self,event):
+		downloader = artwork.Downloader(self.parent,self.parent.client,self.parent.selected[0])
+		downloader.Show()
 
 	def get_info_item(self,event):
 		dialog.SongInfo(self.parent,self.parent.selected)
