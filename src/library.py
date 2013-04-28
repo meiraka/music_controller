@@ -1,4 +1,7 @@
-#!/usr/bin/python
+"""
+Library view.
+
+"""
 
 import thread
 import wx

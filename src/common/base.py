@@ -1,3 +1,8 @@
+"""
+Base classes for application.
+
+"""
+
 class Object(object):
 	def __init__(self):
 		self.__binds = {}

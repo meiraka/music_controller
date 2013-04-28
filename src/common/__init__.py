@@ -1,3 +1,7 @@
+"""
+Common objects and settings for application.
+
+"""
 
 import environment
 import client

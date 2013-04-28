@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 """
 Lyric view, menu and dialogs.
 

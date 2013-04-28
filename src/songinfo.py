@@ -1,5 +1,7 @@
-#!/usr/bin/python
+"""
+Song information view.
 
+"""
 import thread
 
 import wx

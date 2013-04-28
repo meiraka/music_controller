@@ -1,4 +1,8 @@
-#!/usr/bin/python
+"""
+Main window toolbar.
+
+"""
+
 import wx
 from common import environment
 

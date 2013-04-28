@@ -1,4 +1,10 @@
-#!/usr/bin/python
+"""
+Static values for application.
+
+Detects current desktop and turn on/off values.
+
+"""
+
 import os
 import sys
 import wx

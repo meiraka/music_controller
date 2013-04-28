@@ -1,4 +1,7 @@
-#!/usr/bin/python
+"""
+Playlist View and playlist menu.
+
+"""
 
 import thread
 import wx

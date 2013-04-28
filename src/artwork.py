@@ -1,7 +1,6 @@
-#!/usr/bin/python
-
 """
-load Artwork and generates wx.Bitmap objects.
+Loads Artwork and generates wx.Bitmap objects.
+
 """
 
 import sqlite3

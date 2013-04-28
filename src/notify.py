@@ -1,10 +1,9 @@
-#!/usr/bin/python
+"""
+Notifies Application status by on screen display.
+
+"""
 
 import string
-
-"""
-notifies MusicController status by on screen display.
-"""
 
 APP_NAME = u'MusicController'
 

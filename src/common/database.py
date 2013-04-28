@@ -1,9 +1,8 @@
-#!/usr/bin/python
-
 """
 Lyrics reader and writer.
 
 Supports read, write, search and download lyrics.
+
 """
 
 import os

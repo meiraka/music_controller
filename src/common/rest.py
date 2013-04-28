@@ -1,7 +1,6 @@
-#!/usr/bin/python
-
 """
 Rest API wrapper.
+
 """
 
 import time

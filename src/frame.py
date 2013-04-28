@@ -1,3 +1,8 @@
+"""
+Main application window.
+
+"""
+
 import wx
 
 from common import Object

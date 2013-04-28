@@ -1,3 +1,8 @@
+"""
+Main Application.
+
+"""
+
 import os
 import wx
 
@@ -14,9 +19,6 @@ import notify
 NAME = 'MusicController'
 COMMAND_NAME = 'music-controller'
 
-"""
-Main Application.
-"""
 class App(wx.App):
 	""" Initializes Application.
 
@@ -148,10 +150,9 @@ class App(wx.App):
 		self.client.connection.close()
 		
 
-"""
-Runs Application.
-"""		
 def run(**params):
+	""" Runs Application.
+	"""		
 	wx.Log_EnableLogging(False)
 	app = App(**params)
 	app.MainLoop()

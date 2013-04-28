@@ -1,4 +1,7 @@
+"""
+Main window menubar and menubar dialogs.
 
+"""
 import sys
 import datetime
 import webbrowser

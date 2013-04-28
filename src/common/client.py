@@ -1,5 +1,6 @@
 """
-event driven mpd client module.
+Event driven mpd client module.
+
 """
 
 import os

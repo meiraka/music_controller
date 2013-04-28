@@ -1,3 +1,8 @@
+"""
+Preferences dialogs.
+
+"""
+
 import wx
 
 import dialog
