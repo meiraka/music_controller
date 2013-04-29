@@ -21,23 +21,34 @@ class NotifyBase(object):
 			active=active
 			)
 		if active:
-			client.playlist.bind(client.playlist.UPDATE_CURRENT,self.update)
-			client.connection.bind(client.connection.SERVER_ERROR,self.error)
+			client.playlist.bind(client.playlist.UPDATE_CURRENT,self.update_song)
+			client.connection.bind(client.connection.SERVER_ERROR,self.update_error)
 
-	def update(self,song):
+	def update_song(self,song):
 		""" Update song notify.
 
 		get current playing song and call song().
 		"""
-		self.song(song)
+		title = song.format('%title%')
+		desc = song.format('%artist%\n%album% %date%')
+		img = song.artwork
+		self.song(song,title,desc,img)
 
 	def test(self):
 		pass
 
-	def song(self,song):
+	def song(self,song,title,description,image_path):
 		pass
 
-	def error(self,status):
+	def update_error(self,status):
+		p,host,port,up,pa = self.client.connection.current
+		title = _('MPD Server Error (%s)') % (host+':'+port)
+		desc = _(status)
+		if desc == status:
+			desc = string.capwords(status)
+		self.error(title,desc,u'')
+
+	def error(self,title,description,image_path):
 		pass
 
 	def __readwrite(key):
@@ -62,27 +73,19 @@ class NotifyOSD(NotifyBase):
 		except ImportError:
 			NotifyBase.__init__(self,client,False)
 
-	def song(self,song):
-		title = song.format('%title%')
-		desc = song.format('%artist%\n%album% %date%')
-		img = song.artwork
-		self.notify.update(title,desc,img)
+	def song(self,song,title,description,image_path):
+		self.notify.update(title,description,image_path)
 		try:
 			self.notify.show()
 		except Exception,err:
 			pass
 
-	def error(self,error):
+	def error(self,title,description,image_path):
 		try:
 			self.notify.close()
 		except:
 			pass
-		p,host,port,up,pa = self.client.connection.current
-		title = _('MPD Server Error (%s)') % (host+':'+port)
-		desc = _(error)
-		self.notify.update(title,desc)
-		if desc == error:
-			desc = string.capwords(error)
+		self.notify.update(title,description)
 		try:
 			self.notify.show()
 		except Exception,err:
@@ -105,7 +108,7 @@ class GrowlNotify(NotifyBase):
 		import gntp.notifier
 		kwargs = dict(
 			applicationName = APP_NAME,
-			notifications = ["Song","Connection"],
+			notifications = ["Song","Connection","Error"],
 			defaultNotifications = ["Song"],
 			)
 		if self.client.config.notify_growl_host and not self.client.config.notify_growl_host == 'localhost':
@@ -120,16 +123,33 @@ class GrowlNotify(NotifyBase):
 		except gntp.errors.NetworkError:
 			pass
 
-	def song(self,song):
-		title = song.format('%title% %artist%')
-		desc = song.format('%album% %date%')
+	def song(self,song,title,description,image_path):
+		title = title.encode('utf8')
+		description = description.encode('utf8')
+		image_path = image_path.encode('utf8')
 		try:
 			self.growl.notify(
 				"Song",
 				title=title,
-				description=desc,
+				description=description,
+				icon=image_path,
 				sticky=False)
-		except:
+		except Exception,err:
+			pass
+
+	def error(self,title,description,image_path):
+		title = title.encode('utf8')
+		description = description.encode('utf8')
+		image_path = image_path.encode('utf8')
+		print description
+		try:
+			self.growl.notify(
+				"Error",
+				title=title,
+				description=description,
+				icon=image_path,
+				sticky=False)
+		except Exception,err:
 			pass
 
 
