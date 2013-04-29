@@ -44,8 +44,6 @@ class App(wx.App):
 		elif os.path.exists(os.getcwdu() + u'/share/locale'):
 			lang['localedir'] = os.getcwdu() + u'/share/locale'
 		self.__lang = gettext.translation(**lang)
-		self.notifyosd = notify.NotifyOSD(self.client)
-		self.growlnotify = notify.GrowlNotify(self.client)
 		self.client.artwork.clear_empty()
 		self.client.artwork.download_auto = True
 		self.client.artwork.download_background = True
@@ -56,6 +54,8 @@ class App(wx.App):
 		
 		__builtins__['_']  = self.translate
 		wx.App.__init__(self)
+		self.notifyosd = notify.NotifyOSD(self.client)
+		self.growlnotify = notify.GrowlNotify(self.client)
 
 
 	def translate(self,text):

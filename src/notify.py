@@ -4,6 +4,10 @@ Notifies Application status by on screen display.
 """
 
 import string
+import tempfile
+import urllib
+import wx
+import artwork
 
 APP_NAME = u'MusicController'
 
@@ -95,6 +99,9 @@ class NotifyOSD(NotifyBase):
 class GrowlNotify(NotifyBase):
 	def __init__(self,client):
 		self.client = client
+		self.artwork = artwork.Loader(self.client)
+		self.artwork.size = (128,128)
+		self.artwork.background = False
 		self.__inited = False
 		try:
 			import gntp
@@ -124,32 +131,37 @@ class GrowlNotify(NotifyBase):
 			pass
 
 	def song(self,song,title,description,image_path):
-		title = title.encode('utf8')
-		description = description.encode('utf8')
-		image_path = image_path.encode('utf8')
 		try:
 			self.growl.notify(
 				"Song",
-				title=title,
-				description=description,
-				icon=image_path,
-				sticky=False)
+				sticky=False,
+				**self.__encode(title,description,image_path)
+				)
 		except Exception,err:
+			print err
 			pass
 
 	def error(self,title,description,image_path):
-		title = title.encode('utf8')
-		description = description.encode('utf8')
-		image_path = image_path.encode('utf8')
-		print description
 		try:
 			self.growl.notify(
 				"Error",
-				title=title,
-				description=description,
-				icon=image_path,
-				sticky=False)
+				sticky=False,
+				**self.__encode(title,description,image_path)
+				)
 		except Exception,err:
 			pass
 
-
+	def __encode(self,title,description,image_path):
+		returns = dict(
+			title = title.encode('utf8'),
+			description = description.encode('utf8')
+			)
+		if image_path:
+			bmp = self.artwork[image_path]
+			if bmp:
+				a = tempfile.NamedTemporaryFile()
+				bmp.SaveFile(a.name,wx.BITMAP_TYPE_BMP)
+				text = open(a.name,'rb').read()
+				a.close()
+				returns['icon'] = text
+		return returns

@@ -112,22 +112,31 @@ class Loader(Object):
 		self.__empty = None
 		self.__callbacks = []
 		self.__size = (120,120)
+		self.background = True
 		self.mirror = Loader.Mirror(self,mirror)
 		self.artwork = client.artwork
 		self.artwork.bind(self.artwork.UPDATE,self.__load_image)
 
 
 	def __getitem__(self,path):
-		if not path:
-			return self.__get_empty_image()
-		if self.__images.has_key((path,self.size)) and self.__images[(path,self.size)]:
-			return self.__images[(path,self.size)]
-		elif self.__images.has_key((path,self.size)):
-			return self.__get_empty_image()
+		if self.background:
+			if not path:
+				return self.__get_empty_image()
+			if self.__images.has_key((path,self.size)) and self.__images[(path,self.size)]:
+				return self.__images[(path,self.size)]
+			elif self.__images.has_key((path,self.size)):
+				return self.__get_empty_image()
+			else:
+				thread.start_new_thread(self.__load_image,('',path))
+				return None
 		else:
-			thread.start_new_thread(self.__load_image,('',path))
-			return None
-
+			if not path:
+				return self.__get_empty_image()
+			if self.__images.has_key((path,self.size)) and self.__images[(path,self.size)]:
+				return self.__images[(path,self.size)]
+			else:
+				return self.__load_image('',path)
+	
 	def __load_image(self,song,path):
 		""" Generates given path of image object.
 		
@@ -147,7 +156,11 @@ class Loader(Object):
 		if all([i > 0 for i in new_size]):
 			image.Rescale(*new_size,quality=wx.IMAGE_QUALITY_HIGH)
 		self.mirror.load(path,image)
-		wx.CallAfter(self.__cache_image,path,image)
+		if self.background:
+			wx.CallAfter(self.__cache_image,path,image)
+		else:
+			self.__cache_image(path,image)
+		return self.__images[(path,self.size)]
 
 	def __get_empty_image(self):
 		""" Returns image for "Not found".
