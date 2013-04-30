@@ -20,6 +20,7 @@ class App(dialog.Frame):
 			(u'Playback',Playback,['gtk-media-play-ltr',wx.ART_GO_FORWARD]),
 			(u'Artwork',Artwork,['applications-office',wx.ART_PASTE]),
 			(u'Lyrics',Lyrics,['applications-office',wx.ART_PASTE]),
+			(u'Notification',Notify,['applications-office',wx.ART_GO_HOME])
 			]
 
 		self.__ids = {}
@@ -176,6 +177,79 @@ class Lyrics(wx.BoxSizer):
 		label = self.__downloads_api[index]
 		attr = 'lyrics_api_' + label.replace(u'.',u'_')
 		setattr(self.client.config,attr,obj.GetValue())
+
+	def Hide(self):
+		self.ShowItems(False)
+		self.parent.Layout()
+
+	def Show(self):
+		self.ShowItems(True)
+		self.parent.Layout()
+
+
+class Notify(wx.BoxSizer):
+	def __init__(self,parent,client):
+		self.parent = parent
+		self.client = client
+		wx.BoxSizer.__init__(self,wx.VERTICAL)
+		sizer = wx.GridBagSizer()
+		self.growl = wx.CheckBox(parent,-1,_(u'Growl'))
+		growl_host_label = wx.StaticText(parent,-1,_(u'Host')+u':')
+		growl_pass_label = wx.StaticText(parent,-1,_(u'Password')+u':')
+		self.growl_host = wx.TextCtrl(parent,-1,self.client.config.notify_growl_host)
+		self.growl_pass = wx.TextCtrl(parent,-1,self.client.config.notify_growl_pass)
+		self.osd = wx.CheckBox(parent,-1,_(u'Notify OSD'))
+		self.test = wx.Button(parent,-1,_(u'Test'))
+		params = dict(flag=wx.ALL|wx.ALIGN_CENTRE_VERTICAL,border=3)
+		params_label = dict(flag=wx.ALL|wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT,border=3)
+		params_expand = dict(flag=wx.ALL|wx.EXPAND|wx.ALIGN_CENTRE_VERTICAL,border=3)
+		sizer.Add(wx.StaticText(parent,-1,_(u'Notify System')),(0,0),(1,2),**params)
+		sizer.Add(self.growl,(1,1),(1,2),**params)
+		sizer.Add(growl_host_label,(2,1),**params_label)
+		sizer.Add(self.growl_host,(2,2),(1,3),**params_expand)
+		sizer.Add(growl_pass_label,(3,1),**params_label)
+		sizer.Add(self.growl_pass,(3,2),(1,3),**params_expand)
+		sizer.Add(self.osd,(4,1),(1,2),**params)
+		sizer.Add(self.test,(6,4),**params)
+		sizer.AddGrowableCol(3)
+		sizer.AddGrowableRow(5)
+		self.test.Bind(wx.EVT_BUTTON,self.on_test)
+		self.growl.Bind(wx.EVT_CHECKBOX,self.on_activate)
+		self.osd.Bind(wx.EVT_CHECKBOX,self.on_activate)
+		self.growl_host.Bind(wx.EVT_TEXT,self.on_growl_settings)
+		app = wx.GetApp()
+		self.osd.Enable(app.notifyosd.active)
+		self.growl.Enable(app.growlnotify.active)
+		self.growl_host.Enable(app.growlnotify.active)
+		self.growl_pass.Enable(app.growlnotify.active)
+		growl_host_label.Enable(app.growlnotify.active)
+		growl_pass_label.Enable(app.growlnotify.active)
+
+		self.osd.SetValue(self.client.config.notify_osd)
+		self.growl.SetValue(self.client.config.notify_growl)
+		self.Add(sizer,1,wx.ALL|wx.EXPAND,9)
+
+	def on_growl_settings(self,event):
+		app = wx.GetApp()
+		if app.growlnotify.active:
+			obj = event.GetEventObject()
+			if obj == self.growl_host:
+				self.client.config.notify_growl_host = obj.GetValue()
+			elif obj == self.growl_pass:
+				self.client.config.notify_growl_port = obj.GetValue()
+			app.growlnotify.reconnect()
+		
+	def on_activate(self,event):
+		obj = event.GetEventObject()
+		if obj == self.growl:
+			self.client.config.notify_growl = obj.GetValue()
+		elif obj == self.osd:
+			self.client.config.notify_osd = obj.GetValue()
+
+	def on_test(self,event):
+		app = wx.GetApp()
+		app.growlnotify.test()
+		app.notifyosd.test()
 
 	def Hide(self):
 		self.ShowItems(False)

@@ -21,36 +21,41 @@ class NotifyBase(object):
 	"""
 	def __init__(self,client,active):
 		self.__cached = dict(
-			send=False,
 			active=active
 			)
 		if active:
 			client.playlist.bind(client.playlist.UPDATE_CURRENT,self.update_song)
 			client.connection.bind(client.connection.SERVER_ERROR,self.update_error)
 
+	def check_send(self):
+		return False
+
 	def update_song(self,song):
 		""" Update song notify.
 
 		get current playing song and call song().
 		"""
-		title = song.format('%title%')
-		desc = song.format('%artist%\n%album% %date%')
-		img = song.artwork
-		self.song(song,title,desc,img)
+		if self.active and self.check_send():
+			title = song.format('%title%')
+			desc = song.format('%artist%\n%album% %date%')
+			img = song.artwork
+			self.song(song,title,desc,img)
+
+	def update_error(self,status):
+		if self.active and self.check_send():
+			p,host,port,up,pa = self.client.connection.current
+			title = _('MPD Server Error (%s)') % (host+':'+port)
+			desc = _(status)
+			if desc == status:
+				desc = string.capwords(status)
+			self.error(title,desc,u'')
 
 	def test(self):
-		pass
+		song = self.client.playlist.current
+		self.update_song(song)
 
 	def song(self,song,title,description,image_path):
 		pass
-
-	def update_error(self,status):
-		p,host,port,up,pa = self.client.connection.current
-		title = _('MPD Server Error (%s)') % (host+':'+port)
-		desc = _(status)
-		if desc == status:
-			desc = string.capwords(status)
-		self.error(title,desc,u'')
 
 	def error(self,title,description,image_path):
 		pass
@@ -62,7 +67,6 @@ class NotifyBase(object):
 			self.__cached[key] = value
 		return (get,set)
 
-	send = property(*__readwrite('send'))
 	active = property(__readwrite('active')[0])
 
 
@@ -76,6 +80,9 @@ class NotifyOSD(NotifyBase):
 			NotifyBase.__init__(self,client,True)
 		except ImportError:
 			NotifyBase.__init__(self,client,False)
+
+	def check_send(self):
+		return self.client.config.notify_osd
 
 	def song(self,song,title,description,image_path):
 		self.notify.update(title,description,image_path)
@@ -129,6 +136,9 @@ class GrowlNotify(NotifyBase):
 			self.__inited = True
 		except gntp.errors.NetworkError:
 			pass
+
+	def check_send(self):
+		return self.client.config.notify_growl
 
 	def song(self,song,title,description,image_path):
 		try:
