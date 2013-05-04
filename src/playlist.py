@@ -498,7 +498,9 @@ class HeaderPlaylist(HeaderPlaylistBase):
 		self.active_forground_color  = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT)
 		self.artwork = artwork.Loader(client)
 		self.artwork.size = (text_height*8,text_height*8)
-		self.artwork.bind(self.artwork.UPDATE,self.RefreshAll)
+		def refreashall():
+			wx.CallAfter(self.RefreshAll)
+		self.artwork.bind(self.artwork.UPDATE,refreashall)
 
 	def draw_background(self,dc,rect,index):
 		if self.IsSelected(index):
@@ -618,7 +620,9 @@ class AlbumList(AlbumListBase):
 		scroll_block = text_height
 		self.artwork = artwork.Loader(client)
 		self.artwork.size = (text_height*8,text_height*8)  # image size
-		self.artwork.bind(self.artwork.UPDATE,self.update)
+		def update():
+			wx.CallAfter(self.update)
+		self.artwork.bind(self.artwork.UPDATE,update)
 		self.active_background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT )
 		self.background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX)
 		AlbumListBase.__init__(self,parent,client,box_size,scroll_block,debug)
