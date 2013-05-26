@@ -601,7 +601,10 @@ class Playlist(Object):
 				self.__connection.execute('add',False,i)
 			if seek:
 				self.__connection.execute('seek',False,str(id),time)
-			self.__connection.execute('play')
+				if u'state' in status and status[u'state'] == u'play':
+					self.__connection.execute('play')
+				else:
+					self.__connection.execute('pause')
 		self.__connection.update()
 
 	
