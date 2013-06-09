@@ -327,6 +327,11 @@ class AlbumListBase(wx.ScrolledWindow):
 				rect = (x,y,w,h)
 				self.draw_background(index,song,dc,rect)
 				self.draw_album(index,song,dc,rect)
+		if len(self.albums) * w < size_w:
+			for index in range(len(self.albums),(size_w - len(self.albums) * w) / w + 1 + 1):
+				x,y = self.CalcScrolledPosition(index*w,0)
+				rect = (x,y,w,h)
+				self.draw_background(index,None,dc,rect)
 
 	def __update_album_list(self):
 		last_album = None
@@ -402,7 +407,7 @@ class AlbumListBase(wx.ScrolledWindow):
 		x,y = self.CalcUnscrolledPosition(mouse)
 		w,h = self.box_size
 		index = x/w
-		if not self.__focused_index == index:
+		if not self.__focused_index == index and index < len(self.albums):
 			self.playlist.focused = self.albums[index]
 
 	def OnRightClick(self,event):
@@ -413,11 +418,12 @@ class AlbumListBase(wx.ScrolledWindow):
 		x,y = self.CalcUnscrolledPosition(mouse)
 		w,h = self.box_size
 		index = x/w
-		if not self.__focused_index == index:
-			self.playlist.focused = self.albums[index]
-		if -1 < self.__focused_index < len(self.group_songs):
-			self.selected = self.group_songs[self.__focused_index]
-		self.PopupMenu(Menu(self))
+		if index < len(self.albums):
+			if not self.__focused_index == index:
+				self.playlist.focused = self.albums[index]
+			if -1 < self.__focused_index < len(self.group_songs):
+				self.selected = self.group_songs[self.__focused_index]
+			self.PopupMenu(Menu(self))
 
 	def OnKeysUp(self,event):
 		""" Key up event. 
