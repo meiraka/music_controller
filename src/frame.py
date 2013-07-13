@@ -185,8 +185,10 @@ class Frame(wx.Frame,Object):
 		self.call(self.VIEW)
 
 	def __get_search_view(self):
-		if self.playlist.IsShown() and hasattr(self.playlist,'search_first'):
+		if self.playlist.IsShown():
 			return self.playlist
+		elif self.library.IsShown():
+			return self.library
 		else:
 			return None
 

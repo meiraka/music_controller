@@ -118,10 +118,11 @@ class HeaderPlaylistBase(wx.VListBox):
 		return -1
 
 	def search_first(self,keyword):
-		index = self.search(keyword, 0)
+		self.__search_index = 0
+		self.__search_text = keyword
+		index = self.search(self.__search_text, self.__search_index)
 		if not index == -1:
 			self.__search_index = index
-			self.__search_text = keyword
 
 	def search_next(self):
 		index = self.search(self.__search_text, self.__search_index+1)
