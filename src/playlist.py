@@ -30,6 +30,9 @@ class HeaderPlaylistBase(wx.VListBox):
 		# sets by this ui and another playlist ui.
 		self.__focused = None
 		self.__selected = []
+		# sets by search_first() and search_next().
+		self.__search_index = 0
+		self.__search_text = ''
 		# set __init__ args to private values.
 		self.__head_format = head_format
 		self.__list_head_size = list_head_size
@@ -94,12 +97,38 @@ class HeaderPlaylistBase(wx.VListBox):
 		if index > -1 and not self.IsVisible(index):
 			self.Select(0,True)
 		self.DeselectAll()
-		for index,(t,g,i,s) in enumerate(self.songs):
+		for index,(t,g,i,s,k) in enumerate(self.songs):
 			if t == 'song' and s == song:
 				self.Select(index,True)
 				if not self.IsVisible(index):
 					self.ScrollLines(index)
 				break
+
+	def search(self, keyword, index):
+		"""Searches songs.
+
+		Returns:
+			song index in playlist struct if find else -1
+		"""
+		if len(self.songs) > index and keyword:
+			for index, (lt, gp, gi, song, search_keyword) in enumerate(self.songs[index:]):
+				if not search_keyword.find(keyword) == -1:
+					wx.CallAfter(self.__focus, song)
+					return index
+		return -1
+
+	def search_first(self,keyword):
+		index = self.search(keyword, 0)
+		if not index == -1:
+			self.__search_index = index
+			self.__search_text = keyword
+
+	def search_next(self):
+		index = self.search(self.__search_text, self.__search_index+1)
+		if not index == -1:
+			self.__search_index = index
+		else:
+			self.search_first(self.__search_text)
 
 	def update_playlist(self,*args,**kwargs):
 		""" Updates playlist view in main thread.
@@ -146,11 +175,11 @@ class HeaderPlaylistBase(wx.VListBox):
 				groups.append(song)
 				group_count = len(groups)-1
 				if ui_songs and song_count < self.__list_min_row and old_song:
-					ui_songs.extend([('nop',group_count,i+song_count,old_song) for i in xrange(self.__list_min_row-song_count)])
+					ui_songs.extend([('nop',group_count,i+song_count,old_song,'') for i in xrange(self.__list_min_row-song_count)])
 				song_count = 0
-				ui_songs.append(('head',group_count,0,song))
+				ui_songs.append(('head',group_count,0,song,self.search_keyword_head(song)))
 			pos_line[song[u'pos']] = len(ui_songs)
-			ui_songs.append(('song',group_count,song_count,song))
+			ui_songs.append(('song',group_count,song_count,song,self.search_keyword_song(song)))
 			old_song = song
 			song_count = song_count + 1
 		return (ui_songs,pos_line,groups)
@@ -190,7 +219,7 @@ class HeaderPlaylistBase(wx.VListBox):
 			return
 		dc.SetTextForeground(self.__font_color)
 		dc.SetFont(self.__font)
-		type,group_pos,group_index,song = self.songs[index]
+		type,group_pos,group_index,song,keyword = self.songs[index]
 		songs_pos = rect.GetPosition()
 		songs_pos[1] = songs_pos[1] - self.OnMeasureItem(index) * group_index
 		songs_rect = wx.Rect(*(list(songs_pos)+list(rect.GetSize())))
@@ -220,7 +249,7 @@ class HeaderPlaylistBase(wx.VListBox):
 		current = self.playlist.focused
 		index,n = self.GetFirstSelected()
 		if index > -1:
-			type,group_pos,group_index,song = self.songs[index]
+			type,group_pos,group_index,song,keyword = self.songs[index]
 			if type == 'song' and not song == current:
 				self.playlist.focused = song
 				return
@@ -267,12 +296,12 @@ class HeaderPlaylistBase(wx.VListBox):
 				song = self.playlist[pos+1]
 				self.playlist.focused = song
 		elif key == wx.WXK_LEFT:
-			type,group_pos,group_index,song = self.songs[index]
+			type,group_pos,group_index,song,keyword = self.songs[index]
 			if 0 < group_pos <= len(self.groups)-1:
 				song = self.groups[group_pos-1]
 				self.playlist.focused = song
 		elif key == wx.WXK_RIGHT:
-			type,group_pos,group_index,song = self.songs[index]
+			type,group_pos,group_index,song,keyword = self.songs[index]
 			if 0 <= group_pos < len(self.groups)-1:
 				song = self.groups[group_pos+1]
 				self.playlist.focused = song
@@ -516,6 +545,12 @@ class HeaderPlaylist(HeaderPlaylistBase):
 		dc.SetBrush(wx.Brush(color))
 		dc.SetPen(wx.Pen(color))
 		dc.DrawRectangle(*list(rect.GetPosition())+ list(rect.GetSize()))
+
+	def search_keyword_head(self, song):
+		return song.format('%albumartist% %album%')
+
+	def search_keyword_song(self, song):
+		return song.format('%artist% %title%')
 
 	def draw_head(self,dc,rect,index,song):
 		if self.IsSelected(index):

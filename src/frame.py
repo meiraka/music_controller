@@ -184,6 +184,22 @@ class Frame(wx.Frame,Object):
 		self.Layout()
 		self.call(self.VIEW)
 
+	def __get_search_view(self):
+		if self.playlist.IsShown() and hasattr(self.playlist,'search_first'):
+			return self.playlist
+		else:
+			return None
+
+	def search_first(self,text):
+		view = self.__get_search_view()
+		if view:
+			view.search_first(text)
+
+	def search_next(self):
+		view = self.__get_search_view()
+		if view:
+			view.search_next()
+
 	def change_title(self):
 		wx.CallAfter(self.__change_title)
 
