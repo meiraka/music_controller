@@ -40,16 +40,12 @@ def get_command_out(command):
 		return ''
 
 def get_rev():
-	""" Returns Mercurial CVS rev."""
+	""" Returns git rev."""
 	import commands
 	import re
-	current_lang = os.environ['LANG']
-	os.environ['LANG'] = 'C'
-	out = get_command_out('hg summary')
-	os.environ['LANG'] = current_lang
-	match = re.search('parent:\s+([^\s]+)',out)
-	if match:
-		return match.groups()[0]
+	out = len([i for i in get_command_out('git log').split('\n') if i.startswith('commit ')])
+	if out:
+		return str(out)
 	else:
 		return ''
 
