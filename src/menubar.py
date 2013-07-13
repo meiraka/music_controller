@@ -353,7 +353,7 @@ class MenuBar(wx.MenuBar):
 		self.update_by_status()
 
 	def show_repository(self):
-		webbrowser.open('https://bitbucket.org/meiraka/music_controller')
+		webbrowser.open('https://github.com/meiraka/music_controller')
 
 	def show_stats(self):
 		def get_str_delta(uptime):
