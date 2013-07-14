@@ -28,6 +28,7 @@ class MenuBar(wx.MenuBar):
 				(wx.NewId(),u'Rescan Library',self.NORMAL),
 				(wx.ID_EXIT,u'Quit',self.NORMAL),
 				(wx.NewId(),u'',self.SPLITTER),
+				(wx.NewId(),u'Search',self.NORMAL),
 				(wx.NewId(),u'Get Info',self.NORMAL),
 				]),
 			('Edit',[
@@ -64,6 +65,7 @@ class MenuBar(wx.MenuBar):
 		self.__functions = {
 				u'File_Rescan Library':self.client.library.update,
 				u'File_Get Info':self.parent.get_info,
+				u'File_Search':self.parent.search_focus,
 				u'File_Quit':sys.exit,
 				u'Edit_Select All':self.set_select_all,
 				u'Edit_Preferences':self.parent.show_preferences,
@@ -87,6 +89,7 @@ class MenuBar(wx.MenuBar):
 		self.__keys = {
 				u'File_Quit':'Ctrl+Q',
 				u'File_Get Info':'Ctrl+I',
+				u'File_Search':'Ctrl+F',
 				u'Edit_Select All':'Ctrl+A',
 				u'Edit_Preferences':'Ctrl+,',
 				u'Playback_Play':'Space',

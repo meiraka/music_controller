@@ -192,6 +192,16 @@ class Frame(wx.Frame,Object):
 		else:
 			return None
 
+	def search_focus(self):
+		view = self.__get_search_view()
+		if view:
+			self.toolbar.search.SetFocus()
+
+	def search_unforcus(self):
+		view = self.__get_search_view()
+		if view:
+			view.SetFocus()
+
 	def search_first(self,text):
 		view = self.__get_search_view()
 		if view:

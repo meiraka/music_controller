@@ -79,10 +79,11 @@ class Toolbar(object):
 					self.__tool.AddLabelTool(id,_(label),icon)
 			elif not(button_type == self.TYPE_RADIO and environment.userinterface.toolbar_icon_dropdown):
 				self.__tool.AddLabelTool(id,_(label),icon)
-		self.__ctrl_search = wx.SearchCtrl(self.__tool,-1,style=wx.WANTS_CHARS|wx.TE_PROCESS_ENTER)
-		self.__ctrl_search.Bind(wx.EVT_TEXT, self.__on_search_update)
-		self.__ctrl_search.Bind(wx.EVT_TEXT_ENTER, self.__on_search_activate)
-		self.__tool.AddControl(self.__ctrl_search)
+		self.search = wx.SearchCtrl(self.__tool,-1,style=wx.WANTS_CHARS|wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB)
+		self.search.Bind(wx.EVT_CHAR, self.__on_serach_checkkey)
+		self.search.Bind(wx.EVT_TEXT, self.__on_search_update)
+		self.search.Bind(wx.EVT_TEXT_ENTER, self.__on_search_activate)
+		self.__tool.AddControl(self.search)
 		self.__tool.Bind(wx.EVT_TOOL,self.OnTool)
 		self.__tool.Realize()
 		self.connection.bind(self.connection.UPDATE,self.update_playback)
@@ -157,9 +158,17 @@ class Toolbar(object):
 		elif hasattr(self.playback,func_name.lower()):
 			getattr(self.playback,func_name.lower())()
 
+	def __on_serach_checkkey(self,event):
+		code = event.GetKeyCode()
+		print code
+		if code == 27:
+			self.parent.search_unfocus()
+		else:
+			event.Skip()
+
 	def __on_search_update(self,event):
 		def search():
-			text = self.__ctrl_search.GetValue()
+			text = self.search.GetValue()
 			self.parent.search_first(text)
 		thread.start_new_thread(search,())
 
