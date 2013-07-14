@@ -285,8 +285,7 @@ class ViewBase(wx.VListBox):
 		thread.start_new_thread(self.playlist.replace,(songs,))
 
 	def __focus(self, index):
-		self.DeselectAll()
-		self.Select(index,True)
+		self.SetSelection(index)
 		if not self.IsVisible(index):
 			self.ScrollToLine(index)
 
