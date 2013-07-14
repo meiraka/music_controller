@@ -197,7 +197,7 @@ class Frame(wx.Frame,Object):
 		if view:
 			self.toolbar.search.SetFocus()
 
-	def search_unforcus(self):
+	def search_unfocus(self):
 		view = self.__get_search_view()
 		if view:
 			view.SetFocus()
