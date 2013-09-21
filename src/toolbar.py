@@ -79,7 +79,7 @@ class Toolbar(object):
 					self.__tool.AddLabelTool(id,_(label),icon)
 			elif not(button_type == self.TYPE_RADIO and environment.userinterface.toolbar_icon_dropdown):
 				self.__tool.AddLabelTool(id,_(label),icon)
-		self.search = wx.SearchCtrl(self.__tool,-1,style=wx.WANTS_CHARS|wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB)
+		self.search = wx.SearchCtrl(self.__tool,-1,_('Search'),style=wx.WANTS_CHARS|wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB)
 		# MAY BE BUG wx.SearchCtrl can not catch wx.EVT_CHAR and wx.EVT_KEY_DOWN event.
 		self.search.Bind(wx.EVT_KEY_UP, self.__on_serach_checkkey)
 		self.search.Bind(wx.EVT_CHAR, self.__on_serach_checkkey)
