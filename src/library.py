@@ -49,6 +49,8 @@ class ViewBase(wx.VListBox):
 		self.settings = [[format for format,style in i] for i in default_settings]
 		self.styles = [[style for format,style in i] for i in default_settings]
 		self.sorter = default_sorter
+		self.__search_text = ''
+		self.__search_index = 0
 		self.__master = []
 		self.default_font = environment.userinterface.font
 		self.default_font_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOXTEXT)
@@ -281,6 +283,37 @@ class ViewBase(wx.VListBox):
 		song_indexed.sort()
 		songs = [song for title,song in song_indexed]
 		thread.start_new_thread(self.playlist.replace,(songs,))
+
+	def __focus(self, index):
+		self.SetSelection(index)
+		if not self.IsVisible(index):
+			self.ScrollToLine(index)
+
+	def search(self, keyword, search_index):
+		size = len(self.items[-1])
+		x,y = self.state
+		for list_index in range(size)[search_index:]:
+			key,key_y = self.items[y][list_index]
+			format = self.settings[x][key_y]
+			search_keyword = self.songs[key_y][key][0].format(format)
+			if not search_keyword.find(keyword) == -1:
+				wx.CallAfter(self.__focus, list_index)
+				return list_index
+		return -1
+
+	def search_first(self, keyword):
+		self.__search_text = keyword
+		self.__search_index = 0
+		index = self.search(self.__search_text, self.__search_index)
+		if not index == -1:
+			self.__search_index = index
+
+	def search_next(self):
+		index = self.search(self.__search_text, self.__search_index+1)
+		if not index == -1:
+			self.__search_index = index
+		else:
+			self.search_first(self.__search_text)
 
 
 class Menu(wx.Menu):

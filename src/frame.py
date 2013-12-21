@@ -184,6 +184,34 @@ class Frame(wx.Frame,Object):
 		self.Layout()
 		self.call(self.VIEW)
 
+	def __get_search_view(self):
+		if self.playlist.IsShown():
+			return self.playlist
+		elif self.library.IsShown():
+			return self.library
+		else:
+			return None
+
+	def search_focus(self):
+		view = self.__get_search_view()
+		if view:
+			self.toolbar.search.SetFocus()
+
+	def search_unfocus(self):
+		view = self.__get_search_view()
+		if view:
+			view.SetFocus()
+
+	def search_first(self,text):
+		view = self.__get_search_view()
+		if view:
+			view.search_first(text)
+
+	def search_next(self):
+		view = self.__get_search_view()
+		if view:
+			view.search_next()
+
 	def change_title(self):
 		wx.CallAfter(self.__change_title)
 
