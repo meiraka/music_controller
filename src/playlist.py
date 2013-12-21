@@ -318,7 +318,7 @@ class AlbumListBase(wx.ScrolledWindow):
 
 	Overrides draw_background and draw_album to show items.
 	"""
-	def __init__(self,parent,client,box_size,scroll_block,debug=False):
+	def __init__(self,parent,client,box_size,scroll_block,expand=False):
 		wx.ScrolledWindow.__init__(self,parent,style=wx.TAB_TRAVERSAL)
 		self.client = client
 		self.playlist = client.playlist
@@ -328,7 +328,11 @@ class AlbumListBase(wx.ScrolledWindow):
 		self.__focused_index = -1
 		self.box_size = box_size    # item box size
 		self.scroll_block = scroll_block                    # 1 scroll width
-		self.SetMinSize((-1,self.box_size[1]))
+		self.is_expanded = expand
+		if expand:
+			self.SetMinSize((-1, -1))
+		else:
+			self.SetMinSize((-1,self.box_size[1]))
 		self.Bind(wx.EVT_PAINT,self.OnPaint)
 		thread.start_new_thread(self.__update_album_list,())
 		self.playlist.bind(self.playlist.UPDATE,self.__update_album_list)
@@ -348,6 +352,26 @@ class AlbumListBase(wx.ScrolledWindow):
 		self.update_canvas(dc)
 
 	def update_canvas(self,dc):
+		updater = self.update_canvas_expand if self.is_expanded else self.update_canvas_fixed
+		updater(dc)
+
+	def update_canvas_expand(self,dc):
+		w,h = self.box_size
+		hidden = w*2
+		size_w,size_h = self.GetSize()
+		for index,song in enumerate(self.albums):
+			x,y = self.CalcScrolledPosition(index*w,0)
+			if 0-w-hidden < x < size_w+hidden  and 0-h < y < size_h:
+				rect = (x,y,w,h)
+				self.draw_background(index,song,dc,rect)
+				self.draw_album(index,song,dc,rect)
+		if len(self.albums) * w < size_w:
+			for index in range(len(self.albums),(size_w - len(self.albums) * w) / w + 1 + 1):
+				x,y = self.CalcScrolledPosition(index*w,0)
+				rect = (x,y,w,h)
+				self.draw_background(index,None,dc,rect)
+
+	def update_canvas_fixed(self,dc):
 		w,h = self.box_size
 		hidden = w*2
 		size_w,size_h = self.GetSize()
@@ -656,7 +680,7 @@ class HeaderPlaylist(HeaderPlaylistBase):
 
 
 class AlbumList(AlbumListBase):
-	def __init__(self,parent,client,debug=False):
+	def __init__(self,parent,client,expand):
 		text_height = environment.userinterface.text_height
 		box_size = (text_height*10,text_height*12)
 		scroll_block = text_height
@@ -667,7 +691,7 @@ class AlbumList(AlbumListBase):
 		self.artwork.bind(self.artwork.UPDATE,update)
 		self.active_background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT )
 		self.background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX)
-		AlbumListBase.__init__(self,parent,client,box_size,scroll_block,debug)
+		AlbumListBase.__init__(self,parent,client,box_size,scroll_block,expand)
 		self.SetBackgroundColour(self.background_color)
 
 
