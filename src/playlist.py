@@ -395,7 +395,7 @@ class AlbumListBase(wx.ScrolledWindow):
 		hitem_expand = self.GetSize()[1] / self.box_size[1]
 		hitem = hitem_expand if self.is_expanded and hitem_expand else 1
 		self.SetScrollbars(self.scroll_block,self.scroll_block,
-			len(self.albums)*self.box_size[0]/hitem/self.scroll_block,1)
+			(len(self.albums)/hitem+1)*self.box_size[0]/self.scroll_block,1)
 
 	def focus(self):
 		def __scroll(self,index):
