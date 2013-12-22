@@ -679,6 +679,8 @@ class Config(Object):
 	class ConfigError(Error):
 		pass
 	CONFIG_CHANGED = 'config_changed'
+        PLAYLIST_STYLE_SONGS = 1
+        PLAYLIST_STYLE_ALBUMS = 1 << 1
 	def __init__(self,path='./'):
 		""" initializes config by given path.
 		
@@ -791,9 +793,19 @@ class Config(Object):
 				self.call(self.CONFIG_CHANGED)
 		return (_get,_set)
 
+	def __get(key,keytype,default):
+		def _get(self):
+			if not key in self.__config:
+				self.__config[key] = keytype(default)
+			return self.__config[key]
+		def _set(self,value):
+			self.__config[key] = value
+			self.save()
+			self.call(self.CONFIG_CHANGED)
+		return (_get,_set)
 
 	playlist_focus =     property(*__get_bool(u'playlist_focus',True))
-	playlist_albumlist = property(*__get_bool(u'playlist_albumlist',True))
+	playlist_style =     property(*__get(u'playlist_style',int,PLAYLIST_STYLE_SONGS|PLAYLIST_STYLE_ALBUMS))
 	info =               property(*__get_bool(u'info',True))
 	lyrics_download =    property(*__get_bool(u'lyrics_download',False))
 	lyrics_api_geci_me = property(*__get_bool(u'lyrics_api_geci_me',False))

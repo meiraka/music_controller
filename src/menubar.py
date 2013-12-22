@@ -50,7 +50,9 @@ class MenuBar(wx.MenuBar):
 				(wx.NewId(),u'Library',self.SELECT),
 				(wx.NewId(),u'Lyric',self.SELECT),
 				(wx.NewId(),u'splitter',self.SPLITTER),
-				(wx.NewId(),u'Albumlist',self.TOGGLE),
+				(wx.NewId(),u'Songlist',self.SELECT),
+				(wx.NewId(),u'Albumlist',self.SELECT),
+				(wx.NewId(),u'SongAlbumlist',self.SELECT),
 				(wx.NewId(),u'Info',self.TOGGLE),
 				(wx.NewId(),u'splitter',self.SPLITTER),
 				(wx.NewId(),u'Focus Current Song',self.NORMAL)
@@ -79,7 +81,9 @@ class MenuBar(wx.MenuBar):
 				u'View_Playlist':self.parent.show_playlist,
 				u'View_Library':self.parent.show_library,
 				u'View_Lyric':self.parent.show_lyric,
-				u'View_Albumlist':self.toggle_config_value('playlist_albumlist',self.parent.show_not_connection),
+				u'View_Songlist':self.set_config_value('playlist_style',self.client.config.PLAYLIST_STYLE_SONGS,self.parent.show_not_connection),
+				u'View_Albumlist':self.set_config_value('playlist_style',self.client.config.PLAYLIST_STYLE_ALBUMS,self.parent.show_not_connection),
+				u'View_SongAlbumlist':self.set_config_value('playlist_style',self.client.config.PLAYLIST_STYLE_SONGS|self.client.config.PLAYLIST_STYLE_ALBUMS,self.parent.show_not_connection),
 				u'View_Info':self.toggle_config_value('info',self.parent.show_not_connection),
 				u'View_Focus Current Song':self.focus_song,
 				u'Help_About':AboutDialog,
@@ -116,6 +120,8 @@ class MenuBar(wx.MenuBar):
 					menu.Append(id,label)
 				elif menu_type == self.SPLITTER:
 					menu.AppendSeparator()
+					menu.Append(id, label)
+					menu.Remove(id)
 				elif menu_type == self.TOGGLE:
 					self.__ids[id] = head+u'_'+label
 					self.__labels[head+u'_'+label] = id
@@ -246,12 +252,16 @@ class MenuBar(wx.MenuBar):
 	
 	def update_by_config(self):
 		""" change menubar items by config value. """
+		# labels for playlist styles
+		playlist_styles = { u'Albumlist'    : self.client.config.PLAYLIST_STYLE_ALBUMS
+                                  , u'Songlist'     : self.client.config.PLAYLIST_STYLE_SONGS
+                                  , u'SongAlbumlist': self.client.config.PLAYLIST_STYLE_SONGS|self.client.config.PLAYLIST_STYLE_ALBUMS}
 		for index,(head,items) in enumerate(self.menu_list):
 			for id,label,menu_type in items:
 				menu = self.GetMenu(index)
-				if label == u'Albumlist':
+				if label in playlist_styles:
 					current = menu.IsChecked(id)
-					new = self.client.config.playlist_albumlist
+					new = self.client.config.playlist_style == playlist_styles[label]
 					if not current == new:
 						menu.Check(id,new)
 				if label == u'Info':
@@ -311,6 +321,14 @@ class MenuBar(wx.MenuBar):
 		def set():
 			value = getattr(self.client.config,attr)
 			setattr(self.client.config,attr,not(value))
+			if callback:
+				callback()
+			self.update_by_config()
+		return set
+
+	def set_config_value(self,attr,value,callback=None):
+		def set():
+			setattr(self.client.config,attr,value)
 			if callback:
 				callback()
 			self.update_by_config()

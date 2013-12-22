@@ -318,7 +318,7 @@ class AlbumListBase(wx.ScrolledWindow):
 
 	Overrides draw_background and draw_album to show items.
 	"""
-	def __init__(self,parent,client,box_size,scroll_block,debug=False):
+	def __init__(self,parent,client,box_size,scroll_block,expand=False):
 		wx.ScrolledWindow.__init__(self,parent,style=wx.TAB_TRAVERSAL)
 		self.client = client
 		self.playlist = client.playlist
@@ -328,7 +328,12 @@ class AlbumListBase(wx.ScrolledWindow):
 		self.__focused_index = -1
 		self.box_size = box_size    # item box size
 		self.scroll_block = scroll_block                    # 1 scroll width
-		self.SetMinSize((-1,self.box_size[1]))
+		self.is_expanded = expand
+		if expand:
+			self.SetMinSize((-1, -1))
+		else:
+			self.SetMinSize((-1,self.box_size[1]))
+		self.hitem = 1 # item box h count size. updated by update() -> update_canvas()
 		self.Bind(wx.EVT_PAINT,self.OnPaint)
 		thread.start_new_thread(self.__update_album_list,())
 		self.playlist.bind(self.playlist.UPDATE,self.__update_album_list)
@@ -351,15 +356,23 @@ class AlbumListBase(wx.ScrolledWindow):
 		w,h = self.box_size
 		hidden = w*2
 		size_w,size_h = self.GetSize()
+		h = 1 if not h else h
+		hitem = size_h / h
+		hitem = 1 if not hitem or not self.is_expanded else hitem
+		self.draw_background(0,None,dc,(0,0,size_w,size_h))
+		if not self.hitem == hitem:
+			self.hitem = hitem
+			self.__update_window_size()
+			self.focus()
 		for index,song in enumerate(self.albums):
-			x,y = self.CalcScrolledPosition(index*w,0)
+			x,y = self.CalcScrolledPosition((index/hitem)*w,(index%hitem)*h)
 			if 0-w-hidden < x < size_w+hidden  and 0-h < y < size_h:
 				rect = (x,y,w,h)
 				self.draw_background(index,song,dc,rect)
 				self.draw_album(index,song,dc,rect)
 		if len(self.albums) * w < size_w:
 			for index in range(len(self.albums),(size_w - len(self.albums) * w) / w + 1 + 1):
-				x,y = self.CalcScrolledPosition(index*w,0)
+				x,y = self.CalcScrolledPosition((index/hitem)*w,(index%hitem)*h)
 				rect = (x,y,w,h)
 				self.draw_background(index,None,dc,rect)
 
@@ -379,8 +392,10 @@ class AlbumListBase(wx.ScrolledWindow):
 		wx.CallAfter(self.focus)
 
 	def __update_window_size(self):
+		hitem_expand = self.GetSize()[1] / self.box_size[1]
+		hitem = hitem_expand if self.is_expanded and hitem_expand else 1
 		self.SetScrollbars(self.scroll_block,self.scroll_block,
-			len(self.albums)*self.box_size[0]/self.scroll_block,1)
+			(len(self.albums)/hitem+1)*self.box_size[0]/self.scroll_block,1)
 
 	def focus(self):
 		def __scroll(self,index):
@@ -412,7 +427,7 @@ class AlbumListBase(wx.ScrolledWindow):
 		self.__focused_index = index
 		wx.CallAfter(self.update)
 		if index > -1:
-			wx.CallAfter(__scroll,self,index)
+			wx.CallAfter(__scroll,self,index/self.hitem)
 
 	def OnPaint(self,event):
 		dc = wx.BufferedPaintDC(self)
@@ -424,8 +439,7 @@ class AlbumListBase(wx.ScrolledWindow):
 		"""
 		mouse = event.GetPosition()
 		x,y = self.CalcUnscrolledPosition(mouse)
-		w,h = self.box_size
-		index = x/w
+		index = self.__decode_index(x,y)
 		song = self.albums[index]
 		song.play()
 	
@@ -435,10 +449,13 @@ class AlbumListBase(wx.ScrolledWindow):
 		"""
 		mouse = event.GetPosition()
 		x,y = self.CalcUnscrolledPosition(mouse)
-		w,h = self.box_size
-		index = x/w
+		index = self.__decode_index(x,y)
 		if not self.__focused_index == index and index < len(self.albums):
 			self.playlist.focused = self.albums[index]
+
+	def __decode_index(self,unit_x,unit_y):
+		w,h = self.box_size
+		return unit_x/w*self.hitem + unit_y/h
 
 	def OnRightClick(self,event):
 		""" catch right-click event. 
@@ -446,8 +463,7 @@ class AlbumListBase(wx.ScrolledWindow):
 		"""
 		mouse = event.GetPosition()
 		x,y = self.CalcUnscrolledPosition(mouse)
-		w,h = self.box_size
-		index = x/w
+		index = self.__decode_index(x,y)
 		if index < len(self.albums):
 			if not self.__focused_index == index:
 				self.playlist.focused = self.albums[index]
@@ -472,30 +488,49 @@ class AlbumListBase(wx.ScrolledWindow):
 		change song forcus.
 		"""
 		key = event.GetKeyCode()
-		if key == wx.WXK_LEFT:
-			if 0 < self.__focused_index <= len(self.albums)-1:
-				self.__focused_index = self.__focused_index -1
+		if self.is_expanded:
+			# albumview mode
+			move = 0
+			if key == wx.WXK_LEFT:
+				move = -1 * self.hitem
+			elif key == wx.WXK_RIGHT:
+				move = 1 * self.hitem
+			elif key == wx.WXK_UP:
+				move = -1 if self.__focused_index % self.hitem else 0
+			elif key == wx.WXK_DOWN:
+				move = +1 if (self.__focused_index+1) % self.hitem else 0
+			if move and 0 <= self.__focused_index + move < len(self.albums):
+				self.__focused_index = self.__focused_index + move
 				self.selected = self.group_songs[self.__focused_index]
 				self.playlist.focused = self.albums[self.__focused_index]
-		elif key == wx.WXK_RIGHT:
-			if 0 <= self.__focused_index < len(self.albums)-1:
-				self.__focused_index = self.__focused_index + 1
-				self.selected = self.group_songs[self.__focused_index]
-				self.playlist.focused = self.albums[self.__focused_index]
-		elif key == wx.WXK_UP:
-			song = self.playlist.focused
-			pos = int(song[u'pos'])
-			if 0 < pos <= len(self.playlist)-1:
-				self.selected = self.group_songs[self.__focused_index]
-				self.playlist.focused = self.playlist[pos-1]
-		elif key == wx.WXK_DOWN:
-			song = self.playlist.focused
-			pos = int(song[u'pos'])
-			if 0 <= pos < len(self.playlist)-1:
-				self.selected = self.group_songs[self.__focused_index]
-				self.playlist.focused = self.playlist[pos+1]
+			else:
+				event.Skip()
 		else:
-			event.Skip()
+			# playlist + albumlist mode
+			if key == wx.WXK_LEFT:
+				if 0 < self.__focused_index <= len(self.albums)-1:
+					self.__focused_index = self.__focused_index -1
+					self.selected = self.group_songs[self.__focused_index]
+					self.playlist.focused = self.albums[self.__focused_index]
+			elif key == wx.WXK_RIGHT:
+				if 0 <= self.__focused_index < len(self.albums)-1:
+					self.__focused_index = self.__focused_index + 1
+					self.selected = self.group_songs[self.__focused_index]
+					self.playlist.focused = self.albums[self.__focused_index]
+			elif key == wx.WXK_UP:
+				song = self.playlist.focused
+				pos = int(song[u'pos'])
+				if 0 < pos <= len(self.playlist)-1:
+					self.selected = self.group_songs[self.__focused_index]
+					self.playlist.focused = self.playlist[pos-1]
+			elif key == wx.WXK_DOWN:
+				song = self.playlist.focused
+				pos = int(song[u'pos'])
+				if 0 <= pos < len(self.playlist)-1:
+					self.selected = self.group_songs[self.__focused_index]
+					self.playlist.focused = self.playlist[pos+1]
+			else:
+				event.Skip()
 
 
 class Menu(wx.Menu):
@@ -656,7 +691,7 @@ class HeaderPlaylist(HeaderPlaylistBase):
 
 
 class AlbumList(AlbumListBase):
-	def __init__(self,parent,client,debug=False):
+	def __init__(self,parent,client,expand):
 		text_height = environment.userinterface.text_height
 		box_size = (text_height*10,text_height*12)
 		scroll_block = text_height
@@ -667,7 +702,7 @@ class AlbumList(AlbumListBase):
 		self.artwork.bind(self.artwork.UPDATE,update)
 		self.active_background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT )
 		self.background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX)
-		AlbumListBase.__init__(self,parent,client,box_size,scroll_block,debug)
+		AlbumListBase.__init__(self,parent,client,box_size,scroll_block,expand)
 		self.SetBackgroundColour(self.background_color)
 
 

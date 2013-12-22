@@ -44,7 +44,8 @@ class Frame(wx.Frame,Object):
 			base = self
 		self.playlist = playlist.HeaderPlaylist(base,self.client,debug)
 		self.library = library.View(base,self.client,debug)
-		self.albumlist = playlist.AlbumList(base,self.client,debug)
+		self.albumlist = playlist.AlbumList(base,self.client,False)
+		self.albumview = playlist.AlbumList(base,self.client,True)
 		self.info = songinfo.Info(base,self.client,debug)
 		self.connection = preferences.Connection(base,self.client)
 		self.lyric = lyrics.LyricView(base,self.client)
@@ -55,6 +56,7 @@ class Frame(wx.Frame,Object):
 		s.Add(self.connection,1,flag=wx.EXPAND)
 		s.Add(self.lyric,1,flag=wx.EXPAND)
 		s.Add(self.albumlist,0,flag=wx.EXPAND)
+		s.Add(self.albumview,1,flag=wx.EXPAND)
 		self.sizer.Add(s,1,flag=wx.EXPAND)
 		self.sizer.Add(self.info,0,wx.EXPAND)
 		#self.sizer.Add(self.albumlist,0,flag=wx.EXPAND)
@@ -96,6 +98,7 @@ class Frame(wx.Frame,Object):
 	def hide_children(self):
 		self.playlist.Hide()
 		self.albumlist.Hide()
+		self.albumview.Hide()
 		self.library.Hide()
 		self.connection.Hide()
 		self.info.Hide()
@@ -105,6 +108,7 @@ class Frame(wx.Frame,Object):
 		self.SetTitle(self.TITLE +' - '+ 'connection')
 		self.playlist.Hide()
 		self.albumlist.Hide()
+		self.albumview.Hide()
 		self.library.Hide()
 		self.lyric.Hide()
 		self.info.Hide()
@@ -134,6 +138,7 @@ class Frame(wx.Frame,Object):
 		self.connection.Hide()
 		self.playlist.Hide()
 		self.albumlist.Hide()
+		self.albumview.Hide()
 		self.lyric.Hide()
 		self.Layout()
 		self.library.Show()
@@ -153,12 +158,21 @@ class Frame(wx.Frame,Object):
 		self.library.Hide()
 		self.lyric.Hide()
 		self.Layout()
-		self.playlist.Show()
-		self.playlist.SetFocus()
-		if self.client.config.playlist_albumlist:
+		if self.client.config.playlist_style & self.client.config.PLAYLIST_STYLE_SONGS:
+			self.playlist.Show()
+			self.playlist.SetFocus()
+                else:
+			self.playlist.Hide()
+		if self.client.config.playlist_style == (self.client.config.PLAYLIST_STYLE_ALBUMS|self.client.config.PLAYLIST_STYLE_SONGS):
+			self.albumview.Hide()
 			self.albumlist.Show()
-		else:
+		elif self.client.config.playlist_style & self.client.config.PLAYLIST_STYLE_ALBUMS:
 			self.albumlist.Hide()
+			self.albumview.Show()
+			self.albumview.SetFocus()
+                else:
+			self.albumlist.Hide()
+			self.albumview.Hide()
 		if self.client.config.info:
 			self.info.Show()
 		else:
@@ -174,6 +188,7 @@ class Frame(wx.Frame,Object):
 		self.library.Hide()
 		self.playlist.Hide()
 		self.albumlist.Hide()
+		self.albumview.Hide()
 		self.Layout()
 		self.lyric.Show()
 		self.lyric.SetFocus()
