@@ -120,6 +120,8 @@ class MenuBar(wx.MenuBar):
 					menu.Append(id,label)
 				elif menu_type == self.SPLITTER:
 					menu.AppendSeparator()
+					menu.Append(id, label)
+					menu.Remove(id)
 				elif menu_type == self.TOGGLE:
 					self.__ids[id] = head+u'_'+label
 					self.__labels[head+u'_'+label] = id
