@@ -333,6 +333,7 @@ class AlbumListBase(wx.ScrolledWindow):
 			self.SetMinSize((-1, -1))
 		else:
 			self.SetMinSize((-1,self.box_size[1]))
+		self.hitem = 1 # item box h count size. updated by update() -> update_canvas()
 		self.Bind(wx.EVT_PAINT,self.OnPaint)
 		thread.start_new_thread(self.__update_album_list,())
 		self.playlist.bind(self.playlist.UPDATE,self.__update_album_list)
@@ -352,38 +353,25 @@ class AlbumListBase(wx.ScrolledWindow):
 		self.update_canvas(dc)
 
 	def update_canvas(self,dc):
-		updater = self.update_canvas_expand if self.is_expanded else self.update_canvas_fixed
-		updater(dc)
-
-	def update_canvas_expand(self,dc):
 		w,h = self.box_size
 		hidden = w*2
 		size_w,size_h = self.GetSize()
+		h = 1 if not h else h
+		hitem = size_h / h
+		hitem = 1 if not hitem or not self.is_expanded else hitem
+		if not self.hitem == hitem:
+			self.hitem = hitem
+			self.__update_window_size()
+			self.focus()
 		for index,song in enumerate(self.albums):
-			x,y = self.CalcScrolledPosition(index*w,0)
+			x,y = self.CalcScrolledPosition((index/hitem)*w,(index%hitem)*h)
 			if 0-w-hidden < x < size_w+hidden  and 0-h < y < size_h:
 				rect = (x,y,w,h)
 				self.draw_background(index,song,dc,rect)
 				self.draw_album(index,song,dc,rect)
 		if len(self.albums) * w < size_w:
 			for index in range(len(self.albums),(size_w - len(self.albums) * w) / w + 1 + 1):
-				x,y = self.CalcScrolledPosition(index*w,0)
-				rect = (x,y,w,h)
-				self.draw_background(index,None,dc,rect)
-
-	def update_canvas_fixed(self,dc):
-		w,h = self.box_size
-		hidden = w*2
-		size_w,size_h = self.GetSize()
-		for index,song in enumerate(self.albums):
-			x,y = self.CalcScrolledPosition(index*w,0)
-			if 0-w-hidden < x < size_w+hidden  and 0-h < y < size_h:
-				rect = (x,y,w,h)
-				self.draw_background(index,song,dc,rect)
-				self.draw_album(index,song,dc,rect)
-		if len(self.albums) * w < size_w:
-			for index in range(len(self.albums),(size_w - len(self.albums) * w) / w + 1 + 1):
-				x,y = self.CalcScrolledPosition(index*w,0)
+				x,y = self.CalcScrolledPosition((index/hitem)*w,(index%hitem)*h)
 				rect = (x,y,w,h)
 				self.draw_background(index,None,dc,rect)
 
@@ -403,8 +391,10 @@ class AlbumListBase(wx.ScrolledWindow):
 		wx.CallAfter(self.focus)
 
 	def __update_window_size(self):
+		hitem_expand = self.GetSize()[1] / self.box_size[1]
+		hitem = hitem_expand if self.is_expanded and hitem_expand else 1
 		self.SetScrollbars(self.scroll_block,self.scroll_block,
-			len(self.albums)*self.box_size[0]/self.scroll_block,1)
+			len(self.albums)*self.box_size[0]/hitem/self.scroll_block,1)
 
 	def focus(self):
 		def __scroll(self,index):
@@ -436,7 +426,7 @@ class AlbumListBase(wx.ScrolledWindow):
 		self.__focused_index = index
 		wx.CallAfter(self.update)
 		if index > -1:
-			wx.CallAfter(__scroll,self,index)
+			wx.CallAfter(__scroll,self,index/self.hitem)
 
 	def OnPaint(self,event):
 		dc = wx.BufferedPaintDC(self)
@@ -448,8 +438,7 @@ class AlbumListBase(wx.ScrolledWindow):
 		"""
 		mouse = event.GetPosition()
 		x,y = self.CalcUnscrolledPosition(mouse)
-		w,h = self.box_size
-		index = x/w
+		index = self.__decode_index(x,y)
 		song = self.albums[index]
 		song.play()
 	
@@ -459,10 +448,13 @@ class AlbumListBase(wx.ScrolledWindow):
 		"""
 		mouse = event.GetPosition()
 		x,y = self.CalcUnscrolledPosition(mouse)
-		w,h = self.box_size
-		index = x/w
+		index = self.__decode_index(x,y)
 		if not self.__focused_index == index and index < len(self.albums):
 			self.playlist.focused = self.albums[index]
+
+	def __decode_index(self,unit_x,unit_y):
+		w,h = self.box_size
+		return unit_x/w*self.hitem + unit_y/h
 
 	def OnRightClick(self,event):
 		""" catch right-click event. 
@@ -470,8 +462,7 @@ class AlbumListBase(wx.ScrolledWindow):
 		"""
 		mouse = event.GetPosition()
 		x,y = self.CalcUnscrolledPosition(mouse)
-		w,h = self.box_size
-		index = x/w
+		index = self.__decode_index(x,y)
 		if index < len(self.albums):
 			if not self.__focused_index == index:
 				self.playlist.focused = self.albums[index]
