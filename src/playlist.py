@@ -359,6 +359,7 @@ class AlbumListBase(wx.ScrolledWindow):
 		h = 1 if not h else h
 		hitem = size_h / h
 		hitem = 1 if not hitem or not self.is_expanded else hitem
+		self.draw_background(0,None,dc,(0,0,size_w,size_h))
 		if not self.hitem == hitem:
 			self.hitem = hitem
 			self.__update_window_size()
