@@ -487,30 +487,49 @@ class AlbumListBase(wx.ScrolledWindow):
 		change song forcus.
 		"""
 		key = event.GetKeyCode()
-		if key == wx.WXK_LEFT:
-			if 0 < self.__focused_index <= len(self.albums)-1:
-				self.__focused_index = self.__focused_index -1
+		if self.is_expanded:
+			# albumview mode
+			move = 0
+			if key == wx.WXK_LEFT:
+				move = -1 * self.hitem
+			elif key == wx.WXK_RIGHT:
+				move = 1 * self.hitem
+			elif key == wx.WXK_UP:
+				move = -1 if self.__focused_index % self.hitem else 0
+			elif key == wx.WXK_DOWN:
+				move = +1 if (self.__focused_index+1) % self.hitem else 0
+			if move and 0 <= self.__focused_index + move < len(self.albums):
+				self.__focused_index = self.__focused_index + move
 				self.selected = self.group_songs[self.__focused_index]
 				self.playlist.focused = self.albums[self.__focused_index]
-		elif key == wx.WXK_RIGHT:
-			if 0 <= self.__focused_index < len(self.albums)-1:
-				self.__focused_index = self.__focused_index + 1
-				self.selected = self.group_songs[self.__focused_index]
-				self.playlist.focused = self.albums[self.__focused_index]
-		elif key == wx.WXK_UP:
-			song = self.playlist.focused
-			pos = int(song[u'pos'])
-			if 0 < pos <= len(self.playlist)-1:
-				self.selected = self.group_songs[self.__focused_index]
-				self.playlist.focused = self.playlist[pos-1]
-		elif key == wx.WXK_DOWN:
-			song = self.playlist.focused
-			pos = int(song[u'pos'])
-			if 0 <= pos < len(self.playlist)-1:
-				self.selected = self.group_songs[self.__focused_index]
-				self.playlist.focused = self.playlist[pos+1]
+			else:
+				event.Skip()
 		else:
-			event.Skip()
+			# playlist + albumlist mode
+			if key == wx.WXK_LEFT:
+				if 0 < self.__focused_index <= len(self.albums)-1:
+					self.__focused_index = self.__focused_index -1
+					self.selected = self.group_songs[self.__focused_index]
+					self.playlist.focused = self.albums[self.__focused_index]
+			elif key == wx.WXK_RIGHT:
+				if 0 <= self.__focused_index < len(self.albums)-1:
+					self.__focused_index = self.__focused_index + 1
+					self.selected = self.group_songs[self.__focused_index]
+					self.playlist.focused = self.albums[self.__focused_index]
+			elif key == wx.WXK_UP:
+				song = self.playlist.focused
+				pos = int(song[u'pos'])
+				if 0 < pos <= len(self.playlist)-1:
+					self.selected = self.group_songs[self.__focused_index]
+					self.playlist.focused = self.playlist[pos-1]
+			elif key == wx.WXK_DOWN:
+				song = self.playlist.focused
+				pos = int(song[u'pos'])
+				if 0 <= pos < len(self.playlist)-1:
+					self.selected = self.group_songs[self.__focused_index]
+					self.playlist.focused = self.playlist[pos+1]
+			else:
+				event.Skip()
 
 
 class Menu(wx.Menu):
