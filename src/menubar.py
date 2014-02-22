@@ -79,7 +79,7 @@ class MenuBar(wx.MenuBar):
 				u'Playback_Repeat':self.set_repeat,
 				u'Playback_Single':self.set_single,
 				u'View_Playlist':self.parent.show_playlist,
-				u'View_Library':self.parent.show_library,
+				u'View_Library':self.parent.show_listfilter,
 				u'View_Lyric':self.parent.show_lyric,
 				u'View_Songlist':self.set_config_value('playlist_style',self.client.config.PLAYLIST_STYLE_SONGS,self.parent.show_not_connection),
 				u'View_Albumlist':self.set_config_value('playlist_style',self.client.config.PLAYLIST_STYLE_ALBUMS,self.parent.show_not_connection),

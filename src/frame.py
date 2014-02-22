@@ -9,7 +9,7 @@ from common import Object
 from common import environment
 import toolbar
 import playlist
-import library
+import listfilter
 import songinfo
 import lyrics
 import menubar
@@ -19,7 +19,7 @@ class Frame(wx.Frame,Object):
 	TITLE = 'MusicController'
 	VIEW = 'view'
 	VIEW_PLAYLIST = 'playlist'
-	VIEW_LIBRARY = 'library'
+	VIEW_LIBRARY = 'listfilter'
 	VIEW_LYRIC = 'lyric'
 	def __init__(self,parent,client,debug=False):
 		""" generate main app window."""
@@ -43,7 +43,7 @@ class Frame(wx.Frame,Object):
 		else:
 			base = self
 		self.playlist = playlist.HeaderPlaylist(base,self.client,debug)
-		self.library = library.View(base,self.client,debug)
+		self.listfilter = listfilter.View(base,self.client,debug)
 		self.albumlist = playlist.AlbumList(base,self.client,False)
 		self.albumview = playlist.AlbumList(base,self.client,True)
 		self.info = songinfo.Info(base,self.client,debug)
@@ -52,7 +52,7 @@ class Frame(wx.Frame,Object):
 		self.sizer = wx.BoxSizer()
 		s = wx.BoxSizer(wx.VERTICAL)
 		s.Add(self.playlist,1,flag=wx.EXPAND)
-		s.Add(self.library,1,flag=wx.EXPAND)
+		s.Add(self.listfilter,1,flag=wx.EXPAND)
 		s.Add(self.connection,1,flag=wx.EXPAND)
 		s.Add(self.lyric,1,flag=wx.EXPAND)
 		s.Add(self.albumlist,0,flag=wx.EXPAND)
@@ -99,7 +99,7 @@ class Frame(wx.Frame,Object):
 		self.playlist.Hide()
 		self.albumlist.Hide()
 		self.albumview.Hide()
-		self.library.Hide()
+		self.listfilter.Hide()
 		self.connection.Hide()
 		self.info.Hide()
 		self.lyric.Hide()
@@ -109,7 +109,7 @@ class Frame(wx.Frame,Object):
 		self.playlist.Hide()
 		self.albumlist.Hide()
 		self.albumview.Hide()
-		self.library.Hide()
+		self.listfilter.Hide()
 		self.lyric.Hide()
 		self.info.Hide()
 		self.Layout()
@@ -122,17 +122,17 @@ class Frame(wx.Frame,Object):
 			if len(self.client.playlist):
 				self.show_playlist()
 			else:
-				self.show_library()
+				self.show_listfilter()
 		else:
 			if self.current_view == self.VIEW_PLAYLIST:
 				self.show_playlist()
 			elif self.current_view == self.VIEW_LIBRARY:
-				self.show_library()
+				self.show_listfilter()
 			else:
 				self.show_lyric()
 
-	def show_library(self):
-		""" Show library and song info."""
+	def show_listfilter(self):
+		""" Show listfilter and song info."""
 		self.current_view = self.VIEW_LIBRARY
 		self.change_title()
 		self.connection.Hide()
@@ -141,8 +141,8 @@ class Frame(wx.Frame,Object):
 		self.albumview.Hide()
 		self.lyric.Hide()
 		self.Layout()
-		self.library.Show()
-		self.library.SetFocus()
+		self.listfilter.Show()
+		self.listfilter.SetFocus()
 		if self.client.config.info:
 			self.info.Show()
 		else:
@@ -155,7 +155,7 @@ class Frame(wx.Frame,Object):
 		self.current_view = self.VIEW_PLAYLIST
 		self.change_title()
 		self.connection.Hide()
-		self.library.Hide()
+		self.listfilter.Hide()
 		self.lyric.Hide()
 		self.Layout()
 		if self.client.config.playlist_style & self.client.config.PLAYLIST_STYLE_SONGS:
@@ -185,7 +185,7 @@ class Frame(wx.Frame,Object):
 		self.current_view = self.VIEW_LYRIC
 		self.change_title()
 		self.connection.Hide()
-		self.library.Hide()
+		self.listfilter.Hide()
 		self.playlist.Hide()
 		self.albumlist.Hide()
 		self.albumview.Hide()
@@ -202,8 +202,8 @@ class Frame(wx.Frame,Object):
 	def __get_search_view(self):
 		if self.playlist.IsShown():
 			return self.playlist
-		elif self.library.IsShown():
-			return self.library
+		elif self.listfilter.IsShown():
+			return self.listfilter
 		else:
 			return None
 

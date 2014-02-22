@@ -150,7 +150,7 @@ class Toolbar(object):
 		elif func_name == 'Playlist':
 			self.parent.show_playlist()
 		elif func_name == 'Library':
-			self.parent.show_library()
+			self.parent.show_listfilter()
 		elif func_name == 'Lyric':
 			self.parent.show_lyric()
 		elif func_name == 'Info':
@@ -194,8 +194,8 @@ class ViewMenu(wx.Menu):
 	def show_playlist(self,event):
 		self.parent.parent.show_playlist()
 
-	def show_library(self,event):
-		self.parent.parent.show_library()
+	def show_listfilter(self,event):
+		self.parent.parent.show_listfilter()
 
 	def show_lyric(self,event):
 		self.parent.parent.show_lyric()
