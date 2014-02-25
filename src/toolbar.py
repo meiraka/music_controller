@@ -40,6 +40,11 @@ class Toolbar(object):
 			Lyric =    ['applications-office',wx.ART_PASTE],
 			Info =     [wx.ART_GO_FORWARD],
 			)
+		icons[parent.VIEW_SONGLIST] = ['media-tape', wx.ART_NORMAL_FILE]
+		icons[parent.VIEW_SONGALBUMLIST] = ['media-tape', wx.ART_NORMAL_FILE]
+		icons[parent.VIEW_ALBUMVIEW] = ['media-tape', wx.ART_NORMAL_FILE]
+		icons[parent.VIEW_LISTFILTER] = ['media-tape', wx.ART_NORMAL_FILE]
+		icons[parent.VIEW_LYRIC] = ['media-tape', wx.ART_NORMAL_FILE]
 		labels = [
 			(u'View',    self.TYPE_NORMAL),
 			(u'',        self.TYPE_STRETCH),
@@ -47,9 +52,11 @@ class Toolbar(object):
                         (u'Play',    self.TYPE_TOGGLE),
 			(u'Stop',    self.TYPE_NORMAL),
                         (u'Next',    self.TYPE_NORMAL),
-                        (u'Playlist',self.TYPE_RADIO),
-                        (u'Library', self.TYPE_RADIO),
-                        (u'Lyric',   self.TYPE_RADIO),
+                        (parent.VIEW_SONGLIST,self.TYPE_RADIO),
+                        (parent.VIEW_SONGALBUMLIST, self.TYPE_RADIO),
+                        (parent.VIEW_ALBUMVIEW,   self.TYPE_RADIO),
+                        (parent.VIEW_LISTFILTER,   self.TYPE_RADIO),
+                        (parent.VIEW_LYRIC,   self.TYPE_RADIO),
 			(u'',        self.TYPE_STRETCH),
 			(u'Info',    self.TYPE_NORMAL)
 			]
@@ -130,15 +137,13 @@ class Toolbar(object):
 	def update_selector(self):
 		if not environment.userinterface.toolbar_toggle or environment.userinterface.toolbar_icon_dropdown:
 			return
-		updates = [u'Playlist',u'Library',u'Lyric']
-		for view in updates:
-			self.__tool.ToggleTool(self.__ids[view],view.lower()==self.parent.current_view)
+		for view in self.parent.VIEW_STYLES:
+			self.__tool.ToggleTool(self.__ids[view],view==self.parent.current_view)
 
 	def OnTool(self,event):
 		event_id = event.GetId()
 		obj = self.__tool.FindById(event_id)
 		func_name = self.__labels[event_id]
-		radio = ['Playlist','Library','Lyric']
 		if obj.GetLabel() == _(u'Play'):
 			self.playback.play()
 			obj.SetLabel(_(u'Pause'))
@@ -147,12 +152,8 @@ class Toolbar(object):
 			obj.SetLabel(_(u'Play'))
 		elif func_name == 'View':
 			self.parent.PopupMenu(ViewMenu(self))
-		elif func_name == 'Playlist':
-			self.parent.show_playlist()
-		elif func_name == 'Library':
-			self.parent.show_listfilter()
-		elif func_name == 'Lyric':
-			self.parent.show_lyric()
+		elif func_name in self.parent.VIEW_STYLES:
+			self.parent.show_view(func_name)
 		elif func_name == 'Info':
 			current = self.client.config.info
 			self.client.config.info = not(current)
