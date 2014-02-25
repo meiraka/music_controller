@@ -46,10 +46,10 @@ class MenuBar(wx.MenuBar):
 				(wx.NewId(),u'Single',self.TOGGLE),
 				]),
 			('View',[
-				(wx.NewId(),u'SongList',self.SELECT),
-				(wx.NewId(),u'SongAlbumList',self.SELECT),
-				(wx.NewId(),u'AlbumView',self.SELECT),
-				(wx.NewId(),u'SongListFilter',self.SELECT),
+				(wx.NewId(),self.parent.VIEW_LIST,self.SELECT),
+				(wx.NewId(),self.parent.VIEW_LIST_GRID,self.SELECT),
+				(wx.NewId(),self.parent.VIEW_GRID,self.SELECT),
+				(wx.NewId(),self.parent.VIEW_LISTFILTER,self.SELECT),
 				(wx.NewId(),u'Lyric',self.SELECT),
 				(wx.NewId(),u'splitter',self.SPLITTER),
 				(wx.NewId(),u'Info',self.TOGGLE),
@@ -77,10 +77,10 @@ class MenuBar(wx.MenuBar):
 				u'Playback_Shuffle':self.set_shuffle,
 				u'Playback_Repeat':self.set_repeat,
 				u'Playback_Single':self.set_single,
-				u'View_SongList':self.parent.show_songlist,
-				u'View_SongAlbumList':self.parent.show_songalbumlist,
-				u'View_AlbumView':self.parent.show_albumview,
-				u'View_SongListFilter':self.parent.show_songlistfilter,
+				u'View_'+self.parent.VIEW_LIST:self.parent.show_list,
+				u'View_'+self.parent.VIEW_LIST_GRID:self.parent.show_list_grid,
+				u'View_'+self.parent.VIEW_GRID:self.parent.show_grid,
+				u'View_'+self.parent.VIEW_LISTFILTER:self.parent.show_listfilter,
 				u'View_Lyric':self.parent.show_lyric,
 				u'View_Info':self.toggle_config_value('info',self.parent.show_not_connection),
 				u'View_Focus Current Song':self.focus_song,
@@ -100,11 +100,11 @@ class MenuBar(wx.MenuBar):
 				u'Playback_Shuffle':'Ctrl+b',
 				u'Playback_Repeat':'Ctrl+n',
 				u'Playback_Single':'Ctrl+m',
-				u'View_SongList':'Ctrl+1',
-				u'View_SongAlbumList':'Ctrl+2',
-				u'View_AlbumView':'Ctrl+3',
-				u'View_SongListFilter':'Ctrl+4',
-				u'View_Lyric':'Ctrl+5',
+				u'View_'+self.parent.VIEW_LIST:'Ctrl+1',
+				u'View_'+self.parent.VIEW_LIST_GRID:'Ctrl+2',
+				u'View_'+self.parent.VIEW_GRID:'Ctrl+3',
+				u'View_'+self.parent.VIEW_LISTFILTER:'Ctrl+4',
+				u'View_'+self.parent.VIEW_LYRIC:'Ctrl+5',
 				}
 
 		self.__ids = {}
@@ -297,7 +297,7 @@ class MenuBar(wx.MenuBar):
 		""" change menubar items by main view. """
 		current = self.parent.current_view
 		if not current:
-			current = parent.VIEW_SONGLIST
+			current = parent.VIEW_LIST
 		id = self.__labels['View_' + current]
 		if not self.IsChecked(id):
 			self.Check(id,True)

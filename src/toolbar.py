@@ -40,9 +40,9 @@ class Toolbar(object):
 			Lyric =    ['applications-office',wx.ART_PASTE],
 			Info =     [wx.ART_GO_FORWARD],
 			)
-		icons[parent.VIEW_SONGLIST] = ['media-tape', wx.ART_NORMAL_FILE]
-		icons[parent.VIEW_SONGALBUMLIST] = ['media-tape', wx.ART_NORMAL_FILE]
-		icons[parent.VIEW_ALBUMVIEW] = ['media-tape', wx.ART_NORMAL_FILE]
+		icons[parent.VIEW_LIST] = ['media-tape', wx.ART_NORMAL_FILE]
+		icons[parent.VIEW_LIST_GRID] = ['media-tape', wx.ART_NORMAL_FILE]
+		icons[parent.VIEW_GRID] = ['media-tape', wx.ART_NORMAL_FILE]
 		icons[parent.VIEW_LISTFILTER] = ['media-tape', wx.ART_NORMAL_FILE]
 		icons[parent.VIEW_LYRIC] = ['media-tape', wx.ART_NORMAL_FILE]
 		labels = [
@@ -52,9 +52,9 @@ class Toolbar(object):
                         (u'Play',    self.TYPE_TOGGLE),
 			(u'Stop',    self.TYPE_NORMAL),
                         (u'Next',    self.TYPE_NORMAL),
-                        (parent.VIEW_SONGLIST,self.TYPE_RADIO),
-                        (parent.VIEW_SONGALBUMLIST, self.TYPE_RADIO),
-                        (parent.VIEW_ALBUMVIEW,   self.TYPE_RADIO),
+                        (parent.VIEW_LIST,self.TYPE_RADIO),
+                        (parent.VIEW_LIST_GRID, self.TYPE_RADIO),
+                        (parent.VIEW_GRID,   self.TYPE_RADIO),
                         (parent.VIEW_LISTFILTER,   self.TYPE_RADIO),
                         (parent.VIEW_LYRIC,   self.TYPE_RADIO),
 			(u'',        self.TYPE_STRETCH),

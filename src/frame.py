@@ -18,12 +18,12 @@ import preferences
 class Frame(wx.Frame,Object):
 	TITLE = 'MusicController'
 	VIEW = 'view'
-	VIEW_SONGLIST = u'SongList'
-	VIEW_SONGALBUMLIST = 'SongAlbumList'
-	VIEW_ALBUMVIEW = 'AlbumView'
-	VIEW_LISTFILTER = 'SongListFilter'
+	VIEW_LIST = u'List'
+	VIEW_LIST_GRID = 'List Grid'
+	VIEW_GRID = 'Grid'
+	VIEW_LISTFILTER = 'ListFilter'
 	VIEW_LYRIC = 'Lyric'
-	VIEW_STYLES = [VIEW_SONGLIST, VIEW_SONGALBUMLIST, VIEW_ALBUMVIEW, VIEW_LISTFILTER, VIEW_LYRIC]
+	VIEW_STYLES = [VIEW_LIST, VIEW_LIST_GRID, VIEW_GRID, VIEW_LISTFILTER, VIEW_LYRIC]
 	def __init__(self,parent,client,debug=False):
 		""" generate main app window."""
 		self.parent = parent
@@ -130,10 +130,10 @@ class Frame(wx.Frame,Object):
 			else:
 				self.show_songlistfilter()
 		else:
-			if hasattr(self, 'show_' + self.current_view.lower()):
-				getattr(self, 'show_' + self.current_view.lower())()
-			else:
-				self.show_songalbumlist()
+			try:
+				self.show_view(self.current_view)
+			except AttributeError:
+				self.show_list()
 
 	def __update_infoview(self):
 		if self.client.config.info:
@@ -142,7 +142,7 @@ class Frame(wx.Frame,Object):
 			self.info.Hide()
 
 	def show_view(self, view):
-		getattr(self, 'show_' + view.lower())()
+		getattr(self, 'show_' + view.lower().replace(' ', '_'))()
 
 	def __show_views(self, *shows):
 		self.change_title()
@@ -164,21 +164,21 @@ class Frame(wx.Frame,Object):
 		self.Layout()
 		self.call(self.VIEW)
 
-	def show_songlistfilter(self):
+	def show_listfilter(self):
 		""" Show listfilter and song info."""
 		self.current_view = self.VIEW_LISTFILTER
 		self.__show_views(self.listfilter)
 
-        def show_songlist(self):
-		self.current_view = self.VIEW_SONGLIST
+        def show_list(self):
+		self.current_view = self.VIEW_LIST
 		self.__show_views(self.playlist)
 
-	def show_songalbumlist(self):
-		self.current_view = self.VIEW_SONGALBUMLIST
+	def show_list_grid(self):
+		self.current_view = self.VIEW_LIST_GRID
 		self.__show_views(self.albumlist, self.playlist)
 
-	def show_albumview(self):
-		self.current_view = self.VIEW_ALBUMVIEW
+	def show_grid(self):
+		self.current_view = self.VIEW_GRID
 		self.__show_views(self.albumview)
 	
 	def show_lyric(self):
