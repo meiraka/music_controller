@@ -180,23 +180,16 @@ class Toolbar(object):
 
 class ViewMenu(wx.Menu):
 	def __init__(self,parent):
+		def get_show(view):
+			def show(event):
+				self.parent.parent.show_view(view)
+			return show
 		wx.Menu.__init__(self)
 		self.parent = parent
-		items = [u'Playlist',u'Library',u'Lyric']
-		self.__items = dict([(item,wx.NewId()) for item in items])
-		for item in items:
-			id = self.__items[item]
-			self.AppendRadioItem(id,_(item),_(item))
-			if item.lower() == self.parent.parent.current_view:
-				self.Check(id,True)
-			func_name = 'show_'+item.lower()
-			self.Bind(wx.EVT_MENU,getattr(self,func_name),id=id)
+		self.items = [(style,wx.NewId()) for style in self.parent.parent.VIEW_STYLES]
+		for style, menu_id in self.items:
+			self.AppendRadioItem(menu_id,_(style),_(style))
+			if style == self.parent.parent.current_view:
+				self.Check(menu_id,True)
+			self.Bind(wx.EVT_MENU,get_show(style),id=menu_id)
 
-	def show_playlist(self,event):
-		self.parent.parent.show_playlist()
-
-	def show_listfilter(self,event):
-		self.parent.parent.show_listfilter()
-
-	def show_lyric(self,event):
-		self.parent.parent.show_lyric()
