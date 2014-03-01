@@ -25,8 +25,8 @@ from app import run
 
 
 class App(App):
-	"""
-	Main Application.
-	"""
+    """
+    Main Application.
+    """
 
-	pass
+    pass
