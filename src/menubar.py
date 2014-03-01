@@ -46,11 +46,6 @@ class MenuBar(wx.MenuBar):
                 (wx.NewId(), u'Single', self.TOGGLE),
                 ]),
             ('View', [
-                (wx.NewId(), self.parent.VIEW_LIST, self.SELECT),
-                (wx.NewId(), self.parent.VIEW_LIST_GRID, self.SELECT),
-                (wx.NewId(), self.parent.VIEW_GRID, self.SELECT),
-                (wx.NewId(), self.parent.VIEW_LISTFILTER, self.SELECT),
-                (wx.NewId(), u'Lyric', self.SELECT),
                 (wx.NewId(), u'splitter', self.SPLITTER),
                 (wx.NewId(), u'Info', self.TOGGLE),
                 (wx.NewId(), u'splitter', self.SPLITTER),
@@ -62,6 +57,11 @@ class MenuBar(wx.MenuBar):
                 (wx.NewId(), u'Server Stats', self.NORMAL)
                 ])
             ]
+
+        for head, data in self.menu_list:
+            if head == 'View':
+                for index, view in enumerate(self.parent.VIEW_STYLES):
+                    data.insert(index, (wx.NewId(), view, self.SELECT))
 
         self.__functions = {
                 u'File_Rescan Library':self.client.library.update,
@@ -88,6 +88,14 @@ class MenuBar(wx.MenuBar):
                 u'Help_MusicController Website':self.show_repository,
                 u'Help_Server Stats':self.show_stats,
                 }
+
+        for index, view in enumerate(self.parent.VIEW_STYLES):
+            def get_show_view(style):
+                def show_view():
+                    self.parent.show_view(style)
+                return show_view
+            self.__functions['View_' + view] = get_show_view(view)
+
         self.__keys = {
                 u'File_Quit':'Ctrl+Q',
                 u'File_Get Info':'Ctrl+I',
@@ -106,6 +114,11 @@ class MenuBar(wx.MenuBar):
                 u'View_'+self.parent.VIEW_LISTFILTER:'Ctrl+4',
                 u'View_'+self.parent.VIEW_LYRIC:'Ctrl+5',
                 }
+
+        for index, view in enumerate(self.parent.VIEW_STYLES):
+            self.__keys['View_' + view] = 'Ctrl+' + str(index+1)
+
+
 
         self.__ids = {}
         self.__labels = {}
