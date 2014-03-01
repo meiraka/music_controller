@@ -137,7 +137,7 @@ class Connection(Object,threading.Thread):
 				self.update()
 				time.sleep(1)
 			except:
-				print 'daemom err:', traceback.format_exc()
+				print 'daemon err:', traceback.format_exc()
 
 	def check_library(self):
 		""" Check library updates.

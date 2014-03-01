@@ -27,7 +27,7 @@ class MenuBar(wx.MenuBar):
 			('File',[
 				(wx.NewId(),u'Rescan Library',self.NORMAL),
 				(wx.ID_EXIT,u'Quit',self.NORMAL),
-				(wx.NewId(),u'',self.SPLITTER),
+				(wx.NewId(),self.SPLITTER,self.SPLITTER),
 				(wx.NewId(),u'Search',self.NORMAL),
 				(wx.NewId(),u'Get Info',self.NORMAL),
 				]),

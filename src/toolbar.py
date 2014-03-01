@@ -40,11 +40,11 @@ class Toolbar(object):
 			Lyric =    ['applications-office',wx.ART_PASTE],
 			Info =     [wx.ART_GO_FORWARD],
 			)
-		icons[parent.VIEW_LIST] = ['media-tape', wx.ART_NORMAL_FILE]
-		icons[parent.VIEW_LIST_GRID] = ['media-tape', wx.ART_NORMAL_FILE]
-		icons[parent.VIEW_GRID] = ['media-tape', wx.ART_NORMAL_FILE]
-		icons[parent.VIEW_LISTFILTER] = ['media-tape', wx.ART_NORMAL_FILE]
-		icons[parent.VIEW_LYRIC] = ['media-tape', wx.ART_NORMAL_FILE]
+		icons[parent.VIEW_LIST] = ['folder-music', wx.ART_NORMAL_FILE]
+		icons[parent.VIEW_LIST_GRID] = ['folder', wx.ART_NORMAL_FILE]
+		icons[parent.VIEW_GRID] = ['folder-pictures', wx.ART_NORMAL_FILE]
+		icons[parent.VIEW_LISTFILTER] = ['gtk-edit', wx.ART_NORMAL_FILE]
+		icons[parent.VIEW_LYRIC] = ['folder-documents', wx.ART_NORMAL_FILE]
 		labels = [
 			(u'View',    self.TYPE_NORMAL),
 			(u'',        self.TYPE_STRETCH),

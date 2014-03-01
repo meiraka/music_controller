@@ -18,9 +18,9 @@ class App(dialog.Frame):
 		self.__windows = [
 			(u'Connection',Connection,['server',wx.ART_GO_HOME]),
 			(u'Playback',Playback,['gtk-media-play-ltr',wx.ART_GO_FORWARD]),
-			(u'Artwork',Artwork,['applications-office',wx.ART_PASTE]),
-			(u'Lyrics',Lyrics,['applications-office',wx.ART_PASTE]),
-			(u'Notification',Notify,['applications-office',wx.ART_GO_HOME])
+			(u'Artwork',Artwork,['folder-music',wx.ART_PASTE]),
+			(u'Lyrics',Lyrics,['folder-documents',wx.ART_PASTE]),
+			(u'Notification',Notify,['update-notifier',wx.ART_GO_HOME])
 			]
 
 		self.__ids = {}
