@@ -1,7 +1,7 @@
 """
 Lyrics reader and writer.
 
-Supports read, write, search and download lyrics.
+Supports read,  write,  search and download lyrics.
 
 """
 
@@ -19,7 +19,7 @@ class Lyrics(Object):
     """
     UPDATING = 'updating'
     UPDATE = 'update'
-    def __init__(self,client):
+    def __init__(self, client):
         """ init values and database."""
         self.client = client
         self.__downloading = []
@@ -34,7 +34,7 @@ class Lyrics(Object):
             )
         """ init database.
 
-        if not exists database, create table.
+        if not exists database,  create table.
         """
         sql_init = '''
         CREATE TABLE IF NOT EXISTS lyrics
@@ -43,7 +43,7 @@ class Lyrics(Object):
             title TEXT,
             album TEXT,
             lyric TEXT,
-            UNIQUE(artist,title,album)
+            UNIQUE(artist, title, album)
         );
         '''
         Object.__init__(self)
@@ -67,7 +67,7 @@ class Lyrics(Object):
         db = sqlite3.connect(environment.config_dir+'/lyrics')
         return db
         
-    def __getitem__(self,song):
+    def __getitem__(self, song):
         """ Returns lyric.
 
         Arguments:
@@ -100,14 +100,14 @@ class Lyrics(Object):
         if lyric is None:
             if self.download_auto:
                 if self.download_background:
-                    thread.start_new_thread(self.download,(song,))
+                    thread.start_new_thread(self.download, (song, ))
                 else:
                     return self.download(song)
             return u''
         else:
             return lyric[0]
 
-    def __setitem__(self,song,lyric):
+    def __setitem__(self, song, lyric):
         """ Saves lyric.
 
         Arguments:
@@ -117,8 +117,8 @@ class Lyrics(Object):
         lyric = unicode(lyric)
         sql_write = '''
         INSERT OR REPLACE INTO lyrics
-        (artist,title,album,lyric)
-        VALUES(?, ?, ?, ?)
+        (artist, title, album, lyric)
+        VALUES(?,  ?,  ?,  ?)
         '''
         connection = self.__get_connection()
         cursor = connection.cursor()
@@ -131,22 +131,22 @@ class Lyrics(Object):
                 )
             )
         connection.commit()
-        self.call(self.UPDATE,song,lyric)
+        self.call(self.UPDATE, song, lyric)
         
-    def download(self,song):
+    def download(self, song):
         # load client config and enable/disable api
         if self.client.config.lyrics_download:
             downloaders = {}
-            for label,isd in self.downloaders.iteritems():
+            for label, isd in self.downloaders.iteritems():
                 attr = u'lyrics_api_'+label
-                downloaders[label] = getattr(self.client.config,attr)
+                downloaders[label] = getattr(self.client.config, attr)
             self.downloaders = downloaders
         else:
             return ''
         self.__downloading.append(song)
         self.call(self.UPDATING)
         lyric = u''
-        for label,is_download in self.downloaders.iteritems():
+        for label, is_download in self.downloaders.iteritems():
             if is_download:
                 downloader = self.download_class[label]()
                 lyric = downloader.download(song)
@@ -155,42 +155,42 @@ class Lyrics(Object):
             else:
                 pass
         del self.__downloading[self.__downloading.index(song)]
-        self.__setitem__(song,lyric)
+        self.__setitem__(song, lyric)
         return lyric
 
-    def list(self,keywords,callback=None):
+    def list(self, keywords, callback=None):
         """ Returns candidate lyrics of given song.
 
         Arguments:
-            keywords -- keyword dict like dict(artist=foo,title=bar)
-            callback -- if not None, callback(*each_list_item)
+            keywords -- keyword dict like dict(artist=foo, title=bar)
+            callback -- if not None,  callback(*each_list_item)
 
         Returns list like:
             [
-                ( downloadfunc,urlinfo formatter func, urlinfo list),
+                ( downloadfunc, urlinfo formatter func,  urlinfo list),
                 ...,
             ]
 
         to get lyric list[0][0]:
             returnslist = db.list(keywords)
-            func,formatter,urlinfo_list = returnslist[0]
+            func, formatter, urlinfo_list = returnslist[0]
             lyric = func(urlinfo_list[0])
             db[song] = lyric
             
 
         to show readable candidate lyric:
             returnslist = db.list(keywords)
-            for func,formatter,urlinfo_list in returnslist:
+            for func, formatter, urlinfo_list in returnslist:
                 for urlinfo in urlinfo_list:
                     print formatter(urlinfo)
         """
 
         lists = []
-        for label,is_download in self.downloaders.iteritems():
+        for label, is_download in self.downloaders.iteritems():
             if is_download:
                 downloader = self.download_class[label]()
                 urls = downloader.list(**keywords)
-                appends = (downloader.get,downloader.format,urls)
+                appends = (downloader.get, downloader.format, urls)
                 lists.append(appends)
                 if callback:
                     callback(*appends)
@@ -206,7 +206,7 @@ class Lyrics(Object):
 """
 Artwork reader and writer.
 
-Supports read, write, search and download artwork.
+Supports read,  write,  search and download artwork.
 """
 
 class Artwork(Object):
@@ -215,7 +215,7 @@ class Artwork(Object):
     """
     UPDATING = 'updating'
     UPDATE = 'update'
-    def __init__(self,client):
+    def __init__(self, client):
         """ init values and database."""
         self.client = client
         self.__download_path = environment.config_dir+'/artwork'
@@ -231,7 +231,7 @@ class Artwork(Object):
             )
         """ init database.
 
-        if not exists database, create table.
+        if not exists database,  create table.
         """
         sql_init = '''
         CREATE TABLE IF NOT EXISTS artwork
@@ -239,7 +239,7 @@ class Artwork(Object):
             artist TEXT,
             album TEXT,
             artwork TEXT,
-            UNIQUE(artist,album)
+            UNIQUE(artist, album)
         );
         '''
         Object.__init__(self)
@@ -257,7 +257,7 @@ class Artwork(Object):
         db = sqlite3.connect(environment.config_dir+'/artworkdb')
         return db
 
-    def __getitem__(self,song):
+    def __getitem__(self, song):
         """ Returns artwork path.
 
         Arguments:
@@ -288,7 +288,7 @@ class Artwork(Object):
         if artwork is None:
             if self.download_auto:
                 if self.download_background:
-                    thread.start_new_thread(self.download,(song,))
+                    thread.start_new_thread(self.download, (song, ))
                 else:
                     return self.download(song)
             return u''
@@ -299,12 +299,12 @@ class Artwork(Object):
             # or already downloaded but not found any data.
             return u''
 
-    def __setitem__(self,song,artwork_binary):
+    def __setitem__(self, song, artwork_binary):
         """ Saves artwork binary.
 
         Arguments:
             song - song object.
-            artwork - string artwork binary, not filepath.
+            artwork - string artwork binary,  not filepath.
         """
 
         # save binary to local dir.
@@ -313,7 +313,7 @@ class Artwork(Object):
             fullpath = self.__download_path + '/' + filename
             if not os.path.exists(os.path.dirname(fullpath)):
                 os.makedirs(os.path.dirname(fullpath))
-            f = open(fullpath,'wb')
+            f = open(fullpath, 'wb')
             f.write(artwork_binary)
             f.close()
         else:
@@ -323,8 +323,8 @@ class Artwork(Object):
         # save filepath to database.
         sql_write = '''
         INSERT OR REPLACE INTO artwork
-        (artist,album,artwork)
-        VALUES(?, ?, ?)
+        (artist, album, artwork)
+        VALUES(?,  ?,  ?)
         '''
         connection = self.__get_connection()
         cursor = connection.cursor()
@@ -337,7 +337,7 @@ class Artwork(Object):
             )
         connection.commit()
         if fullpath:
-            self.call(self.UPDATE,song,fullpath)
+            self.call(self.UPDATE, song, fullpath)
 
     def clear_empty(self):
         sql_clear = 'delete from artwork where artwork="";'
@@ -347,22 +347,22 @@ class Artwork(Object):
         connection.commit()
         
         
-    def download(self,song):
+    def download(self, song):
         if not song in self.__downloading:
             # load client config and enable/disable api
             if self.client.config.artwork_download:
                 downloaders = {}
-                for label,isd in self.downloaders.iteritems():
+                for label, isd in self.downloaders.iteritems():
                     attr = u'artwork_api_'+label
-                    downloaders[label] = getattr(self.client.config,attr)
+                    downloaders[label] = getattr(self.client.config, attr)
                 self.downloaders = downloaders
             else:
                 return ''
             self.__downloading.append(song)
-            self.__setitem__(song,u'')  # flush for terrible lock.
+            self.__setitem__(song, u'')  # flush for terrible lock.
             self.call(self.UPDATING)
             artwork_binary = u''
-            for label,is_download in self.downloaders.iteritems():
+            for label, is_download in self.downloaders.iteritems():
                 if is_download:
                     downloader = self.download_class[label]()
                     artwork_binary = downloader.download(song)
@@ -371,44 +371,44 @@ class Artwork(Object):
                 else:
                     pass
             del self.__downloading[self.__downloading.index(song)]
-            self.__setitem__(song,artwork_binary)
+            self.__setitem__(song, artwork_binary)
             return self.__getitem__(song)
         else:
             return ''
 
-    def list(self,keywords,callback=None):
+    def list(self, keywords, callback=None):
         """ Returns candidate artworks of given song.
 
         Arguments:
-            keywords -- keyword dict like dict(artist=foo,title=bar)
-            callback -- if not None, callback(*each_list_item)
+            keywords -- keyword dict like dict(artist=foo, title=bar)
+            callback -- if not None,  callback(*each_list_item)
 
         Returns list like:
             [
-                ( downloadfunc,urlinfo formatter func, urlinfo list),
+                ( downloadfunc, urlinfo formatter func,  urlinfo list),
                 ...,
             ]
 
         to get artwork list[0][0]:
             returnslist = db.list(keywords)
-            func,formatter,urlinfo_list = returnslist[0]
+            func, formatter, urlinfo_list = returnslist[0]
             artwork_binary = func(urlinfo_list[0])
             db[song] = artwork_binary
             
 
         to show readable candidate artworks:
             returnslist = db.list(keywords)
-            for func,formatter,urlinfo_list in returnslist:
+            for func, formatter, urlinfo_list in returnslist:
                 for urlinfo in urlinfo_list:
                     print formatter(urlinfo)
         """
 
         lists = []
-        for label,is_download in self.downloaders.iteritems():
+        for label, is_download in self.downloaders.iteritems():
             if is_download:
                 downloader = self.download_class[label]()
                 urls = downloader.list(**keywords)
-                appends = (downloader.get,downloader.format,urls)
+                appends = (downloader.get, downloader.format, urls)
                 lists.append(appends)
                 if callback:
                     callback(*appends)

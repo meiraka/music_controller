@@ -25,19 +25,19 @@ class Data(dict):
 class Song(Data):
     splitter = re.compile(u'\\%\\%')
     __param = re.compile(u'\\%([^\\%]+\\%)')
-    def __init__(self,data,artwork=None,lyrics=None):
+    def __init__(self, data, artwork=None, lyrics=None):
         if u'time' in data:
             t = int(data[u'time'].split(u':')[0])
-            data[u'length'] = u'%i:%s' % (t/60,str(t%60).zfill(2))
+            data[u'length'] = u'%i:%s' % (t/60, str(t%60).zfill(2))
         if data.has_key(u'track'):
             data[u'track_index'] = data[u'track'].zfill(2)
         if not data.has_key(u'albumartist') and data.has_key(u'artist'):
             data[u'albumartist'] = data[u'artist']
         self.__artwork = artwork
         self.__lyrics = lyrics
-        Data.__init__(self,data)
+        Data.__init__(self, data)
 
-    def format(self,format_string):
+    def format(self, format_string):
         v = self.splitter.split(format_string)
         f = [u''.join([ self[ii[:-1]] if ii.endswith(u'%') and len(ii) > 0 and self.has_key(ii[:-1]) else u' [no %s] ' % ii[:-1] if ii.endswith(u'%') else ii  for ii in self.__param.split(i)]) for i in v]
         return u'%%'.join(f)
@@ -57,24 +57,24 @@ class Error(Exception):
 
 class Client(Object):
     '''
-    MPD client. This object can connect, control and manage mpd.
+    MPD client. This object can connect,  control and manage mpd.
 
     Attributes:
         config -- connection settings for this client.
-        playback -- control(play, pause and etc.) mpd status.
+        playback -- control(play,  pause and etc.) mpd status.
     '''
-    def __init__(self,config_path='./'):
+    def __init__(self, config_path='./'):
         Object.__init__(self)
         self.__config     = Config(config_path)
         self.__artwork    = database.Artwork(self)
         self.__lyrics     = database.Lyrics(self)
         self.__connection = Connection(self.config)
-        self.__playback   = Playback(self.__connection,self.__config)
-        args = [self.__connection,self.__playback,self.__config,self.__artwork,self.__lyrics]
+        self.__playback   = Playback(self.__connection, self.__config)
+        args = [self.__connection, self.__playback, self.__config, self.__artwork, self.__lyrics]
         self.__library    = Library(*args)
         self.__playlist   = Playlist(*args)
 
-    def connect(self,profile=None):
+    def connect(self, profile=None):
         return self.__connection.connect(profile)
 
     def start(self):
@@ -89,10 +89,10 @@ class Client(Object):
     lyrics = property(lambda self:self.__lyrics)
     
 
-class Connection(Object,threading.Thread):
+class Connection(Object, threading.Thread):
     '''
     A connection object manages mpd connection and execute commands.
-    To connect to mpd, call the Connection.connect().
+    To connect to mpd,  call the Connection.connect().
 
     Event signals:
         UPDATE -- when status has been changed.
@@ -111,7 +111,7 @@ class Connection(Object,threading.Thread):
     UPDATE_PLAYING = 'update_playing'
     SERVER_ERROR = 'server_error'
     CLOCK = 'clock'
-    def __init__(self,config):
+    def __init__(self, config):
         Object.__init__(self)
         threading.Thread.__init__(self)
         self.__running = False
@@ -137,7 +137,7 @@ class Connection(Object,threading.Thread):
                 self.update()
                 time.sleep(1)
             except:
-                print 'daemon err:', traceback.format_exc()
+                print 'daemon err:',  traceback.format_exc()
 
     def check_library(self):
         """ Check library updates.
@@ -164,15 +164,15 @@ class Connection(Object,threading.Thread):
         elif self.__server_status.has_key('updating_db'):
             self.__check_library = self.__server_status['updating_db']
         if u'error' in self.__server_status and self.__server_status[u'error']:
-            self.call(self.SERVER_ERROR,self.__server_status[u'error'])
+            self.call(self.SERVER_ERROR, self.__server_status[u'error'])
             self.execute('clearerror')
         self.call(self.CLOCK)
 
-    def connect(self,profile=None):
+    def connect(self, profile=None):
         '''connect to mpd daemon.
 
         Arguments:
-        profile -- string profile name. if none, uses default value.
+        profile -- string profile name. if none,  uses default value.
         '''
         connection = mpd.MPDClient()
         if not profile:
@@ -183,7 +183,7 @@ class Connection(Object,threading.Thread):
         try:
     
             mpd.socket.setdefaulttimeout(2)
-            connection.connect(profile[1].encode('utf8'),int(profile[2]))
+            connection.connect(profile[1].encode('utf8'), int(profile[2]))
             if profile[3]:
                 connection.password(profile[4])
             self.__connection = connection
@@ -191,10 +191,10 @@ class Connection(Object,threading.Thread):
             self.connected = True
             self.update()
             self.call(self.CONNECT)
-        except mpd.MPDError,err:
+        except mpd.MPDError, err:
             self.__status = err
             return False
-        except socket.error,err:
+        except socket.error, err:
             self.__status = err
             return False
         #if connection was established
@@ -212,14 +212,14 @@ class Connection(Object,threading.Thread):
     def __enter__(self):
         self.execute('command_list_ok_begin')
 
-    def __exit__(self,exc_type, exc_value, traceback):
+    def __exit__(self, exc_type,  exc_value,  traceback):
         self.execute('command_list_end')
         return True
 
-    def execute(self,func_name,skip=False,*args,**kwargs):
+    def execute(self, func_name, skip=False, *args, **kwargs):
         '''execute mpd commands.
         
-        execute given mpd command. while executing command, can not execute
+        execute given mpd command. while executing command,  can not execute
         another commands.
         
         Arguments:
@@ -238,24 +238,24 @@ class Connection(Object,threading.Thread):
             try:
                 if type(func_name) == str or type(func_name) == unicode:
                     func_name = str(func_name)
-                    value = self.__decode(getattr(self.__connection,func_name)(*args,**kwargs))
+                    value = self.__decode(getattr(self.__connection, func_name)(*args, **kwargs))
             except mpd.ProtocolError:
                 self.connected = False
                 self.__current = None
                 self.call(self.CLOSE_UNEXPECT)
-            except mpd.MPDError,err:
-                print 'err at',func_name,args,kwargs
-                print 'mpderr',traceback.format_exc()
+            except mpd.MPDError, err:
+                print 'err at', func_name, args, kwargs
+                print 'mpderr', traceback.format_exc()
                     
-            except socket.timeout,err:
+            except socket.timeout, err:
                 pass
             except socket.error:
                 self.connected = False
                 self.__current = None
                 self.call(self.CLOSE_UNEXPECT)
-            except AttributeError,err:
+            except AttributeError, err:
                 pass
-            except Exception,err:
+            except Exception, err:
                 print traceback.format_exc()
             finally:
                 self.__lock.release()
@@ -263,7 +263,7 @@ class Connection(Object,threading.Thread):
             return False
         return value
 
-    def __decode(self,item):
+    def __decode(self, item):
         """ Decodes given utf-8 object to unicode object.
 
         decodes str and str in non-nested dict and list to
@@ -273,7 +273,7 @@ class Connection(Object,threading.Thread):
             return item.decode('utf8')
         elif type(item) == dict:
             returns = {}
-            for key,value in item.iteritems():
+            for key, value in item.iteritems():
                 key = self.__decode(key)
                 if type(value) == str:
                     returns[key] = self.__decode(value)
@@ -287,7 +287,7 @@ class Connection(Object,threading.Thread):
         else:
             return item
 
-    def __get_server_status(key=None,cast=None):
+    def __get_server_status(key=None, cast=None):
         def get(self):
             if not self.__running:
                 self.update()
@@ -330,12 +330,12 @@ class Playback(Object):
 
     '''
 
-    def __init__(self,connection,config):
+    def __init__(self, connection, config):
         Object.__init__(self)
         self.connection = connection
         self.config = config
 
-    def __check_status(self,key,value):
+    def __check_status(self, key, value):
         status = self.connection.server_status
         if key in status and status[key] == value:
             return True
@@ -343,60 +343,60 @@ class Playback(Object):
             return False
         
 
-    def play(self,song=None,block=False):
+    def play(self, song=None, block=False):
         if song:
-            self.connection.execute('play',not(block),song[u'pos'])
+            self.connection.execute('play', not(block), song[u'pos'])
         else:
-            self.connection.execute('play',not(block))
+            self.connection.execute('play', not(block))
 
     def is_play(self):
-        return self.__check_status(u'state',u'play')
+        return self.__check_status(u'state', u'play')
 
-    def stop(self,block=False):
-        self.connection.execute('stop',not(block))
+    def stop(self, block=False):
+        self.connection.execute('stop', not(block))
 
     def is_stop(self):
-        return self.__check_status(u'state',u'stop')
+        return self.__check_status(u'state', u'stop')
 
-    def pause(self,block=False):
-        self.connection.execute('pause',not(block))
+    def pause(self, block=False):
+        self.connection.execute('pause', not(block))
 
     def is_pause(self):
-        return self.__check_status(u'state',u'pause')
+        return self.__check_status(u'state', u'pause')
 
-    def next(self,block=False):
-        self.connection.execute('next',not(block))
+    def next(self, block=False):
+        self.connection.execute('next', not(block))
     
-    def previous(self,block=False):
-        self.connection.execute('previous',not(block))
+    def previous(self, block=False):
+        self.connection.execute('previous', not(block))
 
-    def random(self,activate,block=False):
+    def random(self, activate, block=False):
         arg = '1' if activate else '0'
-        self.connection.execute('random',not(block),arg)
+        self.connection.execute('random', not(block), arg)
 
     def is_random(self):
-        return self.__check_status(u'random',u'1')
+        return self.__check_status(u'random', u'1')
 
-    def repeat(self,activate,block=False):
+    def repeat(self, activate, block=False):
         arg = '1' if activate else '0'
-        self.connection.execute('repeat',not(block),arg)
+        self.connection.execute('repeat', not(block), arg)
 
     def is_repeat(self):
-        return self.__check_status(u'repeat',u'1')
+        return self.__check_status(u'repeat', u'1')
 
-    def single(self,activate,block=False):
+    def single(self, activate, block=False):
         arg = '1' if activate else '0'
-        self.connection.execute('single',not(block),arg)
+        self.connection.execute('single', not(block), arg)
 
     def is_single(self):
-        return self.__check_status(u'single',u'1')
+        return self.__check_status(u'single', u'1')
 
-    def seek(self,second):
+    def seek(self, second):
         song_id = self.song
         if song_id is not None:
-            self.connection.execute('seek',True,song_id,second)
+            self.connection.execute('seek', True, song_id, second)
 
-    def __get(key,value_type,default):
+    def __get(key, value_type, default):
         def get(self):
             status = self.connection.server_status
             if status and key in status:
@@ -405,39 +405,39 @@ class Playback(Object):
                 return default
         return get
 
-    def __set(command,default=0):
-        def set(self,value):
+    def __set(command, default=0):
+        def set(self, value):
             if value is None:
                 value = default
-            self.connection.execute(command,True,value)
+            self.connection.execute(command, True, value)
         return set
 
     def __get_devices():
         class Device(object):
-            def __init__(self,connection,kwargs):
+            def __init__(self, connection, kwargs):
                 self.connection = connection
                 self.__id = kwargs[u'outputid']
                 self.name = kwargs[u'outputname']
                 self.__enable = True if kwargs[u'outputenabled'] == u'1' else False
 
             def enable(self):
-                self.connection.execute('enableoutput',True,self.__id)
+                self.connection.execute('enableoutput', True, self.__id)
                 self.__enable = True
 
             def disable(self):
-                self.connection.execute('disableoutput',True,self.__id)
+                self.connection.execute('disableoutput', True, self.__id)
                 self.__enable = False
 
             def is_enable(self):
                 return self.__enable
 
         def get(self):
-            return [Device(self.connection,i) for i in self.connection.execute(u'outputs')]
+            return [Device(self.connection, i) for i in self.connection.execute(u'outputs')]
 
         return get
-    time = property(__get(u'time',int,0))
-    volume = property(__get(u'volume',int,100),__set(u'setvol'))
-    crossfade = property(__get(u'xfade',int,0),__set(u'crossfade'))
+    time = property(__get(u'time', int, 0))
+    volume = property(__get(u'volume', int, 100), __set(u'setvol'))
+    crossfade = property(__get(u'xfade', int, 0), __set(u'crossfade'))
     devices = property(__get_devices())
     
         
@@ -452,21 +452,21 @@ class Playlist(Object):
     class Song(Song):
         """ A playable song object.
         """
-        def __init__(self,song,connection,artwork,lyrics):
-            Song.__init__(self,song,artwork,lyrics)
+        def __init__(self, song, connection, artwork, lyrics):
+            Song.__init__(self, song, artwork, lyrics)
             self.__connection = connection
 
         def play(self):
             """ Plays this song.
             """
-            self.__connection.execute(u'play',True,self[u'pos'])
+            self.__connection.execute(u'play', True, self[u'pos'])
 
         def remove(self):
             """ Removes from playlist.
             """
-            self.__connection.execute(u'deleteid',False,self[u'id'])
+            self.__connection.execute(u'deleteid', False, self[u'id'])
             
-    def __init__(self,connection,playback,config,artwork,lyrics):
+    def __init__(self, connection, playback, config, artwork, lyrics):
         Object.__init__(self)
         self.__connection = connection
         self.__playback = playback
@@ -477,26 +477,26 @@ class Playlist(Object):
         self.__selected = []
         self.__focused = None
         self.__current = None
-        self.__connection.bind(self.__connection.CONNECT,self.__update_cache)
-        self.__connection.bind(self.__connection.UPDATE_PLAYLIST,self.__update_cache)
-        self.__connection.bind(self.__connection.UPDATE,self.__focus_playing)
+        self.__connection.bind(self.__connection.CONNECT, self.__update_cache)
+        self.__connection.bind(self.__connection.UPDATE_PLAYLIST, self.__update_cache)
+        self.__connection.bind(self.__connection.UPDATE, self.__focus_playing)
 
     def __iter__(self):
         return list.__iter__(self.__data)
 
-    def __getitem__(self,index):
+    def __getitem__(self, index):
         return self.__data[index]
 
-    def __delitem__(self,index):
+    def __delitem__(self, index):
         pos = self.__data[index][u'pos']
-        self.__connection.execute('delete',False,pos)
+        self.__connection.execute('delete', False, pos)
         self.__connection.update()
 
-    def __delslice__(self,start,end):
-        self.__connection.execute('delete',False,'%i:%i' % (start,end))
+    def __delslice__(self, start, end):
+        self.__connection.execute('delete', False, '%i:%i' % (start, end))
         self.__connection.update()
 
-    def __getslice__(self,start,end):
+    def __getslice__(self, start, end):
         return self.__data[start:end]
 
     def __len__(self):
@@ -506,7 +506,7 @@ class Playlist(Object):
         """ update playlist songs cache.
         """
         data = self.__connection.execute('playlistinfo')
-        self.__data = [Playlist.Song(song,self.__connection,self.__artwork,self.__lyrics) for song in data]
+        self.__data = [Playlist.Song(song, self.__connection, self.__artwork, self.__lyrics) for song in data]
         if self.__config.playlist_focus:
             self.focus_playing()
         self.call(self.UPDATE)
@@ -526,47 +526,47 @@ class Playlist(Object):
             self.__current = song
             self.__set_select([song])
             self.__set_focus(song)
-            self.call(self.UPDATE_CURRENT,song)
+            self.call(self.UPDATE_CURRENT, song)
 
-    def __focus_playing(self,*args,**kwargs):
+    def __focus_playing(self, *args, **kwargs):
         self.focus_playing()
 
-    def __set_select(self,songs):
+    def __set_select(self, songs):
         self.__selected = [int(song[u'pos']) for song in songs]
         self.call(self.SELECT)
 
-    def __set_focus(self,song):
+    def __set_focus(self, song):
         self.__focused = int(song[u'pos'])
         self.call(self.FOCUS)
 
-    def append(self,song):
+    def append(self, song):
         """apennd song to end of playlist.
         """
         add = 'add'
         filepath = song[u'file'].encode('utf8')
-        self.__connection.execute(add,False,filepath)
+        self.__connection.execute(add, False, filepath)
         self.__connection.update()
 
-    def extend(self,songs):
+    def extend(self, songs):
         """marge the playlist and given songs into the playlist.
         """
         add = 'add'
         filepath = [song[u'file'].encode('utf8') for song in songs if song.has_key(u'file')]
         with self.__connection:
             for i in filepath:
-                self.__connection.execute('add',False,i)
+                self.__connection.execute('add', False, i)
         self.__connection.update()
 
     def clear(self):
         """Clear current playlist.
         """
-        self.__connection.execute('clear',False)
+        self.__connection.execute('clear', False)
         self.__connection.update()
 
-    def replace(self,songs):
+    def replace(self, songs):
         """ Replaces playlist by given songs.
 
-        if mpd plays song, search that in given songs and
+        if mpd plays song,  search that in given songs and
         plays after playlist was updated.
 
         Arguments:
@@ -584,7 +584,7 @@ class Playlist(Object):
                 play_song = self.__data[song_id]
                 check_keys = [u'file']
                 time = status[u'time'].split(':')[0] if u'time' in status else '0'
-                for index,song in enumerate(songs):
+                for index, song in enumerate(songs):
                     for i in check_keys:
                         if not i in song and i in play_song:
                             break
@@ -598,9 +598,9 @@ class Playlist(Object):
         with self.__connection:
             self.__connection.execute('clear')
             for i in filepath:
-                self.__connection.execute('add',False,i)
+                self.__connection.execute('add', False, i)
             if seek:
-                self.__connection.execute('seek',False,str(id),time)
+                self.__connection.execute('seek', False, str(id), time)
                 if u'state' in status and status[u'state'] == u'play':
                     self.__connection.execute('play')
                 else:
@@ -611,15 +611,15 @@ class Playlist(Object):
 
     current = property(lambda self:copy.copy(self.__data[self.current_index]))
     current_index = property(lambda self:int(self.__connection.server_status[u'song']))
-    selected = property(lambda self:[self.__data[pos] for pos in self.__selected if len(self.__data) > pos],__set_select)
-    focused = property(lambda self:self.__data[self.__focused] if not self.__focused == None and len(self.__data) > self.__focused else None,__set_focus)
+    selected = property(lambda self:[self.__data[pos] for pos in self.__selected if len(self.__data) > pos], __set_select)
+    focused = property(lambda self:self.__data[self.__focused] if not self.__focused == None and len(self.__data) > self.__focused else None, __set_focus)
         
 
 
 
 class Library(Object):
     UPDATE = 'update'
-    def __init__(self,connection,playback,config,artwork,lyrics):
+    def __init__(self, connection, playback, config, artwork, lyrics):
         Object.__init__(self)
         self.__connection = connection
         self.__playback = playback
@@ -627,16 +627,16 @@ class Library(Object):
         self.__artwork = artwork
         self.__lyrics = lyrics
         self.__data = []
-        self.__connection.bind(self.__connection.CONNECT,self.__update_cache)
-        self.__connection.bind(self.__connection.UPDATE_DATABASE,self.__update_cache)
+        self.__connection.bind(self.__connection.CONNECT, self.__update_cache)
+        self.__connection.bind(self.__connection.UPDATE_DATABASE, self.__update_cache)
 
     def __iter__(self):
         return list.__iter__(self.__data)
 
-    def __getitem__(self,index):
+    def __getitem__(self, index):
         return self.__data[index]
 
-    def __getslice__(self,start,end):
+    def __getslice__(self, start, end):
         return self.__data[start:end]
 
     def __len__(self):
@@ -645,7 +645,7 @@ class Library(Object):
     def update(self):
         """ Update library database in background.
 
-        to catch updated event, bind Library.UPDATE.
+        to catch updated event,  bind Library.UPDATE.
         """
         self.__connection.check_library()
         self.__connection.execute('update')
@@ -656,14 +656,14 @@ class Library(Object):
         data = self.__connection.execute('listallinfo')
         # remove invalid songs.
         if data:
-            self.__data = [Song(songinfo,self.__artwork,self.__lyrics) for songinfo in data if songinfo.has_key(u'file')]
+            self.__data = [Song(songinfo, self.__artwork, self.__lyrics) for songinfo in data if songinfo.has_key(u'file')]
         else:
             self.__data = []
         self.call(self.UPDATE)
 
 
 class Songs(list):
-    def __init__(self,song_list):
+    def __init__(self, song_list):
         list.__init__(song_list)
 
     
@@ -681,7 +681,7 @@ class Config(Object):
     CONFIG_CHANGED = 'config_changed'
     PLAYLIST_STYLE_SONGS = 1
     PLAYLIST_STYLE_ALBUMS = 1 << 1
-    def __init__(self,path='./'):
+    def __init__(self, path='./'):
         """ initializes config by given path.
         
         Arguments:
@@ -699,7 +699,7 @@ class Config(Object):
         """
         if os.path.exists(self.path+'config.json'):
             try:
-                f = codecs.open(self.path+'config.json','r','utf8')
+                f = codecs.open(self.path+'config.json', 'r', 'utf8')
                 dumps = f.read()
                 f.close()
                 self.__config = json.loads(dumps)
@@ -713,7 +713,7 @@ class Config(Object):
         try:
             if not os.path.exists(self.path):
                 os.makedirs(self.path)
-            f = codecs.open(self.path + 'config.json','w','utf8')
+            f = codecs.open(self.path + 'config.json', 'w', 'utf8')
             f.write(dumps)
             f.close()
         except ValueError:
@@ -721,17 +721,17 @@ class Config(Object):
 
     def __get_profiles(self):
         if not self.__config.has_key(u'profiles'):
-            self.__config[u'profiles'] = [[u'default',u'localhost',u'6600',False,u'']]
+            self.__config[u'profiles'] = [[u'default', u'localhost', u'6600', False, u'']]
         return copy.deepcopy(self.__config[u'profiles'])
 
-    def __set_profiles(self,profiles):
+    def __set_profiles(self, profiles):
         if not type(profiles) == list:
             cause ='given:'+unicode(type(profiles))+' require:'+unicode(list)
             raise TypeError(cause)
         else:
             for profile in profiles:
-                if not [type(item) for item in profile] == [unicode,unicode,unicode,bool,unicode]:
-                    cause = 'given:'+unicode([type(item) for item in profile])+' require:'+unicode([unicode,unicode,unicode,bool,unicode])
+                if not [type(item) for item in profile] == [unicode, unicode, unicode, bool, unicode]:
+                    cause = 'given:'+unicode([type(item) for item in profile])+' require:'+unicode([unicode, unicode, unicode, bool, unicode])
                     raise TypeError(cause)
             if len(profiles) == 0:
                 raise IndexError(0)
@@ -739,11 +739,11 @@ class Config(Object):
         self.save()
         self.call(self.CONFIG_CHANGED)
 
-    profiles = property(__get_profiles,__set_profiles)
+    profiles = property(__get_profiles, __set_profiles)
 
     def __get_default_profile(self):
         if not self.__config.has_key(u'default_profile'):
-            for name,_,_,_,_ in self.__get_profiles():
+            for name, _, _, _, _ in self.__get_profiles():
                 if name == u'default':
                     self.__config[u'default_profile'] = name
                     break
@@ -757,63 +757,63 @@ class Config(Object):
 
     default_profile = property(__get_default_profile)
 
-    def __get_bool(key,default):
+    def __get_bool(key, default):
         def _get(self):
             if not key in self.__config:
                 self.__config[key] = True if default else False
             return self.__config[key]
-        def _set(self,value):
+        def _set(self, value):
             self.__config[key] = True if value else False
             self.save()
             self.call(self.CONFIG_CHANGED)
 
-        return (_get,_set)
+        return (_get, _set)
 
-    def __get_unicode(key,default):
+    def __get_unicode(key, default):
         def _get(self):
             if not key in self.__config:
                 self.__config[key] = unicode(default)
             return self.__config[key]
-        def _set(self,value):
+        def _set(self, value):
             self.__config[key] = value
             self.save()
             self.call(self.CONFIG_CHANGED)
 
-        return (_get,_set)
+        return (_get, _set)
 
-    def __get_tuple(key,default):
+    def __get_tuple(key, default):
         def _get(self):
             if not key in self.__config:
                 self.__config[key] = list(default)
             return tuple(self.__config[key])
-        def _set(self,value):
+        def _set(self, value):
             if len(value) == len(self.window_size):
                 self.__config[key] = list(value)
                 self.save()
                 self.call(self.CONFIG_CHANGED)
-        return (_get,_set)
+        return (_get, _set)
 
-    def __get(key,keytype,default):
+    def __get(key, keytype, default):
         def _get(self):
             if not key in self.__config:
                 self.__config[key] = keytype(default)
             return self.__config[key]
-        def _set(self,value):
+        def _set(self, value):
             self.__config[key] = value
             self.save()
             self.call(self.CONFIG_CHANGED)
-        return (_get,_set)
+        return (_get, _set)
 
-    playlist_focus =     property(*__get_bool(u'playlist_focus',True))
-    view =           property(*__get(u'view',unicode, u''))
-    info =           property(*__get_bool(u'info',True))
-    lyrics_download =    property(*__get_bool(u'lyrics_download',False))
-    lyrics_api_geci_me = property(*__get_bool(u'lyrics_api_geci_me',False))
-    artwork_download =   property(*__get_bool(u'artwork_download',True))
-    artwork_api_lastfm = property(*__get_bool(u'artwork_api_lastfm',True))
-    window_size =    property(*__get_tuple(u'window_size',(-1,-1)))
-    notify_growl =       property(*__get_bool(u'notify_growl',True))
-    notify_growl_host =  property(*__get_unicode(u'notify_growl_host',u'localhost'))
-    notify_growl_pass =  property(*__get_unicode(u'notify_growl_pass',u''))
-    notify_osd =     property(*__get_bool(u'notify_osd',True))
+    playlist_focus =     property(*__get_bool(u'playlist_focus', True))
+    view =           property(*__get(u'view', unicode,  u''))
+    info =           property(*__get_bool(u'info', True))
+    lyrics_download =    property(*__get_bool(u'lyrics_download', False))
+    lyrics_api_geci_me = property(*__get_bool(u'lyrics_api_geci_me', False))
+    artwork_download =   property(*__get_bool(u'artwork_download', True))
+    artwork_api_lastfm = property(*__get_bool(u'artwork_api_lastfm', True))
+    window_size =    property(*__get_tuple(u'window_size', (-1, -1)))
+    notify_growl =       property(*__get_bool(u'notify_growl', True))
+    notify_growl_host =  property(*__get_unicode(u'notify_growl_host', u'localhost'))
+    notify_growl_pass =  property(*__get_unicode(u'notify_growl_pass', u''))
+    notify_osd =     property(*__get_bool(u'notify_osd', True))
     

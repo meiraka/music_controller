@@ -21,7 +21,7 @@ class __Common(object):
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation; either version 3
-of the License, or (at your option) any later version.
+of the License,  or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -29,8 +29,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+along with this program; if not,  write to the Free Software
+Foundation,  Inc.,  59 Temple Place - Suite 330,  Boston,  MA  02111-1307,  USA.
 """
         )
 
@@ -99,18 +99,18 @@ class __UI(object):
         argv_override = True
         for arg in sys.argv:
             if arg.count('='):
-                key,value = arg.split('=',1)
+                key, value = arg.split('=', 1)
                 if key in self.__cached:
                     bool_value = True if value == 'True' else False
                     if not self.__cached[key] == bool_value:
                         self.__cached[key] = bool_value
-                        print 'override: %s to %s' % (key,str(bool_value))
+                        print 'override: %s to %s' % (key, str(bool_value))
                 else:
                     print 'no keys: ' + key
                     argv_override = False
         if not argv_override:
-            for k,v in self.__cached.iteritems():
-                print '%s=%s' % (k,str(v))
+            for k, v in self.__cached.iteritems():
+                print '%s=%s' % (k, str(v))
                     
                     
     def __get_font(self):
@@ -126,7 +126,7 @@ class __UI(object):
         if self.__cached.has_key(u'text_height'):
             return self.__cached[u'text_height']
         else:
-            image = wx.EmptyBitmap(100,100)
+            image = wx.EmptyBitmap(100, 100)
             image_writer = wx.MemoryDC(image)
             image_writer.SetFont(self.font)
             text_height = image_writer.GetTextExtent('A-glFf')[1]
@@ -138,19 +138,19 @@ class __UI(object):
             return self.__cached[u'colors']
         else:
             base = wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWFRAME)
-            indexes = [wx.SYS_COLOUR_WINDOW,wx.SYS_COLOUR_HIGHLIGHT,wx.SYS_COLOUR_WINDOWTEXT,wx.SYS_COLOUR_HIGHLIGHTTEXT,wx.SYS_COLOUR_BTNFACE]
+            indexes = [wx.SYS_COLOUR_WINDOW, wx.SYS_COLOUR_HIGHLIGHT, wx.SYS_COLOUR_WINDOWTEXT, wx.SYS_COLOUR_HIGHLIGHTTEXT, wx.SYS_COLOUR_BTNFACE]
             if not base == wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX):
-                self.__cached[u'colors'] = (base, wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX))
+                self.__cached[u'colors'] = (base,  wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX))
             for index in indexes:
                 if not base == wx.SystemSettings.GetColour(index):
-                    self.__cached[u'colors'] = (base,wx.SystemSettings.GetColour(index))
+                    self.__cached[u'colors'] = (base, wx.SystemSettings.GetColour(index))
                     break
             else:
-                self.__cached[u'colors'] = (base,base)
+                self.__cached[u'colors'] = (base, base)
             return self.__cached[u'colors']
 
     def __set(key):
-        def set(self,value):
+        def set(self, value):
             self.__cached[key] = value
         return set
 
@@ -171,7 +171,7 @@ class __UI(object):
     toolbar_icon_horizontal =  property(__get('toolbar_icon_horizontal'))
     about_licence =        property(__get('about_licence'))
     colors =           property(__get_colors)
-    font =             property(__get_font, __set(u'font'))
+    font =             property(__get_font,  __set(u'font'))
     text_height =          property(__get_text_height)
 
 userinterface = __UI()

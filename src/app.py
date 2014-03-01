@@ -25,14 +25,14 @@ class App(wx.App):
 
     loads config directory and installs language.
     """
-    def __init__(self,**params):
+    def __init__(self, **params):
         """init this app"""
         self.config_dir = environment.config_dir
         self.client = client.Client(self.config_dir)
         self.client.connection.bind(
-            self.client.connection.CLOSE_UNEXPECT,self.reconnect)
+            self.client.connection.CLOSE_UNEXPECT, self.reconnect)
         self.client.connection.bind(
-            self.client.connection.CONNECT,self.connected)
+            self.client.connection.CONNECT, self.connected)
         if params.has_key('debug'):self.__debug = True
         else:self.__debug = False
         self.__connected = None
@@ -59,16 +59,16 @@ class App(wx.App):
         self.growlnotify = notify.GrowlNotify(self.client)
 
 
-    def translate(self,text):
+    def translate(self, text):
         """ translate text to current system language.
 
-        bug? ugettext returns unicode by docs, but returns str in Ubuntu12.04.
+        bug? ugettext returns unicode by docs,  but returns str in Ubuntu12.04.
         """
         return self.__lang.ugettext(text).decode('utf8')
 
     def connect_default(self):
         """ Connects to default host and runs mpd monitor daemon in background."""
-        thread.start_new_thread(self.__connect_default,())
+        thread.start_new_thread(self.__connect_default, ())
 
     def __connect_default(self):
         """ Connects to default host and runs mpd monitor daemon."""
@@ -91,7 +91,7 @@ class App(wx.App):
 
     def reconnect(self):
         """ Reconnects to previously connected host in background."""
-        thread.start_new_thread(self.__reconnect,())
+        thread.start_new_thread(self.__reconnect, ())
 
     def __reconnect(self):
         """ Reconnects to previously connected host."""
@@ -117,30 +117,30 @@ class App(wx.App):
         """
         self.SetAppName(NAME)
         if self.__debug: print 'init frame.'
-        self.frame = frame.Frame(None,self.client,self.__debug)
+        self.frame = frame.Frame(None, self.client, self.__debug)
         if environment.userinterface.style == 'mac':
-            self.frame.Bind(wx.EVT_CLOSE,self.OnCloseToHide)
-            self.Bind(wx.EVT_ACTIVATE_APP, self.OnActivate)
+            self.frame.Bind(wx.EVT_CLOSE, self.OnCloseToHide)
+            self.Bind(wx.EVT_ACTIVATE_APP,  self.OnActivate)
         else:
-            self.frame.Bind(wx.EVT_CLOSE, self.OnClose)
+            self.frame.Bind(wx.EVT_CLOSE,  self.OnClose)
         if self.__debug: print 'show frame.'
         self.frame.Show()
         if self.__debug: print 'frame viewing now.'
         self.connect_default()
         return True
 
-    def OnClose(self, event):
+    def OnClose(self,  event):
         """ catch window close event.
         """
         sys.exit(0)
 
-    def OnCloseToHide(self,event):
+    def OnCloseToHide(self, event):
         """ catch window close event.
         close event is raises in Mac environment only. Hide window.
         """
         self.frame.Hide()
 
-    def OnActivate(self,event):
+    def OnActivate(self, event):
         """ catch application activate event.
         application activate event is raises in Mac environment only.
         Show window.

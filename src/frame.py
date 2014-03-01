@@ -15,7 +15,7 @@ import lyrics
 import menubar
 import preferences
 
-class Frame(wx.Frame,Object):
+class Frame(wx.Frame, Object):
     TITLE = 'MusicController'
     VIEW = 'view'
     VIEW_LIST = u'List'
@@ -23,35 +23,35 @@ class Frame(wx.Frame,Object):
     VIEW_GRID = 'Grid'
     VIEW_LISTFILTER = 'ListFilter'
     VIEW_LYRIC = 'Lyric'
-    VIEW_STYLES = [VIEW_LIST, VIEW_LIST_GRID, VIEW_GRID, VIEW_LISTFILTER, VIEW_LYRIC]
-    def __init__(self,parent,client,debug=False):
+    VIEW_STYLES = [VIEW_LIST,  VIEW_LIST_GRID,  VIEW_GRID,  VIEW_LISTFILTER,  VIEW_LYRIC]
+    def __init__(self, parent, client, debug=False):
         """ generate main app window."""
         self.parent = parent
         self.client = client
         self.current_view = 'playlist'
-        wx.Frame.__init__(self,parent,-1)
+        wx.Frame.__init__(self, parent, -1)
         Object.__init__(self)
         self.SetTitle(self.TITLE)
-        icon = wx.ArtProvider.GetIcon('gtk-media-play-ltr',size=(128,128))
+        icon = wx.ArtProvider.GetIcon('gtk-media-play-ltr', size=(128, 128))
         if icon.IsOk():
             self.SetIcon(icon)
     
-        self.menubar = menubar.MenuBar(self,client,accele=False if environment.userinterface.style == 'mac' else True)
+        self.menubar = menubar.MenuBar(self, client, accele=False if environment.userinterface.style == 'mac' else True)
         # add mac Help -> search item. (not work)
         wx.GetApp().SetMacHelpMenuTitleName(_('Help'))
         self.SetMenuBar(self.menubar)
-        self.toolbar = toolbar.Toolbar(self,self.client)
+        self.toolbar = toolbar.Toolbar(self, self.client)
         if environment.userinterface.fill_window_background:
-            base = wx.Panel(self,-1)
+            base = wx.Panel(self, -1)
         else:
             base = self
-        self.playlist = playlist.HeaderPlaylist(base,self.client,debug)
-        self.listfilter = listfilter.View(base,self.client,debug)
-        self.albumlist = playlist.AlbumList(base,self.client,False)
-        self.albumview = playlist.AlbumList(base,self.client,True)
-        self.info = songinfo.Info(base,self.client,debug)
-        self.connection = preferences.Connection(base,self.client)
-        self.lyric = lyrics.LyricView(base,self.client)
+        self.playlist = playlist.HeaderPlaylist(base, self.client, debug)
+        self.listfilter = listfilter.View(base, self.client, debug)
+        self.albumlist = playlist.AlbumList(base, self.client, False)
+        self.albumview = playlist.AlbumList(base, self.client, True)
+        self.info = songinfo.Info(base, self.client, debug)
+        self.connection = preferences.Connection(base, self.client)
+        self.lyric = lyrics.LyricView(base, self.client)
         self.views = [
             self.connection,
             self.playlist,
@@ -61,53 +61,53 @@ class Frame(wx.Frame,Object):
             self.listfilter]
         self.sizer = wx.BoxSizer()
         s = wx.BoxSizer(wx.VERTICAL)
-        s.Add(self.playlist,1,flag=wx.EXPAND)
-        s.Add(self.listfilter,1,flag=wx.EXPAND)
-        s.Add(self.connection,1,flag=wx.EXPAND)
-        s.Add(self.lyric,1,flag=wx.EXPAND)
-        s.Add(self.albumlist,0,flag=wx.EXPAND)
-        s.Add(self.albumview,1,flag=wx.EXPAND)
-        self.sizer.Add(s,1,flag=wx.EXPAND)
-        self.sizer.Add(self.info,0,wx.EXPAND)
-        #self.sizer.Add(self.albumlist,0,flag=wx.EXPAND)
+        s.Add(self.playlist, 1, flag=wx.EXPAND)
+        s.Add(self.listfilter, 1, flag=wx.EXPAND)
+        s.Add(self.connection, 1, flag=wx.EXPAND)
+        s.Add(self.lyric, 1, flag=wx.EXPAND)
+        s.Add(self.albumlist, 0, flag=wx.EXPAND)
+        s.Add(self.albumview, 1, flag=wx.EXPAND)
+        self.sizer.Add(s, 1, flag=wx.EXPAND)
+        self.sizer.Add(self.info, 0, wx.EXPAND)
+        #self.sizer.Add(self.albumlist, 0, flag=wx.EXPAND)
         base.SetSizer(self.sizer)
         if environment.userinterface.fill_window_background:
             sizer = wx.BoxSizer()
-            sizer.Add(base,1,wx.EXPAND)
+            sizer.Add(base, 1, wx.EXPAND)
             self.SetSizer(sizer)
         self.hide_children()
         self.Layout()
         window_size = self.client.config.window_size
-        if window_size == (-1,-1):
+        if window_size == (-1, -1):
             h = environment.userinterface.text_height
-            self.SetSize((h*64,h*48))
+            self.SetSize((h*64, h*48))
         else:
-            w,h = window_size
+            w, h = window_size
             if w < 100:
                 w = 100
             if h < 100:
                 h = 100
-            self.SetSize((w,h))
+            self.SetSize((w, h))
         self.preferences = None
         self.change_title()
         if self.client.connection.current:
             self.show_not_connection()
-        self.Bind(wx.EVT_SIZE,self.OnSize)
+        self.Bind(wx.EVT_SIZE, self.OnSize)
         self.Show()
         if debug: print 'sized.'
-        self.client.connection.bind(self.client.connection.UPDATE_PLAYING,self.change_title)
+        self.client.connection.bind(self.client.connection.UPDATE_PLAYING, self.change_title)
         if debug: print 'binded.'
 
     def can_get_info(self):
         for view in self.views:
-            if hasattr(view,'selected_get_info') and hasattr(view,'IsShown') and view.IsShown():
+            if hasattr(view, 'selected_get_info') and hasattr(view, 'IsShown') and view.IsShown():
                 return True
         else:
             return False
 
     def get_info(self):
         for view in self.views:
-            if hasattr(view,'selected_get_info') and hasattr(view,'IsShown') and view.IsShown():
+            if hasattr(view, 'selected_get_info') and hasattr(view, 'IsShown') and view.IsShown():
                 view.selected_get_info()
 
     def hide_children(self):
@@ -141,10 +141,10 @@ class Frame(wx.Frame,Object):
         else:
             self.info.Hide()
 
-    def show_view(self, view):
-        getattr(self, 'show_' + view.lower().replace(' ', '_'))()
+    def show_view(self,  view):
+        getattr(self,  'show_' + view.lower().replace(' ',  '_'))()
 
-    def __show_views(self, *shows):
+    def __show_views(self,  *shows):
         self.change_title()
         views = [
             self.connection,
@@ -175,7 +175,7 @@ class Frame(wx.Frame,Object):
 
     def show_list_grid(self):
         self.current_view = self.VIEW_LIST_GRID
-        self.__show_views(self.albumlist, self.playlist)
+        self.__show_views(self.albumlist,  self.playlist)
 
     def show_grid(self):
         self.current_view = self.VIEW_GRID
@@ -204,7 +204,7 @@ class Frame(wx.Frame,Object):
         if view:
             view.SetFocus()
 
-    def search_first(self,text):
+    def search_first(self, text):
         view = self.__get_search_view()
         if view:
             view.search_first(text)
@@ -231,12 +231,12 @@ class Frame(wx.Frame,Object):
         if not self.preferences:
             def hide(event):
                 event.GetEventObject().Hide()
-            self.preferences = preferences.App(None,self.client)
-            self.preferences.Bind(wx.EVT_CLOSE,hide)
+            self.preferences = preferences.App(None, self.client)
+            self.preferences.Bind(wx.EVT_CLOSE, hide)
             
         self.preferences.Show()
 
-    def OnSize(self,event):
+    def OnSize(self, event):
         self.client.config.window_size =  self.GetSize()
         event.Skip()
 

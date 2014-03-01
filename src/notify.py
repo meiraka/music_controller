@@ -19,18 +19,18 @@ class NotifyBase(object):
         send -- toggle on/off notify interface.
         active -- False if this object can not use in this environment(ex. notify module does not installed).
     """
-    def __init__(self,client,active):
+    def __init__(self, client, active):
         self.__cached = dict(
             active=active
             )
         if active:
-            client.playlist.bind(client.playlist.UPDATE_CURRENT,self.update_song)
-            client.connection.bind(client.connection.SERVER_ERROR,self.update_error)
+            client.playlist.bind(client.playlist.UPDATE_CURRENT, self.update_song)
+            client.connection.bind(client.connection.SERVER_ERROR, self.update_error)
 
     def check_send(self):
         return False
 
-    def update_song(self,song):
+    def update_song(self, song):
         """ Update song notify.
 
         get current playing song and call song().
@@ -39,90 +39,90 @@ class NotifyBase(object):
             title = song.format('%title%')
             desc = song.format('%artist%\n%album% %date%')
             img = song.artwork
-            self.song(song,title,desc,img)
+            self.song(song, title, desc, img)
 
-    def update_error(self,status):
+    def update_error(self, status):
         if self.active and self.check_send():
-            p,host,port,up,pa = self.client.connection.current
+            p, host, port, up, pa = self.client.connection.current
             title = _('MPD Server Error (%s)') % (host+':'+port)
             desc = _(status)
             if desc == status:
                 desc = string.capwords(status)
-            self.error(title,desc,u'')
+            self.error(title, desc, u'')
 
     def test(self):
         song = self.client.playlist.current
         self.update_song(song)
 
-    def song(self,song,title,description,image_path):
+    def song(self, song, title, description, image_path):
         pass
 
-    def error(self,title,description,image_path):
+    def error(self, title, description, image_path):
         pass
 
     def __readwrite(key):
         def get(self):
             return self.__cached[key]
-        def set(self,value):
+        def set(self, value):
             self.__cached[key] = value
-        return (get,set)
+        return (get, set)
 
     active = property(__readwrite('active')[0])
 
 
 class NotifyOSD(NotifyBase):
-    def __init__(self,client):
+    def __init__(self, client):
         self.client = client
         try:
             import pynotify
             pynotify.init(APP_NAME)
-            self.notify = pynotify.Notification(APP_NAME,u'Connecting Server',None)
-            NotifyBase.__init__(self,client,True)
+            self.notify = pynotify.Notification(APP_NAME, u'Connecting Server', None)
+            NotifyBase.__init__(self, client, True)
         except ImportError:
-            NotifyBase.__init__(self,client,False)
+            NotifyBase.__init__(self, client, False)
 
     def check_send(self):
         return self.client.config.notify_osd
 
-    def song(self,song,title,description,image_path):
-        self.notify.update(title,description,image_path)
+    def song(self, song, title, description, image_path):
+        self.notify.update(title, description, image_path)
         try:
             self.notify.show()
-        except Exception,err:
+        except Exception, err:
             pass
 
-    def error(self,title,description,image_path):
+    def error(self, title, description, image_path):
         try:
             self.notify.close()
         except:
             pass
-        self.notify.update(title,description)
+        self.notify.update(title, description)
         try:
             self.notify.show()
-        except Exception,err:
+        except Exception, err:
             pass
 
 
 class GrowlNotify(NotifyBase):
-    def __init__(self,client):
+    def __init__(self, client):
         self.client = client
         self.artwork = artwork.Loader(self.client)
-        self.artwork.size = (128,128)
+        self.artwork.size = (128, 128)
         self.artwork.background = False
         self.__inited = False
         try:
             import gntp
-            NotifyBase.__init__(self,client,True)
+            NotifyBase.__init__(self, client, True)
             self.reconnect()
         except ImportError:
-            NotifyBase.__init__(self,client,False)
+            NotifyBase.__init__(self, client, False)
     
 
-    def reconnect(self,*args,**kwargs):
+    def reconnect(self, *args, **kwargs):
         import gntp.notifier
         kwargs = dict(
             applicationName = APP_NAME,
-            notifications = ["Song","Connection","Error"],
+            notifications = ["Song", "Connection", "Error"],
             defaultNotifications = ["Song"],
             )
         if self.client.config.notify_growl_host and not self.client.config.notify_growl_host == 'localhost':
@@ -140,28 +140,28 @@ class GrowlNotify(NotifyBase):
     def check_send(self):
         return self.client.config.notify_growl
 
-    def song(self,song,title,description,image_path):
+    def song(self, song, title, description, image_path):
         try:
             self.growl.notify(
                 "Song",
                 sticky=False,
-                **self.__encode(title,description,image_path)
+                **self.__encode(title, description, image_path)
                 )
-        except Exception,err:
+        except Exception, err:
             print err
             pass
 
-    def error(self,title,description,image_path):
+    def error(self, title, description, image_path):
         try:
             self.growl.notify(
                 "Error",
                 sticky=False,
-                **self.__encode(title,description,image_path)
+                **self.__encode(title, description, image_path)
                 )
-        except Exception,err:
+        except Exception, err:
             pass
 
-    def __encode(self,title,description,image_path):
+    def __encode(self, title, description, image_path):
         returns = dict(
             title = title.encode('utf8'),
             description = description.encode('utf8')
@@ -170,8 +170,8 @@ class GrowlNotify(NotifyBase):
             bmp = self.artwork[image_path]
             if bmp:
                 a = tempfile.NamedTemporaryFile()
-                bmp.SaveFile(a.name,wx.BITMAP_TYPE_BMP)
-                text = open(a.name,'rb').read()
+                bmp.SaveFile(a.name, wx.BITMAP_TYPE_BMP)
+                text = open(a.name, 'rb').read()
                 a.close()
                 returns['icon'] = text
         return returns
