@@ -49,6 +49,9 @@ class ViewBase(wx.VListBox):
 		self.settings = [[format for format,style in i] for i in default_settings]
 		self.styles = [[style for format,style in i] for i in default_settings]
 		self.sorter = default_sorter
+		self.items = []
+		self.songs = []
+		self.selected = []
 		self.__search_text = ''
 		self.__search_index = 0
 		self.__master = []
@@ -59,27 +62,42 @@ class ViewBase(wx.VListBox):
 		self.__criteria_song_height = criteria_song_height
 		self.__criteria_album_height = criteria_album_height
 		self.Bind(wx.EVT_LEFT_UP,self.OnClick)
-		self.library.bind(self.library.UPDATE,self.clear)
+		self.playlist.bind(self.playlist.UPDATE,self.update)
 		self.Bind(wx.EVT_RIGHT_UP,self.OnRightClick)
 		self.Bind(wx.EVT_KEY_UP,self.OnKeys)
+		self.__reset()
+
+	def update(self):
+		"""Sync playlist -> ViewBase."""
+		master = list(self.playlist)
+		if not self.__master == master:
+			self.items = []
+			self.songs = []
+			self.selected = []
+			self.__master = master
+			wx.CallAfter(self.__reset)
 
 	def clear(self):
+		"""Force sync library -> ViewBase."""
 		self.items = []
 		self.songs = []
 		self.selected = []
 		self.__master = list(self.library)
 		wx.CallAfter(self.__reset)
+		self.replace_master()
 
 	def reset(self):
+		"""Reset ViewBase."""
 		wx.CallAfter(self.__reset)
 
 	def __reset(self):
+		"""Reset ViewBase(Thread Unsafe)."""
 		self.state = (0,0)
 		x,y = self.state
 		self.items = [[(formats[x],y) for formats in self.settings]]
 		self.selected = []
 		if not self.__master:
-			self.__master = list(self.library)
+			self.__master = list(self.playlist)
 		self.songs = [dict([(item,self.__master) for item,y in self.items[y]])]
 		self.SetItemCount(len(self.items[y]))
 		self.RefreshAll()

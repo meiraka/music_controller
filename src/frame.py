@@ -9,7 +9,7 @@ from common import Object
 from common import environment
 import toolbar
 import playlist
-import library
+import listfilter
 import songinfo
 import lyrics
 import menubar
@@ -18,9 +18,12 @@ import preferences
 class Frame(wx.Frame,Object):
 	TITLE = 'MusicController'
 	VIEW = 'view'
-	VIEW_PLAYLIST = 'playlist'
-	VIEW_LIBRARY = 'library'
-	VIEW_LYRIC = 'lyric'
+	VIEW_LIST = u'List'
+	VIEW_LIST_GRID = 'List Grid'
+	VIEW_GRID = 'Grid'
+	VIEW_LISTFILTER = 'ListFilter'
+	VIEW_LYRIC = 'Lyric'
+	VIEW_STYLES = [VIEW_LIST, VIEW_LIST_GRID, VIEW_GRID, VIEW_LISTFILTER, VIEW_LYRIC]
 	def __init__(self,parent,client,debug=False):
 		""" generate main app window."""
 		self.parent = parent
@@ -43,16 +46,23 @@ class Frame(wx.Frame,Object):
 		else:
 			base = self
 		self.playlist = playlist.HeaderPlaylist(base,self.client,debug)
-		self.library = library.View(base,self.client,debug)
+		self.listfilter = listfilter.View(base,self.client,debug)
 		self.albumlist = playlist.AlbumList(base,self.client,False)
 		self.albumview = playlist.AlbumList(base,self.client,True)
 		self.info = songinfo.Info(base,self.client,debug)
 		self.connection = preferences.Connection(base,self.client)
 		self.lyric = lyrics.LyricView(base,self.client)
+		self.views = [
+			self.connection,
+			self.playlist,
+			self.albumlist,
+			self.albumview,
+			self.lyric,
+			self.listfilter]
 		self.sizer = wx.BoxSizer()
 		s = wx.BoxSizer(wx.VERTICAL)
 		s.Add(self.playlist,1,flag=wx.EXPAND)
-		s.Add(self.library,1,flag=wx.EXPAND)
+		s.Add(self.listfilter,1,flag=wx.EXPAND)
 		s.Add(self.connection,1,flag=wx.EXPAND)
 		s.Add(self.lyric,1,flag=wx.EXPAND)
 		s.Add(self.albumlist,0,flag=wx.EXPAND)
@@ -89,121 +99,98 @@ class Frame(wx.Frame,Object):
 		if debug: print 'binded.'
 
 	def can_get_info(self):
-		view = getattr(self,self.current_view)
-		return hasattr(view,'IsShown') and view.IsShown() and hasattr(view,'selected_get_info')
+		for view in self.views:
+			if hasattr(view,'selected_get_info') and hasattr(view,'IsShown') and view.IsShown():
+				return True
+		else:
+			return False
 
 	def get_info(self):
-		getattr(getattr(self,self.current_view),'selected_get_info')()
+		for view in self.views:
+			if hasattr(view,'selected_get_info') and hasattr(view,'IsShown') and view.IsShown():
+				view.selected_get_info()
 
 	def hide_children(self):
 		self.playlist.Hide()
 		self.albumlist.Hide()
 		self.albumview.Hide()
-		self.library.Hide()
+		self.listfilter.Hide()
 		self.connection.Hide()
 		self.info.Hide()
 		self.lyric.Hide()
 
 	def show_connection(self):
 		self.SetTitle(self.TITLE +' - '+ 'connection')
-		self.playlist.Hide()
-		self.albumlist.Hide()
-		self.albumview.Hide()
-		self.library.Hide()
-		self.lyric.Hide()
-		self.info.Hide()
-		self.Layout()
-		self.connection.Show()
-		self.Layout()
-		self.call(self.VIEW)
+		self.__show_views(self.connection)
 
 	def show_not_connection(self):
 		if not self.current_view:
 			if len(self.client.playlist):
 				self.show_playlist()
 			else:
-				self.show_library()
+				self.show_songlistfilter()
 		else:
-			if self.current_view == self.VIEW_PLAYLIST:
-				self.show_playlist()
-			elif self.current_view == self.VIEW_LIBRARY:
-				self.show_library()
-			else:
-				self.show_lyric()
+			try:
+				self.show_view(self.current_view)
+			except AttributeError:
+				self.show_list()
 
-	def show_library(self):
-		""" Show library and song info."""
-		self.current_view = self.VIEW_LIBRARY
-		self.change_title()
-		self.connection.Hide()
-		self.playlist.Hide()
-		self.albumlist.Hide()
-		self.albumview.Hide()
-		self.lyric.Hide()
-		self.Layout()
-		self.library.Show()
-		self.library.SetFocus()
+	def __update_infoview(self):
 		if self.client.config.info:
 			self.info.Show()
 		else:
 			self.info.Hide()
+
+	def show_view(self, view):
+		getattr(self, 'show_' + view.lower().replace(' ', '_'))()
+
+	def __show_views(self, *shows):
+		self.change_title()
+		views = [
+			self.connection,
+			self.playlist,
+			self.albumlist,
+			self.albumview,
+			self.lyric,
+			self.listfilter]
+		for view in views:
+			if not view in shows:
+				view.Hide()
+		self.Layout()
+		for view in shows:
+			view.Show()
+			view.SetFocus()
+		self.__update_infoview()
 		self.Layout()
 		self.call(self.VIEW)
+
+	def show_listfilter(self):
+		""" Show listfilter and song info."""
+		self.current_view = self.VIEW_LISTFILTER
+		self.__show_views(self.listfilter)
+
+        def show_list(self):
+		self.current_view = self.VIEW_LIST
+		self.__show_views(self.playlist)
+
+	def show_list_grid(self):
+		self.current_view = self.VIEW_LIST_GRID
+		self.__show_views(self.albumlist, self.playlist)
+
+	def show_grid(self):
+		self.current_view = self.VIEW_GRID
+		self.__show_views(self.albumview)
 	
-	def show_playlist(self):
-		""" Show playlist and song info."""
-		self.current_view = self.VIEW_PLAYLIST
-		self.change_title()
-		self.connection.Hide()
-		self.library.Hide()
-		self.lyric.Hide()
-		self.Layout()
-		if self.client.config.playlist_style & self.client.config.PLAYLIST_STYLE_SONGS:
-			self.playlist.Show()
-			self.playlist.SetFocus()
-                else:
-			self.playlist.Hide()
-		if self.client.config.playlist_style == (self.client.config.PLAYLIST_STYLE_ALBUMS|self.client.config.PLAYLIST_STYLE_SONGS):
-			self.albumview.Hide()
-			self.albumlist.Show()
-		elif self.client.config.playlist_style & self.client.config.PLAYLIST_STYLE_ALBUMS:
-			self.albumlist.Hide()
-			self.albumview.Show()
-			self.albumview.SetFocus()
-                else:
-			self.albumlist.Hide()
-			self.albumview.Hide()
-		if self.client.config.info:
-			self.info.Show()
-		else:
-			self.info.Hide()
-		self.Layout()
-		self.call(self.VIEW)
-
 	def show_lyric(self):
 		""" Show lyric and song info."""
 		self.current_view = self.VIEW_LYRIC
-		self.change_title()
-		self.connection.Hide()
-		self.library.Hide()
-		self.playlist.Hide()
-		self.albumlist.Hide()
-		self.albumview.Hide()
-		self.Layout()
-		self.lyric.Show()
-		self.lyric.SetFocus()
-		if self.client.config.info:
-			self.info.Show()
-		else:
-			self.info.Hide()
-		self.Layout()
-		self.call(self.VIEW)
+		self.__show_views(self.lyric)
 
 	def __get_search_view(self):
 		if self.playlist.IsShown():
 			return self.playlist
-		elif self.library.IsShown():
-			return self.library
+		elif self.listfilter.IsShown():
+			return self.listfilter
 		else:
 			return None
 

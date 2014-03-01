@@ -4,6 +4,7 @@ Main Application.
 """
 
 import os
+import sys
 import wx
 
 from common import client
@@ -118,15 +119,22 @@ class App(wx.App):
 		if self.__debug: print 'init frame.'
 		self.frame = frame.Frame(None,self.client,self.__debug)
 		if environment.userinterface.style == 'mac':
-			self.frame.Bind(wx.EVT_CLOSE,self.OnClose)
+			self.frame.Bind(wx.EVT_CLOSE,self.OnCloseToHide)
 			self.Bind(wx.EVT_ACTIVATE_APP, self.OnActivate)
+		else:
+			self.frame.Bind(wx.EVT_CLOSE, self.OnClose)
 		if self.__debug: print 'show frame.'
 		self.frame.Show()
 		if self.__debug: print 'frame viewing now.'
 		self.connect_default()
 		return True
 
-	def OnClose(self,event):
+	def OnClose(self, event):
+		""" catch window close event.
+		"""
+		sys.exit(0)
+
+	def OnCloseToHide(self,event):
 		""" catch window close event.
 		close event is raises in Mac environment only. Hide window.
 		"""
