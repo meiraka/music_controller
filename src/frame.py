@@ -28,7 +28,7 @@ class Frame(wx.Frame, Object):
         """ generate main app window."""
         self.parent = parent
         self.client = client
-        self.current_view = 'playlist'
+        self.current_view = self.VIEW_LIST
         wx.Frame.__init__(self, parent, -1)
         Object.__init__(self)
         self.SetTitle(self.TITLE)
@@ -122,6 +122,7 @@ class Frame(wx.Frame, Object):
     def show_connection(self):
         self.SetTitle(self.TITLE +' - '+ 'connection')
         self.__show_views(self.connection)
+        self.info.Hide()
 
     def show_not_connection(self):
         if not self.current_view:
@@ -159,7 +160,8 @@ class Frame(wx.Frame, Object):
         self.Layout()
         for view in shows:
             view.Show()
-            view.SetFocus()
+            if hasattr(view, 'SetFocus'):
+                view.SetFocus()
         self.__update_infoview()
         self.Layout()
         self.call(self.VIEW)
