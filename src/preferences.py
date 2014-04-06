@@ -355,11 +355,11 @@ class Connection(wx.BoxSizer):
         labels = [profile[0] for profile in profiles]
         self.box.Set(labels)
         if not self.host.GetValue():
-            self.selected = self.connection.current
-            if self.selected:
-                selected_index = labels.index(self.selected[0])
-                if selected_index > -1:
-                    self.selected_index = selected_index
+            current = self.connection.current
+            self.selected = current if current else profiles[0]
+            selected_index = labels.index(self.selected[0])
+            if selected_index > -1:
+                self.selected_index = selected_index
         if 0 < len(labels) <= self.selected_index:
             self.selected_index = len(labels) - 1
             self.selected = profiles[self.selected_index]
