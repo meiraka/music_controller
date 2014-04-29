@@ -329,6 +329,24 @@ class Playback(Object):
     Controlls playback interface.
 
     '''
+    class Device(object):
+        def __init__(self, connection, kwargs):
+            self.connection = connection
+            self.__id = kwargs[u'outputid']
+            self.name = kwargs[u'outputname']
+            self.__enable = True if kwargs[u'outputenabled'] == u'1' else False
+
+        def enable(self):
+            self.connection.execute('enableoutput', True, self.__id)
+            self.__enable = True
+
+        def disable(self):
+            self.connection.execute('disableoutput', True, self.__id)
+            self.__enable = False
+
+        def is_enable(self):
+            return self.__enable
+
 
     def __init__(self, connection, config):
         Object.__init__(self)
@@ -413,26 +431,13 @@ class Playback(Object):
         return set
 
     def __get_devices():
-        class Device(object):
-            def __init__(self, connection, kwargs):
-                self.connection = connection
-                self.__id = kwargs[u'outputid']
-                self.name = kwargs[u'outputname']
-                self.__enable = True if kwargs[u'outputenabled'] == u'1' else False
-
-            def enable(self):
-                self.connection.execute('enableoutput', True, self.__id)
-                self.__enable = True
-
-            def disable(self):
-                self.connection.execute('disableoutput', True, self.__id)
-                self.__enable = False
-
-            def is_enable(self):
-                return self.__enable
-
         def get(self):
-            return [Device(self.connection, i) for i in self.connection.execute(u'outputs')]
+            def generate_device(connection, kwargs):
+                try:
+                    return Playback.Device(connection, kwargs)
+                except KeyError:
+                    return None
+            return [dev for dev in [generate_device(self.connection, i) for i in self.connection.execute(u'outputs')] if dev]
 
         return get
     time = property(__get(u'time', int, 0))
