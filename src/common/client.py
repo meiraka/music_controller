@@ -409,10 +409,8 @@ class Playback(Object):
     def is_single(self):
         return self.__check_status(u'single', u'1')
 
-    def seek(self, second):
-        song_id = self.song
-        if song_id is not None:
-            self.connection.execute('seek', True, song_id, second)
+    def seek(self, song, second):
+        self.connection.execute('seek', True, song['pos'], second)
 
     def __get(key, value_type, default):
         def get(self):
@@ -511,7 +509,10 @@ class Playlist(Object):
         """ update playlist songs cache.
         """
         data = self.__connection.execute('playlistinfo')
-        self.__data = [Playlist.Song(song, self.__connection, self.__artwork, self.__lyrics) for song in data]
+        if data:
+            self.__data = [Playlist.Song(song, self.__connection, self.__artwork, self.__lyrics) for song in data]
+        else:
+            self.__data = []
         if self.__config.playlist_focus:
             self.focus_playing()
         self.call(self.UPDATE)
