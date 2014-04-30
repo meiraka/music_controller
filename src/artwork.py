@@ -117,7 +117,7 @@ class Loader(threading.Thread, Object):
         self.__callbacks = []
         self.__size = (120, 120)
         self.background = True
-        self.sleep = 0
+        self.sleep_time = 0
         self.mirror = Loader.Mirror(self, mirror)
         self.artwork = client.artwork
         self.artwork.bind(self.artwork.UPDATE, self.__load_image)
@@ -129,7 +129,7 @@ class Loader(threading.Thread, Object):
             try:
                 path =  self.__imaging.get()
                 self.__load_image('', path)
-                time.sleep(self.sleep)
+                time.sleep(self.sleep_time)
             except Queue.Empty:
                 pass
             except:
