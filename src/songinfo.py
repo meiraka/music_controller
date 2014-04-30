@@ -15,7 +15,7 @@ class Info(wx.BoxSizer):
         wx.BoxSizer.__init__(self)
         self.parent = parent
         self.client = client
-        self.__currentsong = 0
+        self.__currentsong = None
         self.__lock = False
         self.__image = None
         h = environment.userinterface.text_height
@@ -26,6 +26,7 @@ class Info(wx.BoxSizer):
             , artist = wx.StaticText(parent, -1)
             )
         self.slider = wx.Slider(parent, -1, 50, 0, 100, size=(h*12, -1))
+        self.slider.Bind(wx.EVT_SCROLL_THUMBRELEASE, self.OnSlider)
         self.slider.Bind(wx.EVT_SCROLL_THUMBTRACK, self.OnSlider)
         self.double_text = dict(
             album  = wx.StaticText(parent, -1)
@@ -75,8 +76,8 @@ class Info(wx.BoxSizer):
             return
         if song is None and len(self.client.playlist)> int(status[u'song']):
             song = self.client.playlist[int(status[u'song'])]
-            if not self.__currentsong == status[u'song']:
-                self.__currentsong = status[u'song']
+            if not self.__currentsong == song:
+                self.__currentsong = song
         if song and self.__currentsong is not None:
             for key, label in self.single_text.iteritems():
                 label.SetLabel(song.format(u'%'+key+u'%'))
@@ -106,5 +107,6 @@ class Info(wx.BoxSizer):
             self.Layout()
 
     def OnSlider(self, event):
-        pos = self.slider.GetValue()
-        self.client.playback.seek(pos)
+        if self.__currentsong:
+            pos = self.slider.GetValue()
+            self.client.playback.seek(self.__currentsong, pos)

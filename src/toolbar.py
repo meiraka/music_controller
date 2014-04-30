@@ -126,12 +126,10 @@ class Toolbar(object):
         wx.CallAfter(__update)
 
     def update_connection(self):
-        updates = [u'View', u'Playlist', u'Library', u'Lyric', u'Previous', u'Play', u'Stop', u'Next', u'Info']
         enable = self.connection.connected
         def __update():
             for label, icon, id, button_type in self.__buttons:
-                if updates.count(label):
-                    self.__tool.EnableTool(id, enable)
+                self.__tool.EnableTool(id, enable)
         wx.CallAfter(__update)
 
     def update_selector(self):

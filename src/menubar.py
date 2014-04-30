@@ -236,31 +236,18 @@ class MenuBar(wx.MenuBar):
                 menu.Enable(id, widget and hasattr(widget, 'HasMultipleSelection') and widget.HasMultipleSelection() or type(widget) is wx.TextCtrl and hasattr(widget, 'SetSelection'))
 
     def update_by_connection(self, event=None):
-        updates = [
-            u'Rescan Library',
-            u'Get Info',
-            u'Play',
-            u'Stop',
-            u'Previous',
-            u'Next',
-            u'Shuffle',
-            u'Repeat',
-            u'Single',
-            u'Playlist',
-            u'Library',
-            u'Lyric',
-            u'Albumlist',
-            u'Info',
-            u'Focus Current Song',
-            u'Server Stats'
+        no_updates = [
+            u'Quit',
+            u'Preferences',
+            u'About',
+            u'MusicController Website'
             ]
         def __update():
             for index, (head, items) in enumerate(self.menu_list):
                 menu = self.GetMenu(index)
                 for id, label, menu_type in items:
-                    for update_label in updates:
-                        if label == update_label:
-                            menu.Enable(id, self.client.connection.connected)
+                    if not label in no_updates:
+                       menu.Enable(id, self.client.connection.connected)
         wx.CallAfter(__update)
     
     def update_by_config(self):
