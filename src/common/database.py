@@ -9,11 +9,13 @@ import socket
 import os
 import sqlite3
 import Queue
+import time
 import threading
 
 from base import Object
 import rest
 import environment
+
 
 class SqliteDict(Object):
     def __init__(self, path, init, search, search_parser, write, write_parser):
@@ -37,6 +39,14 @@ class SqliteDict(Object):
         connection = self.connection()
         cursor = connection.cursor()
         cursor.execute(self.__search, self.__search_parser(key))
+        ret = cursor.fetchone()
+        if ret == None or ret[0] == '':
+            raise KeyError(key)
+        return ret[0]
+
+        connection = self.connection()
+        cursor = connection.cursor()
+        cursor.execute(self.__search, self.__search_parser(key))
         return cursor.fetchone()
 
     def __setitem__(self, key, value):
@@ -45,12 +55,19 @@ class SqliteDict(Object):
         cursor.execute(self.__write, self.__write_parser(key) + (value,))
         connection.commit()
 
+    def __contains__(self, key):
+        connection = self.connection()
+        cursor = connection.cursor()
+        cursor.execute(self.__search, self.__search_parser(key))
+        ret = cursor.fetchone()
+        return False if ret == None or ret[0] == '' else True
 
-class CacheManager(Object, threading.Thread):
+
+class CacheDict(Object, threading.Thread):
     def __init__(self):
+        self.__first_sleep_time = 10
         self.__download_queue = Queue.LifoQueue()
         self.__cache = {}
-        
         threading.Thread.__init__(self)
         self.setDaemon(True)
         self.start()
@@ -61,29 +78,33 @@ class CacheManager(Object, threading.Thread):
     def __getitem__(self, key):
         return self.__cache[hash(frozenset(key.items()))]
 
+    def __contains__(self, key):
+        return hash(frozenset(key.items())) in self.__cache
+
     def run(self):
+        time.sleep(self.__first_sleep_time)
         while True:
             if not self.__download_queue.empty():
-                song = self.__download_queue.get()
+                func, song = self.__download_queue.get()
                 if not hash(frozenset(song.items())) in self.__cache:
                     try:
-                        self.download(song)
+                        func(song)
                     except Exception, err:
                         print type(err), err
 
-    def add_download_queue(self, obj):
-        self.__download_queue.put(obj)
+    def add_download_queue(self, downloader, obj):
+        self.__download_queue.put((downloader, obj))
 
-class Lyrics(CacheManager, SqliteDict):
-    """
-    Downloads and manages lyric.
+
+class Lyrics(Object):
+    """Downloads and manages lyric.
     """
     UPDATING = 'updating'
     UPDATE = 'update'
+
     def __init__(self, client):
         """init values and database."""
-        CacheManager.__init__(self)
-        
+        self.__cache = CacheDict()
         sql_init = '''
         CREATE TABLE IF NOT EXISTS lyrics
         (
@@ -105,41 +126,26 @@ class Lyrics(CacheManager, SqliteDict):
         (artist, title, album, lyric)
         VALUES(?,  ?,  ?,  ?)
         '''
+
         def sql_arg_parser(song):
             return (song.format('%artist%'),
                     song.format('%title%'),
                     song.format('%album%'))
 
-
-        SqliteDict.__init__(self,
-                            environment.config_dir+u'/lyrics',
-                            sql_init,
-                            sql_search,
-                            sql_arg_parser,
-                            sql_write,
-                            sql_arg_parser)
+        self.__data = SqliteDict(environment.config_dir + u'/lyrics',
+                                 sql_init,
+                                 sql_search,
+                                 sql_arg_parser,
+                                 sql_write,
+                                 sql_arg_parser)
         self.client = client
         self.__downloading = []
         self.download_auto = False
         self.download_background = False
-        self.downloaders = dict(
-            geci_me = True
-            )
-
-        self.download_class = dict(
-            geci_me = rest.GeciMe
-            )
+        self.downloaders = {'geci_me': True}
+        self.download_class = {'geci_me': rest.GeciMe}
         Object.__init__(self)
 
-    def clear_empty(self):
-        """Clears no lyrics data raw(fail to download or no lyrics found raw).
-        """
-        sql_clear = 'delete from lyrics where lyric="None";'
-        connection = self.connection()
-        connection.execute(sql_clear)
-        connection.commit()
-        
-       
     def __getitem__(self, song):
         """Returns lyric.
 
@@ -154,20 +160,19 @@ class Lyrics(CacheManager, SqliteDict):
 
         check self.downloading param to downloading lyric list.
         """
-        try:
-            return CacheManager.__getitem__(self, song)
-        except KeyError:
-            pass
-        lyric = SqliteDict.__getitem__(self, song)
-        if lyric is None:
+        if song in self.__cache:
+            return self.__cache[song]
+        if song in self.__data:
+            self.__cache[song] = self.__data[song]
+            return self.__cache[song]
+        else:
+            self.__cache[song] = u''
             if self.download_auto:
                 if self.download_background:
-                    self.add_download_queue(song)
+                    self.__cache.add_download_queue(self.download, song)
                 else:
                     return self.download(song)
-            return u''
-        else:
-            return lyric[0]
+            return self.__cache[song]
 
     def __setitem__(self, song, lyric):
         """Saves lyric.
@@ -177,16 +182,17 @@ class Lyrics(CacheManager, SqliteDict):
             lyric - string lyric.
         """
         lyric = unicode(lyric)
-        CacheManager.__setitem__(self, song, lyric)
-        SqliteDict.__setitem__(self, song, lyric)
-        self.call(self.UPDATE, song, lyric)
-        
+        self.__cache[song] = lyric
+        if lyric:
+            self.__data[song] = lyric
+            self.call(self.UPDATE, song, lyric)
+
     def download(self, song):
         # load client config and enable/disable api
         if self.client.config.lyrics_download:
             downloaders = {}
             for label, isd in self.downloaders.iteritems():
-                attr = u'lyrics_api_'+label
+                attr = u'lyrics_api_' + label
                 downloaders[label] = getattr(self.client.config, attr)
             self.downloaders = downloaders
         else:
@@ -224,7 +230,6 @@ class Lyrics(CacheManager, SqliteDict):
             func, formatter, urlinfo_list = returnslist[0]
             lyric = func(urlinfo_list[0])
             db[song] = lyric
-            
 
         to show readable candidate lyric:
             returnslist = db.list(keywords)
@@ -246,22 +251,28 @@ class Lyrics(CacheManager, SqliteDict):
                 pass
         return lists
 
-    downloading = property(lambda self:self.__downloading)
+    downloading = property(lambda self: self.__downloading)
 
 
-class Artwork(CacheManager, SqliteDict):
+class Artwork(Object):
     """Downloads and manages Artwork.
     """
     UPDATING = 'updating'
     UPDATE = 'update'
+
     def __init__(self, client):
         """init values and database."""
-        CacheManager.__init__(self)
+        self.client = client
+        self.__download_path = environment.config_dir + '/artwork'
+        self.__downloading = []
+        self.download_auto = False
+        self.download_background = False
+        self.downloaders = {'lastfm': True}
+        self.download_class = {'lastfm': rest.ArtworkLastfm}
 
         sql_init = '''
         CREATE TABLE IF NOT EXISTS artwork
-        (
-            artist TEXT,
+        (   artist TEXT,
             album TEXT,
             artwork TEXT,
             UNIQUE(artist, album)
@@ -277,29 +288,18 @@ class Artwork(CacheManager, SqliteDict):
         (artist, album, artwork)
         VALUES(?,  ?,  ?)
         '''
+
         def sql_arg_parser(song):
             return (song.format('%albumartist%'),
                     song.format('%album%'))
- 
-        SqliteDict.__init__(self,
-                            environment.config_dir+'/artworkdb',
-                            sql_init,
-                            sql_search,
-                            sql_arg_parser,
-                            sql_write,
-                            sql_arg_parser)
-        self.client = client
-        self.__download_path = environment.config_dir+'/artwork'
-        self.__downloading = []
-        self.download_auto = False
-        self.download_background = False
-        self.downloaders = dict(
-            lastfm = True
-            )
 
-        self.download_class = dict(
-            lastfm = rest.ArtworkLastfm
-            )
+        self.__data = SqliteDict(environment.config_dir + '/artworkdb',
+                                 sql_init,
+                                 sql_search,
+                                 sql_arg_parser,
+                                 sql_write,
+                                 sql_arg_parser)
+        self.__cache = CacheDict()
         Object.__init__(self)
 
     def __getitem__(self, song):
@@ -316,23 +316,18 @@ class Artwork(CacheManager, SqliteDict):
 
         check self.downloading param to downloading artwork list.
         """
-        try:
-            return CacheManager.__getitem__(self, song)
-        except KeyError:
-            pass
-        artwork = SqliteDict.__getitem__(self, song)
-        if artwork is None:
+        if song in self.__cache:
+            return self.__cache[song]
+        if song in self.__data:
+            self.__cache[song] = self.__download_path + '/' + self.__data[song]
+            return self.__cache[song]
+        else:
+            self.__cache[song] = u''
             if self.download_auto:
                 if self.download_background:
-                    self.add_download_queue(song)
+                    self.__cache.add_download_queue(self.download, song)
                 else:
                     return self.download(song)
-            return u''
-        elif artwork[0]:
-            return self.__download_path + '/' + artwork[0]
-        else:
-            # download is blocked
-            # or already downloaded but not found any data.
             return u''
 
     def __setitem__(self, song, artwork_binary):
@@ -340,7 +335,7 @@ class Artwork(CacheManager, SqliteDict):
 
         Arguments:
             song - song object.
-            artwork - string artwork binary,  not filepath.
+            artwork - string artwork binary, not filepath.
         """
         # save binary to local dir.
         if artwork_binary:
@@ -354,28 +349,20 @@ class Artwork(CacheManager, SqliteDict):
         else:
             fullpath = u''
             filename = u''
-        CacheManager.__setitem__(self, song, fullpath)
+        self.__cache[song] = fullpath
 
         # save filepath to database.
-        SqliteDict.__setitem__(self, filename)
         if fullpath:
+            self.__data[song] = filename
             self.call(self.UPDATE, song, fullpath)
 
-    def clear_empty(self):
-        sql_clear = 'delete from artwork where artwork="";'
-        connection = self.connection()
-        cursor = connection.cursor()
-        cursor.execute(sql_clear)
-        connection.commit()
-        
-        
     def download(self, song):
         if not song in self.__downloading:
             # load client config and enable/disable api
             if self.client.config.artwork_download:
                 downloaders = {}
                 for label, isd in self.downloaders.iteritems():
-                    attr = u'artwork_api_'+label
+                    attr = u'artwork_api_' + label
                     downloaders[label] = getattr(self.client.config, attr)
                 self.downloaders = downloaders
             else:
@@ -415,7 +402,6 @@ class Artwork(CacheManager, SqliteDict):
             func, formatter, urlinfo_list = returnslist[0]
             artwork_binary = func(urlinfo_list[0])
             db[song] = artwork_binary
-            
 
         to show readable candidate artworks:
             returnslist = db.list(keywords)
@@ -437,7 +423,4 @@ class Artwork(CacheManager, SqliteDict):
                 pass
         return lists
 
-    downloading = property(lambda self:self.__downloading)
-
-
-
+    downloading = property(lambda self: self.__downloading)
