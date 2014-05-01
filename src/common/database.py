@@ -5,15 +5,55 @@ Supports read,  write,  search and download lyrics.
 
 """
 
+import socket
 import os
 import sqlite3
-import thread
+import Queue
+import threading
 
 from base import Object
 import rest
 import environment
 
-class Lyrics(Object):
+class CacheManager(Object, threading.Thread):
+    def __init__(self, path):
+        self.__path = path
+        self.__download_queue = Queue.LifoQueue()
+        self.__cache = {}
+        
+        threading.Thread.__init__(self)
+        self.setDaemon(True)
+        self.start()
+
+    def __setitem__(self, key, value):
+        self.__cache[hash(frozenset(key.items()))] = value
+
+    def __getitem__(self, key):
+        return self.__cache[hash(frozenset(key.items()))]
+
+    def connection(self):
+        """ Returns database instance.
+
+        must generate instance at everytime cause
+        sqlite3 is not thread-safe.
+        """
+        db = sqlite3.connect(self.__path)
+        return db
+
+    def run(self):
+        while True:
+            if not self.__download_queue.empty():
+                song = self.__download_queue.get()
+                if not hash(frozenset(song.items())) in self.__cache:
+                    try:
+                        self.download(song)
+                    except Exception, err:
+                        print type(err), err
+
+    def add_download_queue(self, obj):
+        self.__download_queue.put(obj)
+
+class Lyrics(CacheManager):
     """
     Downloads and manages lyric.
     """
@@ -21,6 +61,7 @@ class Lyrics(Object):
     UPDATE = 'update'
     def __init__(self, client):
         """ init values and database."""
+        CacheManager.__init__(self, environment.config_dir+u'/lyrics')
         self.client = client
         self.__downloading = []
         self.download_auto = False
@@ -47,26 +88,18 @@ class Lyrics(Object):
         );
         '''
         Object.__init__(self)
-        connection = self.__get_connection()
+        connection = self.connection()
         connection.execute(sql_init)
 
     def clear_empty(self):
         """ Clears no lyrics data raw(fail to download or no lyrics found raw).
         """
         sql_clear = 'delete from lyrics where lyric="None";'
-        connection = self.__get_connection()
+        connection = self.connection()
         connection.execute(sql_clear)
         connection.commit()
         
-    def __get_connection(self):
-        """ Returns database instance.
-
-        must generate instance at everytime cause
-        sqlite3 is not thread-safe.
-        """
-        db = sqlite3.connect(environment.config_dir+'/lyrics')
-        return db
-        
+       
     def __getitem__(self, song):
         """ Returns lyric.
 
@@ -87,7 +120,11 @@ class Lyrics(Object):
             title=? and
             album=?
         '''
-        connection = self.__get_connection()
+        try:
+            return CacheManager.__getitem__(self, song)
+        except KeyError:
+            pass
+        connection = self.connection()
         cursor = connection.cursor()
         cursor.execute(sql_search,
                 (
@@ -100,7 +137,7 @@ class Lyrics(Object):
         if lyric is None:
             if self.download_auto:
                 if self.download_background:
-                    thread.start_new_thread(self.download, (song, ))
+                    self.add_download_queue(song)
                 else:
                     return self.download(song)
             return u''
@@ -114,13 +151,14 @@ class Lyrics(Object):
             song - song object.
             lyric - string lyric.
         """
+        CacheManager.__setitem__(self, song, lyric)
         lyric = unicode(lyric)
         sql_write = '''
         INSERT OR REPLACE INTO lyrics
         (artist, title, album, lyric)
         VALUES(?,  ?,  ?,  ?)
         '''
-        connection = self.__get_connection()
+        connection = self.connection()
         cursor = connection.cursor()
         cursor.execute(sql_write,
                 (
@@ -209,7 +247,7 @@ Artwork reader and writer.
 Supports read,  write,  search and download artwork.
 """
 
-class Artwork(Object):
+class Artwork(CacheManager):
     """
     Downloads and manages Artwork.
     """
@@ -217,6 +255,7 @@ class Artwork(Object):
     UPDATE = 'update'
     def __init__(self, client):
         """ init values and database."""
+        CacheManager.__init__(self, environment.config_dir+'/artworkdb')
         self.client = client
         self.__download_path = environment.config_dir+'/artwork'
         self.__downloading = []
@@ -243,19 +282,8 @@ class Artwork(Object):
         );
         '''
         Object.__init__(self)
-        connection = self.__get_connection()
+        connection = self.connection()
         connection.execute(sql_init)
-
-    def __get_connection(self):
-        """ Returns database instance.
-
-        must generate instance at everytime cause
-        sqlite3 is not thread-safe.
-        """
-        if not os.path.exists(environment.config_dir):
-            os.makedirs(environment.config_dir)
-        db = sqlite3.connect(environment.config_dir+'/artworkdb')
-        return db
 
     def __getitem__(self, song):
         """ Returns artwork path.
@@ -271,12 +299,16 @@ class Artwork(Object):
 
         check self.downloading param to downloading artwork list.
         """
+        try:
+            return CacheManager.__getitem__(self, song)
+        except KeyError:
+            pass
         sql_search = '''
         SELECT artwork FROM artwork WHERE
             artist=? and
             album=?
         '''
-        connection = self.__get_connection()
+        connection = self.connection()
         cursor = connection.cursor()
         cursor.execute(sql_search,
                 (
@@ -288,7 +320,7 @@ class Artwork(Object):
         if artwork is None:
             if self.download_auto:
                 if self.download_background:
-                    thread.start_new_thread(self.download, (song, ))
+                    self.add_download_queue(song)
                 else:
                     return self.download(song)
             return u''
@@ -306,7 +338,6 @@ class Artwork(Object):
             song - song object.
             artwork - string artwork binary,  not filepath.
         """
-
         # save binary to local dir.
         if artwork_binary:
             filename = song.format('%albumartist% %album%')
@@ -319,6 +350,7 @@ class Artwork(Object):
         else:
             fullpath = u''
             filename = u''
+        CacheManager.__setitem__(self, song, fullpath)
 
         # save filepath to database.
         sql_write = '''
@@ -326,7 +358,7 @@ class Artwork(Object):
         (artist, album, artwork)
         VALUES(?,  ?,  ?)
         '''
-        connection = self.__get_connection()
+        connection = self.connection()
         cursor = connection.cursor()
         cursor.execute(sql_write,
                 (
@@ -341,7 +373,7 @@ class Artwork(Object):
 
     def clear_empty(self):
         sql_clear = 'delete from artwork where artwork="";'
-        connection = self.__get_connection()
+        connection = self.connection()
         cursor = connection.cursor()
         cursor.execute(sql_clear)
         connection.commit()
@@ -370,7 +402,6 @@ class Artwork(Object):
                         break
                 else:
                     pass
-            del self.__downloading[self.__downloading.index(song)]
             self.__setitem__(song, artwork_binary)
             return self.__getitem__(song)
         else:
