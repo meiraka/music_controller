@@ -1,8 +1,4 @@
-"""
-Lyrics reader and writer.
-
-Supports read,  write,  search and download lyrics.
-
+"""Lyric and Artwork reader/writer/downloader
 """
 
 import socket
@@ -18,15 +14,20 @@ import environment
 
 
 class SqliteDict(Object):
+    """Sqlite as a Dict."""
     def __init__(self, path, init, search, search_parser, write, write_parser):
+        """Initializes sqlite database.
+
+        :path: sqlite db path
+        """
         self.__path = path
         self.__search = search
         self.__search_parser = search_parser
         self.__write = write
         self.__write_parser = write_parser
-        self.connection().execute(init)
+        self.__connection().execute(init)
 
-    def connection(self):
+    def __connection(self):
         """Returns database instance.
 
         must generate instance at everytime cause
@@ -35,65 +36,69 @@ class SqliteDict(Object):
         db = sqlite3.connect(self.__path)
         return db
 
+    def __contains__(self, key):
+        """D.__contains__(k) -> True if D has a key k, else False"""
+        cursor = self.__connection().cursor()
+        cursor.execute(self.__search, self.__search_parser(key))
+        ret = cursor.fetchone()
+        return False if ret == None or ret[0] == '' else True
+
     def __getitem__(self, key):
-        connection = self.connection()
-        cursor = connection.cursor()
+        """x.__getitem__(k) <==> x[k]"""
+        cursor = self.__connection().cursor()
         cursor.execute(self.__search, self.__search_parser(key))
         ret = cursor.fetchone()
         if ret == None or ret[0] == '':
             raise KeyError(key)
         return ret[0]
 
-        connection = self.connection()
-        cursor = connection.cursor()
-        cursor.execute(self.__search, self.__search_parser(key))
-        return cursor.fetchone()
-
     def __setitem__(self, key, value):
-        connection = self.connection()
+        """x.__setitem__(k, v) <==> x[k]=v"""
+        connection = self.__connection()
         cursor = connection.cursor()
         cursor.execute(self.__write, self.__write_parser(key) + (value,))
         connection.commit()
 
-    def __contains__(self, key):
-        connection = self.connection()
-        cursor = connection.cursor()
-        cursor.execute(self.__search, self.__search_parser(key))
-        ret = cursor.fetchone()
-        return False if ret == None or ret[0] == '' else True
-
 
 class CacheDict(Object, threading.Thread):
+    """Cache dict with background setitem."""
     def __init__(self):
+        """Initializes cache."""
         self.__first_sleep_time = 10
-        self.__download_queue = Queue.LifoQueue()
+        self.__queue = Queue.LifoQueue()
         self.__cache = {}
         threading.Thread.__init__(self)
         self.setDaemon(True)
         self.start()
 
-    def __setitem__(self, key, value):
-        self.__cache[hash(frozenset(key.items()))] = value
-
-    def __getitem__(self, key):
-        return self.__cache[hash(frozenset(key.items()))]
-
     def __contains__(self, key):
+        """D.__contains__(k) -> True if D has a key k, else False"""
         return hash(frozenset(key.items())) in self.__cache
 
+    def __getitem__(self, key):
+        """x.__getitem__(k) <==> x[k]"""
+        return self.__cache[hash(frozenset(key.items()))]
+
+    def __setitem__(self, key, value):
+        """x.__setitem__(k, v) <==> x[k]=v"""
+        self.__cache[hash(frozenset(key.items()))] = value
+
     def run(self):
+        """Executes setdefault_later() queue."""
         time.sleep(self.__first_sleep_time)
         while True:
-            if not self.__download_queue.empty():
-                func, song = self.__download_queue.get()
-                if not hash(frozenset(song.items())) in self.__cache:
+            if not self.__queue.empty():
+                key, func, args, kwargs = self.__queue.get()
+                if not key in self:
                     try:
-                        func(song)
+                        self[key] = func(*args, **kwargs)
                     except Exception, err:
                         print type(err), err
+            time.sleep(0.5)
 
-    def add_download_queue(self, downloader, obj):
-        self.__download_queue.put((downloader, obj))
+    def setdefault_later(self, key, func, *args, **kwargs):
+        """Sets D[key]=func(*args,**kwargs) in background if key not in D"""
+        self.__queue.put((key, func, args, kwargs))
 
 
 class Lyrics(Object):
@@ -169,7 +174,7 @@ class Lyrics(Object):
             self.__cache[song] = u''
             if self.download_auto:
                 if self.download_background:
-                    self.__cache.add_download_queue(self.download, song)
+                    self.__cache.setdefault_later(song, self.download, song)
                 else:
                     return self.download(song)
             return self.__cache[song]
@@ -325,7 +330,7 @@ class Artwork(Object):
             self.__cache[song] = u''
             if self.download_auto:
                 if self.download_background:
-                    self.__cache.add_download_queue(self.download, song)
+                    self.__cache.setdefault_later(song, self.download, song)
                 else:
                     return self.download(song)
             return u''
