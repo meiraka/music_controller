@@ -15,9 +15,39 @@ from base import Object
 import rest
 import environment
 
-class CacheManager(Object, threading.Thread):
-    def __init__(self, path):
+class SqliteDict(Object):
+    def __init__(self, path, init, search, search_parser, write, write_parser):
         self.__path = path
+        self.__search = search
+        self.__search_parser = search_parser
+        self.__write = write
+        self.__write_parser = write_parser
+        self.connection().execute(init)
+
+    def connection(self):
+        """Returns database instance.
+
+        must generate instance at everytime cause
+        sqlite3 is not thread-safe.
+        """
+        db = sqlite3.connect(self.__path)
+        return db
+
+    def __getitem__(self, key):
+        connection = self.connection()
+        cursor = connection.cursor()
+        cursor.execute(self.__search, self.__search_parser(key))
+        return cursor.fetchone()
+
+    def __setitem__(self, key, value):
+        connection = self.connection()
+        cursor = connection.cursor()
+        cursor.execute(self.__write, self.__write_parser(key) + (value,))
+        connection.commit()
+
+
+class CacheManager(Object, threading.Thread):
+    def __init__(self):
         self.__download_queue = Queue.LifoQueue()
         self.__cache = {}
         
@@ -30,15 +60,6 @@ class CacheManager(Object, threading.Thread):
 
     def __getitem__(self, key):
         return self.__cache[hash(frozenset(key.items()))]
-
-    def connection(self):
-        """ Returns database instance.
-
-        must generate instance at everytime cause
-        sqlite3 is not thread-safe.
-        """
-        db = sqlite3.connect(self.__path)
-        return db
 
     def run(self):
         while True:
@@ -53,15 +74,50 @@ class CacheManager(Object, threading.Thread):
     def add_download_queue(self, obj):
         self.__download_queue.put(obj)
 
-class Lyrics(CacheManager):
+class Lyrics(CacheManager, SqliteDict):
     """
     Downloads and manages lyric.
     """
     UPDATING = 'updating'
     UPDATE = 'update'
     def __init__(self, client):
-        """ init values and database."""
-        CacheManager.__init__(self, environment.config_dir+u'/lyrics')
+        """init values and database."""
+        CacheManager.__init__(self)
+        
+        sql_init = '''
+        CREATE TABLE IF NOT EXISTS lyrics
+        (
+            artist TEXT,
+            title TEXT,
+            album TEXT,
+            lyric TEXT,
+            UNIQUE(artist, title, album)
+        );
+        '''
+        sql_search = '''
+        SELECT lyric FROM lyrics WHERE
+            artist=? and
+            title=? and
+            album=?
+        '''
+        sql_write = '''
+        INSERT OR REPLACE INTO lyrics
+        (artist, title, album, lyric)
+        VALUES(?,  ?,  ?,  ?)
+        '''
+        def sql_arg_parser(song):
+            return (song.format('%artist%'),
+                    song.format('%title%'),
+                    song.format('%album%'))
+
+
+        SqliteDict.__init__(self,
+                            environment.config_dir+u'/lyrics',
+                            sql_init,
+                            sql_search,
+                            sql_arg_parser,
+                            sql_write,
+                            sql_arg_parser)
         self.client = client
         self.__downloading = []
         self.download_auto = False
@@ -73,26 +129,10 @@ class Lyrics(CacheManager):
         self.download_class = dict(
             geci_me = rest.GeciMe
             )
-        """ init database.
-
-        if not exists database,  create table.
-        """
-        sql_init = '''
-        CREATE TABLE IF NOT EXISTS lyrics
-        (
-            artist TEXT,
-            title TEXT,
-            album TEXT,
-            lyric TEXT,
-            UNIQUE(artist, title, album)
-        );
-        '''
         Object.__init__(self)
-        connection = self.connection()
-        connection.execute(sql_init)
 
     def clear_empty(self):
-        """ Clears no lyrics data raw(fail to download or no lyrics found raw).
+        """Clears no lyrics data raw(fail to download or no lyrics found raw).
         """
         sql_clear = 'delete from lyrics where lyric="None";'
         connection = self.connection()
@@ -101,7 +141,7 @@ class Lyrics(CacheManager):
         
        
     def __getitem__(self, song):
-        """ Returns lyric.
+        """Returns lyric.
 
         Arguments:
             song - client.Song object.
@@ -114,26 +154,11 @@ class Lyrics(CacheManager):
 
         check self.downloading param to downloading lyric list.
         """
-        sql_search = '''
-        SELECT lyric FROM lyrics WHERE
-            artist=? and
-            title=? and
-            album=?
-        '''
         try:
             return CacheManager.__getitem__(self, song)
         except KeyError:
             pass
-        connection = self.connection()
-        cursor = connection.cursor()
-        cursor.execute(sql_search,
-                (
-                song.format('%artist%'),
-                song.format('%title%'),
-                song.format('%album%')
-                )
-            )
-        lyric = cursor.fetchone()
+        lyric = SqliteDict.__getitem__(self, song)
         if lyric is None:
             if self.download_auto:
                 if self.download_background:
@@ -145,30 +170,15 @@ class Lyrics(CacheManager):
             return lyric[0]
 
     def __setitem__(self, song, lyric):
-        """ Saves lyric.
+        """Saves lyric.
 
         Arguments:
             song - song object.
             lyric - string lyric.
         """
-        CacheManager.__setitem__(self, song, lyric)
         lyric = unicode(lyric)
-        sql_write = '''
-        INSERT OR REPLACE INTO lyrics
-        (artist, title, album, lyric)
-        VALUES(?,  ?,  ?,  ?)
-        '''
-        connection = self.connection()
-        cursor = connection.cursor()
-        cursor.execute(sql_write,
-                (
-                song.format('%artist%'),
-                song.format('%title%'),
-                song.format('%album%'),
-                lyric
-                )
-            )
-        connection.commit()
+        CacheManager.__setitem__(self, song, lyric)
+        SqliteDict.__setitem__(self, song, lyric)
         self.call(self.UPDATE, song, lyric)
         
     def download(self, song):
@@ -197,7 +207,7 @@ class Lyrics(CacheManager):
         return lyric
 
     def list(self, keywords, callback=None):
-        """ Returns candidate lyrics of given song.
+        """Returns candidate lyrics of given song.
 
         Arguments:
             keywords -- keyword dict like dict(artist=foo, title=bar)
@@ -239,23 +249,45 @@ class Lyrics(CacheManager):
     downloading = property(lambda self:self.__downloading)
 
 
-#!/usr/bin/python
-
-"""
-Artwork reader and writer.
-
-Supports read,  write,  search and download artwork.
-"""
-
-class Artwork(CacheManager):
-    """
-    Downloads and manages Artwork.
+class Artwork(CacheManager, SqliteDict):
+    """Downloads and manages Artwork.
     """
     UPDATING = 'updating'
     UPDATE = 'update'
     def __init__(self, client):
-        """ init values and database."""
-        CacheManager.__init__(self, environment.config_dir+'/artworkdb')
+        """init values and database."""
+        CacheManager.__init__(self)
+
+        sql_init = '''
+        CREATE TABLE IF NOT EXISTS artwork
+        (
+            artist TEXT,
+            album TEXT,
+            artwork TEXT,
+            UNIQUE(artist, album)
+        );
+        '''
+        sql_search = '''
+        SELECT artwork FROM artwork WHERE
+            artist=? and
+            album=?
+        '''
+        sql_write = '''
+        INSERT OR REPLACE INTO artwork
+        (artist, album, artwork)
+        VALUES(?,  ?,  ?)
+        '''
+        def sql_arg_parser(song):
+            return (song.format('%albumartist%'),
+                    song.format('%album%'))
+ 
+        SqliteDict.__init__(self,
+                            environment.config_dir+'/artworkdb',
+                            sql_init,
+                            sql_search,
+                            sql_arg_parser,
+                            sql_write,
+                            sql_arg_parser)
         self.client = client
         self.__download_path = environment.config_dir+'/artwork'
         self.__downloading = []
@@ -268,25 +300,10 @@ class Artwork(CacheManager):
         self.download_class = dict(
             lastfm = rest.ArtworkLastfm
             )
-        """ init database.
-
-        if not exists database,  create table.
-        """
-        sql_init = '''
-        CREATE TABLE IF NOT EXISTS artwork
-        (
-            artist TEXT,
-            album TEXT,
-            artwork TEXT,
-            UNIQUE(artist, album)
-        );
-        '''
         Object.__init__(self)
-        connection = self.connection()
-        connection.execute(sql_init)
 
     def __getitem__(self, song):
-        """ Returns artwork path.
+        """Returns artwork path.
 
         Arguments:
             song - client.Song object.
@@ -303,20 +320,7 @@ class Artwork(CacheManager):
             return CacheManager.__getitem__(self, song)
         except KeyError:
             pass
-        sql_search = '''
-        SELECT artwork FROM artwork WHERE
-            artist=? and
-            album=?
-        '''
-        connection = self.connection()
-        cursor = connection.cursor()
-        cursor.execute(sql_search,
-                (
-                song.format('%albumartist%'),
-                song.format('%album%')
-                )
-            )
-        artwork = cursor.fetchone()
+        artwork = SqliteDict.__getitem__(self, song)
         if artwork is None:
             if self.download_auto:
                 if self.download_background:
@@ -332,7 +336,7 @@ class Artwork(CacheManager):
             return u''
 
     def __setitem__(self, song, artwork_binary):
-        """ Saves artwork binary.
+        """Saves artwork binary.
 
         Arguments:
             song - song object.
@@ -353,21 +357,7 @@ class Artwork(CacheManager):
         CacheManager.__setitem__(self, song, fullpath)
 
         # save filepath to database.
-        sql_write = '''
-        INSERT OR REPLACE INTO artwork
-        (artist, album, artwork)
-        VALUES(?,  ?,  ?)
-        '''
-        connection = self.connection()
-        cursor = connection.cursor()
-        cursor.execute(sql_write,
-                (
-                song.format('%albumartist%'),
-                song.format('%album%'),
-                filename
-                )
-            )
-        connection.commit()
+        SqliteDict.__setitem__(self, filename)
         if fullpath:
             self.call(self.UPDATE, song, fullpath)
 
@@ -408,7 +398,7 @@ class Artwork(CacheManager):
             return ''
 
     def list(self, keywords, callback=None):
-        """ Returns candidate artworks of given song.
+        """Returns candidate artworks of given song.
 
         Arguments:
             keywords -- keyword dict like dict(artist=foo, title=bar)
