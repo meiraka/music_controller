@@ -69,7 +69,6 @@ class CacheDict(Object, threading.Thread):
         self.__cache = {}
         threading.Thread.__init__(self)
         self.setDaemon(True)
-        self.start()
 
     def __contains__(self, key):
         """D.__contains__(k) -> True if D has a key k, else False"""
@@ -98,6 +97,8 @@ class CacheDict(Object, threading.Thread):
 
     def setdefault_later(self, key, func, *args, **kwargs):
         """Sets D[key]=func(*args,**kwargs) in background if key not in D"""
+        if not self.is_alive():
+            self.start()
         self.__queue.put((key, func, args, kwargs))
 
 
