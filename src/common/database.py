@@ -12,8 +12,40 @@ from base import Object
 import rest
 import environment
 
+class LazyDictMixin(threading.Thread):
+    """Cache dict with background setitem."""
+    def __init__(self):
+        """Initializes lazy queue."""
+        self.__first_sleep_time = 10
+        self.__queue = Queue.LifoQueue()
+        threading.Thread.__init__(self)
+        self.setDaemon(True)
 
-class SqliteDict(Object):
+    def run(self):
+        """Executes setdefault_later() queue."""
+        time.sleep(self.__first_sleep_time)
+        while True:
+            if not self.__queue.empty():
+                key, func, args, kwargs = self.__queue.get()
+                if not key in self:
+                    try:
+                        self[key] = func(*args, **kwargs)
+                    except Exception, err:
+                        print type(err), err
+            time.sleep(0.5)
+
+    def setdefault_later(self, key, value, func, *args, **kwargs):
+        """Sets D[key]=func(*args,**kwargs) in background if key not in D"""
+        if not key in self:
+            if not self.is_alive():
+                self.start()
+            self[key] = value
+            self.__queue.put((key, func, args, kwargs))
+        return self[key]
+
+
+
+class SqliteDict(Object, LazyDictMixin):
     """Sqlite as a Dict."""
     def __init__(self, path, init, search, search_parser, write, write_parser):
         """Initializes sqlite database.
@@ -26,6 +58,7 @@ class SqliteDict(Object):
         self.__write = write
         self.__write_parser = write_parser
         self.__connection().execute(init)
+        LazyDictMixin.__init__(self)
 
     def __connection(self):
         """Returns database instance.
@@ -59,16 +92,19 @@ class SqliteDict(Object):
         cursor.execute(self.__write, self.__write_parser(key) + (value,))
         connection.commit()
 
+    def setdefault(self, key, value):
+        if not key in self:
+            self[key] = value
+            return value
+        else:
+            return self[key]
 
-class CacheDict(Object, threading.Thread):
+class CacheDict(Object, LazyDictMixin):
     """Cache dict with background setitem."""
     def __init__(self):
         """Initializes cache."""
-        self.__first_sleep_time = 10
-        self.__queue = Queue.LifoQueue()
         self.__cache = {}
-        threading.Thread.__init__(self)
-        self.setDaemon(True)
+        LazyDictMixin.__init__(self)
 
     def __contains__(self, key):
         """D.__contains__(k) -> True if D has a key k, else False"""
@@ -82,24 +118,9 @@ class CacheDict(Object, threading.Thread):
         """x.__setitem__(k, v) <==> x[k]=v"""
         self.__cache[hash(frozenset(key.items()))] = value
 
-    def run(self):
-        """Executes setdefault_later() queue."""
-        time.sleep(self.__first_sleep_time)
-        while True:
-            if not self.__queue.empty():
-                key, func, args, kwargs = self.__queue.get()
-                if not key in self:
-                    try:
-                        self[key] = func(*args, **kwargs)
-                    except Exception, err:
-                        print type(err), err
-            time.sleep(0.5)
+    def setdefault(self, key, value):
+        return self.__cache.setdefault(key, value)
 
-    def setdefault_later(self, key, func, *args, **kwargs):
-        """Sets D[key]=func(*args,**kwargs) in background if key not in D"""
-        if not self.is_alive():
-            self.start()
-        self.__queue.put((key, func, args, kwargs))
 
 
 class Lyrics(Object):
@@ -168,17 +189,16 @@ class Lyrics(Object):
         """
         if song in self.__cache:
             return self.__cache[song]
-        if song in self.__data:
+        elif song in self.__data:
             self.__cache[song] = self.__data[song]
             return self.__cache[song]
+        elif self.download_auto:
+            if self.download_background:
+                return self.__cache.setdefault_later(song, u'', self.download, song)
+            else:
+                return self.__cache.setdefault(song, self.download(song))
         else:
-            self.__cache[song] = u''
-            if self.download_auto:
-                if self.download_background:
-                    self.__cache.setdefault_later(song, self.download, song)
-                else:
-                    return self.download(song)
-            return self.__cache[song]
+            return self.__cache.setdefault(song, u'')
 
     def __setitem__(self, song, lyric):
         """Saves lyric.
@@ -324,17 +344,16 @@ class Artwork(Object):
         """
         if song in self.__cache:
             return self.__cache[song]
-        if song in self.__data:
+        elif song in self.__data:
             self.__cache[song] = self.__download_path + '/' + self.__data[song]
             return self.__cache[song]
+        elif self.download_auto:
+            if self.download_background:
+                return self.__cache.setdefault_later(song, u'', self.download, song)
+            else:
+                return self.__cache.setdefault(song, self.download(song))
         else:
-            self.__cache[song] = u''
-            if self.download_auto:
-                if self.download_background:
-                    self.__cache.setdefault_later(song, self.download, song)
-                else:
-                    return self.download(song)
-            return u''
+            return self.__cache.setdefault(song, u'')
 
     def __setitem__(self, song, artwork_binary):
         """Saves artwork binary.
