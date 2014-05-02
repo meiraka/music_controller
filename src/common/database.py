@@ -12,8 +12,9 @@ from base import Object
 import rest
 import environment
 
+
 class LazyDictMixin(threading.Thread):
-    """Cache dict with background setitem."""
+    """setdefault in background mixin for dict interface"""
     def __init__(self):
         """Initializes lazy queue."""
         self.__first_sleep_time = 10
@@ -42,7 +43,6 @@ class LazyDictMixin(threading.Thread):
             self[key] = value
             self.__queue.put((key, func, args, kwargs))
         return self[key]
-
 
 
 class SqliteDict(Object, LazyDictMixin):
@@ -99,6 +99,7 @@ class SqliteDict(Object, LazyDictMixin):
         else:
             return self[key]
 
+
 class CacheDict(Object, LazyDictMixin):
     """Cache dict with background setitem."""
     def __init__(self):
@@ -120,7 +121,6 @@ class CacheDict(Object, LazyDictMixin):
 
     def setdefault(self, key, value):
         return self.__cache.setdefault(key, value)
-
 
 
 class Lyrics(Object):
@@ -194,7 +194,8 @@ class Lyrics(Object):
             return self.__cache[song]
         elif self.download_auto:
             if self.download_background:
-                return self.__cache.setdefault_later(song, u'', self.download, song)
+                return self.__cache.setdefault_later(song, u'',
+                                                     self.download, song)
             else:
                 return self.__cache.setdefault(song, self.download(song))
         else:
@@ -349,7 +350,8 @@ class Artwork(Object):
             return self.__cache[song]
         elif self.download_auto:
             if self.download_background:
-                return self.__cache.setdefault_later(song, u'', self.download, song)
+                return self.__cache.setdefault_later(song, u'',
+                                                     self.download, song)
             else:
                 return self.__cache.setdefault(song, self.download(song))
         else:
