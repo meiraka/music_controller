@@ -178,7 +178,7 @@ class Downloader(Frame):
             base = wx.Panel(self, -1)
         for index, label in enumerate(labels):
             sizer.Add(wx.StaticText(base, -1, _(label)+u':'), (index, 0), **sizer_flag_right)
-            value = wx.TextCtrl(base, -1, getattr(self.song, label))
+            value = wx.TextCtrl(base, -1, self.song[label])
             self.values[label] = value
             sizer.Add(value, (index, 1), (1, 2), **expand_sizer_flag)
         self.listview = wx.ListBox(base, -1)

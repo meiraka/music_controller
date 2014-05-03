@@ -40,8 +40,8 @@ class LazyDictMixin(threading.Thread):
         if not key in self:
             if not self.is_alive():
                 self.start()
-            self[key] = value
             self.__queue.put((key, func, args, kwargs))
+            return value
         return self[key]
 
 

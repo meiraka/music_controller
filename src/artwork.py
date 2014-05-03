@@ -120,7 +120,7 @@ class Loader(threading.Thread, Object):
         self.sleep_time = 0
         self.mirror = Loader.Mirror(self, mirror)
         self.artwork = client.artwork
-        self.artwork.bind(self.artwork.UPDATE, self.__load_image)
+        self.artwork.bind(self.artwork.UPDATE, self.load_image)
         self.deamon = True
         self.start()
 
@@ -153,6 +153,11 @@ class Loader(threading.Thread, Object):
                 return self.__images[(path, self.size)]
             else:
                 return self.__load_image('', path)
+
+    def load_image(self, song, path):
+        def load():
+            self.__load_image(song, path)
+        wx.CallAfter(load)
     
     def __load_image(self, song, path):
         """ Generates given path of image object.
