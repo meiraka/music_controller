@@ -21,6 +21,7 @@ class LazyDictMixin(threading.Thread):
         self.__queue = Queue.LifoQueue()
         threading.Thread.__init__(self)
         self.setDaemon(True)
+        self.start()
 
     def run(self):
         """Executes setdefault_later() queue."""
@@ -31,6 +32,8 @@ class LazyDictMixin(threading.Thread):
                 if not key in self:
                     try:
                         self[key] = func(*args, **kwargs)
+                    except socket.error:
+                        pass
                     except Exception, err:
                         print type(err), err
             time.sleep(0.5)
@@ -38,8 +41,6 @@ class LazyDictMixin(threading.Thread):
     def setdefault_later(self, key, value, func, *args, **kwargs):
         """Sets D[key]=func(*args,**kwargs) in background if key not in D"""
         if not key in self:
-            if not self.is_alive():
-                self.start()
             self.__queue.put((key, func, args, kwargs))
             return value
         return self[key]
