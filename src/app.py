@@ -45,10 +45,8 @@ class App(wx.App):
         elif os.path.exists(os.getcwdu() + u'/share/locale'):
             lang['localedir'] = os.getcwdu() + u'/share/locale'
         self.__lang = gettext.translation(**lang)
-        self.client.artwork.clear_empty()
         self.client.artwork.download_auto = True
         self.client.artwork.download_background = True
-        self.client.lyrics.clear_empty()
         self.client.lyrics.download_auto = True
         self.client.lyrics.download_background = True
 

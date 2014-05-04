@@ -1,41 +1,138 @@
-"""
-Lyrics reader and writer.
-
-Supports read,  write,  search and download lyrics.
-
+"""Lyric and Artwork reader/writer/downloader
 """
 
+import socket
 import os
 import sqlite3
-import thread
+import Queue
+import time
+import threading
 
 from base import Object
 import rest
 import environment
 
+
+class LazyDictMixin(threading.Thread):
+    """setdefault in background mixin for dict interface"""
+    def __init__(self):
+        """Initializes lazy queue."""
+        self.__first_sleep_time = 10
+        self.__queue = Queue.LifoQueue()
+        threading.Thread.__init__(self)
+        self.setDaemon(True)
+        self.start()
+
+    def run(self):
+        """Executes setdefault_later() queue."""
+        time.sleep(self.__first_sleep_time)
+        while True:
+            if not self.__queue.empty():
+                key, func, args, kwargs = self.__queue.get()
+                if not key in self:
+                    try:
+                        self[key] = func(*args, **kwargs)
+                    except socket.error:
+                        pass
+                    except Exception, err:
+                        print type(err), err
+            time.sleep(0.5)
+
+    def setdefault_later(self, key, value, func, *args, **kwargs):
+        """Sets D[key]=func(*args,**kwargs) in background if key not in D"""
+        if not key in self:
+            self.__queue.put((key, func, args, kwargs))
+            return value
+        return self[key]
+
+
+class SqliteDict(Object, LazyDictMixin):
+    """Sqlite as a Dict."""
+    def __init__(self, path, init, search, search_parser, write, write_parser):
+        """Initializes sqlite database.
+
+        :path: sqlite db path
+        """
+        self.__path = path
+        self.__search = search
+        self.__search_parser = search_parser
+        self.__write = write
+        self.__write_parser = write_parser
+        self.__connection().execute(init)
+        LazyDictMixin.__init__(self)
+
+    def __connection(self):
+        """Returns database instance.
+
+        must generate instance at everytime cause
+        sqlite3 is not thread-safe.
+        """
+        db = sqlite3.connect(self.__path)
+        return db
+
+    def __contains__(self, key):
+        """D.__contains__(k) -> True if D has a key k, else False"""
+        cursor = self.__connection().cursor()
+        cursor.execute(self.__search, self.__search_parser(key))
+        ret = cursor.fetchone()
+        return False if ret == None or ret[0] == '' else True
+
+    def __getitem__(self, key):
+        """x.__getitem__(k) <==> x[k]"""
+        cursor = self.__connection().cursor()
+        cursor.execute(self.__search, self.__search_parser(key))
+        ret = cursor.fetchone()
+        if ret == None or ret[0] == '':
+            raise KeyError(key)
+        return ret[0]
+
+    def __setitem__(self, key, value):
+        """x.__setitem__(k, v) <==> x[k]=v"""
+        connection = self.__connection()
+        cursor = connection.cursor()
+        cursor.execute(self.__write, self.__write_parser(key) + (value,))
+        connection.commit()
+
+    def setdefault(self, key, value):
+        if not key in self:
+            self[key] = value
+            return value
+        else:
+            return self[key]
+
+
+class CacheDict(Object, LazyDictMixin):
+    """Cache dict with background setitem."""
+    def __init__(self):
+        """Initializes cache."""
+        self.__cache = {}
+        LazyDictMixin.__init__(self)
+
+    def __contains__(self, key):
+        """D.__contains__(k) -> True if D has a key k, else False"""
+        return hash(frozenset(key.items())) in self.__cache
+
+    def __getitem__(self, key):
+        """x.__getitem__(k) <==> x[k]"""
+        return self.__cache[hash(frozenset(key.items()))]
+
+    def __setitem__(self, key, value):
+        """x.__setitem__(k, v) <==> x[k]=v"""
+        self.__cache[hash(frozenset(key.items()))] = value
+
+    def setdefault(self, key, value):
+        return self.__cache.setdefault(key, value)
+
+
 class Lyrics(Object):
-    """
-    Downloads and manages lyric.
+    """Downloads and manages lyric.
     """
     UPDATING = 'updating'
     UPDATE = 'update'
+
     def __init__(self, client):
-        """ init values and database."""
-        self.client = client
-        self.__downloading = []
-        self.download_auto = False
-        self.download_background = False
-        self.downloaders = dict(
-            geci_me = True
-            )
-
-        self.download_class = dict(
-            geci_me = rest.GeciMe
-            )
-        """ init database.
-
-        if not exists database,  create table.
-        """
+        """init values and database."""
+        self.__cache = CacheDict()
         sql_init = '''
         CREATE TABLE IF NOT EXISTS lyrics
         (
@@ -46,29 +143,39 @@ class Lyrics(Object):
             UNIQUE(artist, title, album)
         );
         '''
+        sql_search = '''
+        SELECT lyric FROM lyrics WHERE
+            artist=? and
+            title=? and
+            album=?
+        '''
+        sql_write = '''
+        INSERT OR REPLACE INTO lyrics
+        (artist, title, album, lyric)
+        VALUES(?,  ?,  ?,  ?)
+        '''
+
+        def sql_arg_parser(song):
+            return (song.format('%artist%'),
+                    song.format('%title%'),
+                    song.format('%album%'))
+
+        self.__data = SqliteDict(environment.config_dir + u'/lyrics',
+                                 sql_init,
+                                 sql_search,
+                                 sql_arg_parser,
+                                 sql_write,
+                                 sql_arg_parser)
+        self.client = client
+        self.__downloading = []
+        self.download_auto = False
+        self.download_background = False
+        self.downloaders = {'geci_me': True}
+        self.download_class = {'geci_me': rest.GeciMe}
         Object.__init__(self)
-        connection = self.__get_connection()
-        connection.execute(sql_init)
 
-    def clear_empty(self):
-        """ Clears no lyrics data raw(fail to download or no lyrics found raw).
-        """
-        sql_clear = 'delete from lyrics where lyric="None";'
-        connection = self.__get_connection()
-        connection.execute(sql_clear)
-        connection.commit()
-        
-    def __get_connection(self):
-        """ Returns database instance.
-
-        must generate instance at everytime cause
-        sqlite3 is not thread-safe.
-        """
-        db = sqlite3.connect(environment.config_dir+'/lyrics')
-        return db
-        
     def __getitem__(self, song):
-        """ Returns lyric.
+        """Returns lyric.
 
         Arguments:
             song - client.Song object.
@@ -81,64 +188,39 @@ class Lyrics(Object):
 
         check self.downloading param to downloading lyric list.
         """
-        sql_search = '''
-        SELECT lyric FROM lyrics WHERE
-            artist=? and
-            title=? and
-            album=?
-        '''
-        connection = self.__get_connection()
-        cursor = connection.cursor()
-        cursor.execute(sql_search,
-                (
-                song.format('%artist%'),
-                song.format('%title%'),
-                song.format('%album%')
-                )
-            )
-        lyric = cursor.fetchone()
-        if lyric is None:
-            if self.download_auto:
-                if self.download_background:
-                    thread.start_new_thread(self.download, (song, ))
-                else:
-                    return self.download(song)
-            return u''
+        if song in self.__cache:
+            return self.__cache[song]
+        elif song in self.__data:
+            self.__cache[song] = self.__data[song]
+            return self.__cache[song]
+        elif self.download_auto:
+            if self.download_background:
+                return self.__cache.setdefault_later(song, u'',
+                                                     self.download, song)
+            else:
+                return self.__cache.setdefault(song, self.download(song))
         else:
-            return lyric[0]
+            return self.__cache.setdefault(song, u'')
 
     def __setitem__(self, song, lyric):
-        """ Saves lyric.
+        """Saves lyric.
 
         Arguments:
             song - song object.
             lyric - string lyric.
         """
         lyric = unicode(lyric)
-        sql_write = '''
-        INSERT OR REPLACE INTO lyrics
-        (artist, title, album, lyric)
-        VALUES(?,  ?,  ?,  ?)
-        '''
-        connection = self.__get_connection()
-        cursor = connection.cursor()
-        cursor.execute(sql_write,
-                (
-                song.format('%artist%'),
-                song.format('%title%'),
-                song.format('%album%'),
-                lyric
-                )
-            )
-        connection.commit()
-        self.call(self.UPDATE, song, lyric)
-        
+        self.__cache[song] = lyric
+        if lyric:
+            self.__data[song] = lyric
+            self.call(self.UPDATE, song, lyric)
+
     def download(self, song):
         # load client config and enable/disable api
         if self.client.config.lyrics_download:
             downloaders = {}
             for label, isd in self.downloaders.iteritems():
-                attr = u'lyrics_api_'+label
+                attr = u'lyrics_api_' + label
                 downloaders[label] = getattr(self.client.config, attr)
             self.downloaders = downloaders
         else:
@@ -159,7 +241,7 @@ class Lyrics(Object):
         return lyric
 
     def list(self, keywords, callback=None):
-        """ Returns candidate lyrics of given song.
+        """Returns candidate lyrics of given song.
 
         Arguments:
             keywords -- keyword dict like dict(artist=foo, title=bar)
@@ -176,7 +258,6 @@ class Lyrics(Object):
             func, formatter, urlinfo_list = returnslist[0]
             lyric = func(urlinfo_list[0])
             db[song] = lyric
-            
 
         to show readable candidate lyric:
             returnslist = db.list(keywords)
@@ -198,67 +279,59 @@ class Lyrics(Object):
                 pass
         return lists
 
-    downloading = property(lambda self:self.__downloading)
+    downloading = property(lambda self: self.__downloading)
 
-
-#!/usr/bin/python
-
-"""
-Artwork reader and writer.
-
-Supports read,  write,  search and download artwork.
-"""
 
 class Artwork(Object):
-    """
-    Downloads and manages Artwork.
+    """Downloads and manages Artwork.
     """
     UPDATING = 'updating'
     UPDATE = 'update'
+
     def __init__(self, client):
-        """ init values and database."""
+        """init values and database."""
         self.client = client
-        self.__download_path = environment.config_dir+'/artwork'
+        self.__download_path = environment.config_dir + '/artwork'
         self.__downloading = []
         self.download_auto = False
         self.download_background = False
-        self.downloaders = dict(
-            lastfm = True
-            )
+        self.downloaders = {'lastfm': True}
+        self.download_class = {'lastfm': rest.ArtworkLastfm}
 
-        self.download_class = dict(
-            lastfm = rest.ArtworkLastfm
-            )
-        """ init database.
-
-        if not exists database,  create table.
-        """
         sql_init = '''
         CREATE TABLE IF NOT EXISTS artwork
-        (
-            artist TEXT,
+        (   artist TEXT,
             album TEXT,
             artwork TEXT,
             UNIQUE(artist, album)
         );
         '''
+        sql_search = '''
+        SELECT artwork FROM artwork WHERE
+            artist=? and
+            album=?
+        '''
+        sql_write = '''
+        INSERT OR REPLACE INTO artwork
+        (artist, album, artwork)
+        VALUES(?,  ?,  ?)
+        '''
+
+        def sql_arg_parser(song):
+            return (song.format('%albumartist%'),
+                    song.format('%album%'))
+
+        self.__data = SqliteDict(environment.config_dir + '/artworkdb',
+                                 sql_init,
+                                 sql_search,
+                                 sql_arg_parser,
+                                 sql_write,
+                                 sql_arg_parser)
+        self.__cache = CacheDict()
         Object.__init__(self)
-        connection = self.__get_connection()
-        connection.execute(sql_init)
-
-    def __get_connection(self):
-        """ Returns database instance.
-
-        must generate instance at everytime cause
-        sqlite3 is not thread-safe.
-        """
-        if not os.path.exists(environment.config_dir):
-            os.makedirs(environment.config_dir)
-        db = sqlite3.connect(environment.config_dir+'/artworkdb')
-        return db
 
     def __getitem__(self, song):
-        """ Returns artwork path.
+        """Returns artwork path.
 
         Arguments:
             song - client.Song object.
@@ -271,42 +344,27 @@ class Artwork(Object):
 
         check self.downloading param to downloading artwork list.
         """
-        sql_search = '''
-        SELECT artwork FROM artwork WHERE
-            artist=? and
-            album=?
-        '''
-        connection = self.__get_connection()
-        cursor = connection.cursor()
-        cursor.execute(sql_search,
-                (
-                song.format('%albumartist%'),
-                song.format('%album%')
-                )
-            )
-        artwork = cursor.fetchone()
-        if artwork is None:
-            if self.download_auto:
-                if self.download_background:
-                    thread.start_new_thread(self.download, (song, ))
-                else:
-                    return self.download(song)
-            return u''
-        elif artwork[0]:
-            return self.__download_path + '/' + artwork[0]
+        if song in self.__cache:
+            return self.__cache[song]
+        elif song in self.__data:
+            self.__cache[song] = self.__download_path + '/' + self.__data[song]
+            return self.__cache[song]
+        elif self.download_auto:
+            if self.download_background:
+                return self.__cache.setdefault_later(song, u'',
+                                                     self.download, song)
+            else:
+                return self.__cache.setdefault(song, self.download(song))
         else:
-            # download is blocked
-            # or already downloaded but not found any data.
-            return u''
+            return self.__cache.setdefault(song, u'')
 
     def __setitem__(self, song, artwork_binary):
-        """ Saves artwork binary.
+        """Saves artwork binary.
 
         Arguments:
             song - song object.
-            artwork - string artwork binary,  not filepath.
+            artwork - string artwork binary, not filepath.
         """
-
         # save binary to local dir.
         if artwork_binary:
             filename = song.format('%albumartist% %album%')
@@ -319,41 +377,20 @@ class Artwork(Object):
         else:
             fullpath = u''
             filename = u''
+        self.__cache[song] = fullpath
 
         # save filepath to database.
-        sql_write = '''
-        INSERT OR REPLACE INTO artwork
-        (artist, album, artwork)
-        VALUES(?,  ?,  ?)
-        '''
-        connection = self.__get_connection()
-        cursor = connection.cursor()
-        cursor.execute(sql_write,
-                (
-                song.format('%albumartist%'),
-                song.format('%album%'),
-                filename
-                )
-            )
-        connection.commit()
         if fullpath:
+            self.__data[song] = filename
             self.call(self.UPDATE, song, fullpath)
 
-    def clear_empty(self):
-        sql_clear = 'delete from artwork where artwork="";'
-        connection = self.__get_connection()
-        cursor = connection.cursor()
-        cursor.execute(sql_clear)
-        connection.commit()
-        
-        
     def download(self, song):
         if not song in self.__downloading:
             # load client config and enable/disable api
             if self.client.config.artwork_download:
                 downloaders = {}
                 for label, isd in self.downloaders.iteritems():
-                    attr = u'artwork_api_'+label
+                    attr = u'artwork_api_' + label
                     downloaders[label] = getattr(self.client.config, attr)
                 self.downloaders = downloaders
             else:
@@ -370,14 +407,13 @@ class Artwork(Object):
                         break
                 else:
                     pass
-            del self.__downloading[self.__downloading.index(song)]
             self.__setitem__(song, artwork_binary)
             return self.__getitem__(song)
         else:
             return ''
 
     def list(self, keywords, callback=None):
-        """ Returns candidate artworks of given song.
+        """Returns candidate artworks of given song.
 
         Arguments:
             keywords -- keyword dict like dict(artist=foo, title=bar)
@@ -394,7 +430,6 @@ class Artwork(Object):
             func, formatter, urlinfo_list = returnslist[0]
             artwork_binary = func(urlinfo_list[0])
             db[song] = artwork_binary
-            
 
         to show readable candidate artworks:
             returnslist = db.list(keywords)
@@ -416,7 +451,4 @@ class Artwork(Object):
                 pass
         return lists
 
-    downloading = property(lambda self:self.__downloading)
-
-
-
+    downloading = property(lambda self: self.__downloading)

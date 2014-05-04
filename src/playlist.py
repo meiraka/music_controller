@@ -134,6 +134,7 @@ class HeaderPlaylistBase(wx.VListBox):
     def update_playlist(self, *args, **kwargs):
         """ Updates playlist view in main thread.
         """
+        self.songs, self.__line_song, self.groups = self.__generate_playlist_struct()
         wx.CallAfter(self.__update_playlist)
 
     def __update_playlist(self):
@@ -142,7 +143,6 @@ class HeaderPlaylistBase(wx.VListBox):
         generates new playlist struct
         and focuses current song.
         """
-        self.songs, self.__line_song, self.groups = self.__generate_playlist_struct()
         self.SetItemCount(len(self.songs))
         self.focus()
 

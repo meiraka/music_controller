@@ -20,7 +20,7 @@ from base import Object
 import database
 
 class Data(dict):
-    __getattr__ = dict.__getitem__
+    pass
 
 class Song(Data):
     splitter = re.compile(u'\\%\\%')

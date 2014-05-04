@@ -5,7 +5,9 @@ Loads Artwork and generates wx.Bitmap objects.
 
 import sqlite3
 import os
-import thread
+import threading
+import time
+import Queue
 import wx
 import math
 
@@ -14,7 +16,7 @@ from common import Object
 
 import dialog
 
-class Loader(Object):
+class Loader(threading.Thread, Object):
     """
     Artwork image loader.
 
@@ -106,17 +108,32 @@ class Loader(Object):
             mirror -- if True,  generates mirrored image.
 
         """
+        threading.Thread.__init__(self)
         Object.__init__(self)
+        self.__imaging = Queue.LifoQueue()
         self.__files = []
         self.__images = {}
         self.__empty = None
         self.__callbacks = []
         self.__size = (120, 120)
         self.background = True
+        self.sleep_time = 0
         self.mirror = Loader.Mirror(self, mirror)
         self.artwork = client.artwork
-        self.artwork.bind(self.artwork.UPDATE, self.__load_image)
+        self.artwork.bind(self.artwork.UPDATE, self.load_image)
+        self.deamon = True
+        self.start()
 
+    def run(self):
+        while True:
+            try:
+                path =  self.__imaging.get()
+                self.__load_image('', path)
+                time.sleep(self.sleep_time)
+            except Queue.Empty:
+                pass
+            except:
+                pass
 
     def __getitem__(self, path):
         if self.background:
@@ -127,7 +144,7 @@ class Loader(Object):
             elif self.__images.has_key((path, self.size)):
                 return self.__get_empty_image()
             else:
-                thread.start_new_thread(self.__load_image, ('', path))
+                self.__imaging.put(path)
                 return None
         else:
             if not path:
@@ -136,12 +153,19 @@ class Loader(Object):
                 return self.__images[(path, self.size)]
             else:
                 return self.__load_image('', path)
+
+    def load_image(self, song, path):
+        def load():
+            self.__load_image(song, path)
+        wx.CallAfter(load)
     
     def __load_image(self, song, path):
         """ Generates given path of image object.
         
         
         """
+        if (path, self.size) in self.__images:
+            return self.__images[(path, self.size)]
         self.__images[(path, self.size)] = None
         image = wx.Image(path)
         if not image.IsOk():
