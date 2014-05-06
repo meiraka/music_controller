@@ -120,7 +120,10 @@ class Loader(threading.Thread, Object):
         self.sleep_time = 0
         self.mirror = Loader.Mirror(self, mirror)
         self.artwork = client.artwork
-        self.artwork.bind(self.artwork.UPDATE, self.load_image)
+        def artwork_update(song, path):
+            self.load_image(path)
+
+        self.artwork.bind(self.artwork.UPDATE, artwork_update)
         self.deamon = True
         self.start()
 
@@ -128,8 +131,9 @@ class Loader(threading.Thread, Object):
         while True:
             try:
                 path =  self.__imaging.get()
-                self.__load_image('', path)
-                time.sleep(self.sleep_time)
+                if not (path, self.size) in self.__images:
+                    self.__load_image(path)
+                    time.sleep(self.sleep_time)
             except Queue.Empty:
                 pass
             except:
@@ -152,20 +156,18 @@ class Loader(threading.Thread, Object):
             if self.__images.has_key((path, self.size)) and self.__images[(path, self.size)]:
                 return self.__images[(path, self.size)]
             else:
-                return self.__load_image('', path)
+                return self.__load_image(path)
 
-    def load_image(self, song, path):
+    def load_image(self, path):
         def load():
-            self.__load_image(song, path)
+            self.__load_image(path)
         wx.CallAfter(load)
     
-    def __load_image(self, song, path):
+    def __load_image(self, path):
         """ Generates given path of image object.
         
         
         """
-        if (path, self.size) in self.__images:
-            return self.__images[(path, self.size)]
         self.__images[(path, self.size)] = None
         image = wx.Image(path)
         if not image.IsOk():
@@ -209,8 +211,6 @@ class Loader(threading.Thread, Object):
                     writer.DrawLine(0, x*space, self.__size[0], x*space+self.__size[1])
         return self.__empty
 
-        
-
     def __cache_image(self, path, image):
         """ converts image to bitmap and stores __cache
 
@@ -220,8 +220,6 @@ class Loader(threading.Thread, Object):
         self.__images[(path, self.size)] = bmp
         self.call(self.UPDATE)
 
-    
-    
     def __change_size(self, size=None):
         if size:
             self.__size = size

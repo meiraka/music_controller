@@ -1,6 +1,7 @@
 """Lyric and Artwork reader/writer/downloader
 """
 
+import shutil
 import socket
 import os
 import sqlite3
@@ -358,31 +359,37 @@ class Artwork(Object):
         else:
             return self.__cache.setdefault(song, u'')
 
-    def __setitem__(self, song, artwork_binary):
-        """Saves artwork binary.
+    def __setitem__(self, song, filepath):
+        """Saves artwork path.
 
         Arguments:
             song - song object.
-            artwork - string artwork binary, not filepath.
+            filepath - string artwork filepath.
         """
+        if os.path.exists(filepath):
+            filename = os.path.basename(filepath)
+            download_path = os.path.join(self.__download_path, filename)
+            if not os.path.abspath(filepath) == os.path.abspath(download_path):
+                shutil.copy(filepath, download_path)
+            self.__cache[song] = filepath
+            self.__data[song] = filename
+            self.call(self.UPDATE, song, download_path)
+        else:
+            self.__cache[song] = u''
+
+    def __save_artwork_binary(self, song, artwork_binary):
         # save binary to local dir.
         if artwork_binary:
             filename = song.format('%albumartist% %album%')
-            fullpath = self.__download_path + '/' + filename
+            fullpath = os.path.join(self.__download_path, filename)
             if not os.path.exists(os.path.dirname(fullpath)):
                 os.makedirs(os.path.dirname(fullpath))
             f = open(fullpath, 'wb')
             f.write(artwork_binary)
             f.close()
+            return fullpath
         else:
-            fullpath = u''
-            filename = u''
-        self.__cache[song] = fullpath
-
-        # save filepath to database.
-        if fullpath:
-            self.__data[song] = filename
-            self.call(self.UPDATE, song, fullpath)
+            return u''
 
     def download(self, song):
         if not song in self.__downloading:
@@ -407,12 +414,13 @@ class Artwork(Object):
                         break
                 else:
                     pass
-            self.__setitem__(song, artwork_binary)
+            filepath = self.__save_artwork_binary(song, artwork_binary)
+            self.__setitem__(song, filepath)
             return self.__getitem__(song)
         else:
             return ''
 
-    def list(self, keywords, callback=None):
+    def list(self, song, keywords, callback=None):
         """Returns candidate artworks of given song.
 
         Arguments:
@@ -426,7 +434,7 @@ class Artwork(Object):
             ]
 
         to get artwork list[0][0]:
-            returnslist = db.list(keywords)
+            returnslist = db.list(song, keywords)
             func, formatter, urlinfo_list = returnslist[0]
             artwork_binary = func(urlinfo_list[0])
             db[song] = artwork_binary
@@ -443,7 +451,12 @@ class Artwork(Object):
             if is_download:
                 downloader = self.download_class[label]()
                 urls = downloader.list(**keywords)
-                appends = (downloader.get, downloader.format, urls)
+
+                def download_and_save(info):
+                    return self.__save_artwork_binary(song,
+                                                      downloader.get(info))
+
+                appends = (download_and_save, downloader.format, urls)
                 lists.append(appends)
                 if callback:
                     callback(*appends)
