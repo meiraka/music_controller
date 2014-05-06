@@ -3,8 +3,6 @@ Loads Artwork and generates wx.Bitmap objects.
 
 """
 
-import sqlite3
-import os
 import threading
 import time
 import Queue
@@ -15,6 +13,7 @@ from common import environment
 from common import Object
 
 import dialog
+
 
 class Loader(threading.Thread, Object):
     """
@@ -31,6 +30,7 @@ class Loader(threading.Thread, Object):
         UPDATE -- database is updated. raises with no arguments.
     """
     UPDATE = 'update'
+
     class Mirror(Object):
         def __init__(self, parent, enable=False):
             Object.__init__(self)
@@ -50,13 +50,13 @@ class Loader(threading.Thread, Object):
                 return self.__get_empty_image()
             if not path:
                 return self.__get_empty_image()
-            if self.__images.has_key((path, self.size)):
+            if (path, self.size) in self.__images:
                 return self.__images[(path, self.size)]
             else:
                 return self.__get_empty_image()
 
         def load(self, path, image):
-            """ converts image to mirror image and 
+            """ converts image to mirror image and
             stores image as given path of image.
             """
             mirror = image.Mirror()
@@ -71,13 +71,12 @@ class Loader(threading.Thread, Object):
                 for y in xrange(h):
                     if y:
                         p = int(y*1.0/h * 200)
-                        mirror.SetAlpha(x, y, 200-p if 200-p>0 else 0)
+                        mirror.SetAlpha(x, y, 200 - p if 200-p > 0 else 0)
 
             def __cache_image(path, image):
                 bmp = wx.BitmapFromImage(image)
                 self.__images[(path, self.size)] = bmp
             wx.CallAfter(__cache_image, path, mirror)
-
 
         def __get_empty_image(self):
             if not self.__empty_image:
@@ -94,12 +93,12 @@ class Loader(threading.Thread, Object):
                     for y in xrange(h):
                         if y:
                             p = int(y*1.0/h * 200)
-                            image.SetAlpha(x, y, 200-p if 200-p>0 else 0)
+                            image.SetAlpha(x, y, 200-p if 200-p > 0 else 0)
                 self.__empty_image = wx.BitmapFromImage(image)
             return self.__empty_image
 
         empty = property(__get_empty_image)
-            
+
     def __init__(self, client, mirror=False):
         """ Inits database interface.
 
@@ -120,6 +119,7 @@ class Loader(threading.Thread, Object):
         self.sleep_time = 0
         self.mirror = Loader.Mirror(self, mirror)
         self.artwork = client.artwork
+
         def artwork_update(song, path):
             self.load_image(path)
 
@@ -130,7 +130,7 @@ class Loader(threading.Thread, Object):
     def run(self):
         while True:
             try:
-                path =  self.__imaging.get()
+                path = self.__imaging.get()
                 if not (path, self.size) in self.__images:
                     self.__load_image(path)
                     time.sleep(self.sleep_time)
@@ -140,21 +140,17 @@ class Loader(threading.Thread, Object):
                 pass
 
     def __getitem__(self, path):
-        if self.background:
-            if not path:
-                return self.__get_empty_image()
-            if self.__images.has_key((path, self.size)) and self.__images[(path, self.size)]:
-                return self.__images[(path, self.size)]
-            elif self.__images.has_key((path, self.size)):
-                return self.__get_empty_image()
-            else:
+        key = (path, self.size)
+        if not path:
+            return self.__get_empty_image()
+        if key in self.__images and self.__images[key]:
+            return self.__images[key]
+        elif key in self.__images:
+            return self.__get_empty_image()
+        else:
+            if self.background:
                 self.__imaging.put(path)
                 return None
-        else:
-            if not path:
-                return self.__get_empty_image()
-            if self.__images.has_key((path, self.size)) and self.__images[(path, self.size)]:
-                return self.__images[(path, self.size)]
             else:
                 return self.__load_image(path)
 
@@ -162,11 +158,11 @@ class Loader(threading.Thread, Object):
         def load():
             self.__load_image(path)
         wx.CallAfter(load)
-    
+
     def __load_image(self, path):
         """ Generates given path of image object.
-        
-        
+
+
         """
         self.__images[(path, self.size)] = None
         image = wx.Image(path)
@@ -206,9 +202,15 @@ class Loader(threading.Thread, Object):
             space = int(math.sqrt(width*width*2))
             writer.SetPen(wx.Pen(fg, width=width))
             for x in xrange(self.__size[0]/space+1):
-                if x%2:
-                    writer.DrawLine(x*space, 0, x*space+self.__size[0], self.__size[1])
-                    writer.DrawLine(0, x*space, self.__size[0], x*space+self.__size[1])
+                if x % 2:
+                    writer.DrawLine(x*space,
+                                    0,
+                                    x*space+self.__size[0],
+                                    self.__size[1])
+                    writer.DrawLine(0,
+                                    x*space,
+                                    self.__size[0],
+                                    x*space+self.__size[1])
         return self.__empty
 
     def __cache_image(self, path, image):
@@ -231,11 +233,15 @@ class Loader(threading.Thread, Object):
     size = property(__change_size, __change_size)
     empty = property(__get_empty_image)
 
+
 class Downloader(dialog.Downloader):
     """
     Artwork Download dialog.
     """
     def __init__(self, parent, client, song):
-        dialog.Downloader.__init__(self, parent, client.artwork, song, ['albumartist', 'album'])
+        dialog.Downloader.__init__(self,
+                                   parent,
+                                   client.artwork,
+                                   song,
+                                   ['albumartist', 'album'])
         self.SetTitle(_('Download Artwork: %s') % song.format('%albumartist% - %album%'))
-
