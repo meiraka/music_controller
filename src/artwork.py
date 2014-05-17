@@ -119,6 +119,7 @@ class Loader(threading.Thread, Object):
         self.sleep_time = 0
         self.mirror = Loader.Mirror(self, mirror)
         self.artwork = client.artwork
+        self.setDaemon(True)
 
         def artwork_update(song, path):
             self.load_image(path)
