@@ -19,16 +19,17 @@ class Frame(wx.Frame, Object):
     TITLE = 'MusicController'
     VIEW = 'view'
     VIEW_LIST = u'List'
-    VIEW_LIST_GRID = 'List Grid'
-    VIEW_GRID = 'Grid'
-    VIEW_LISTFILTER = 'ListFilter'
-    VIEW_LYRIC = 'Lyric'
+    VIEW_LIST_GRID = u'List Grid'
+    VIEW_GRID = u'Grid'
+    VIEW_LISTFILTER = u'ListFilter'
+    VIEW_LYRIC = u'Lyric'
     VIEW_STYLES = [VIEW_LIST,  VIEW_LIST_GRID,  VIEW_GRID,  VIEW_LISTFILTER,  VIEW_LYRIC]
     def __init__(self, parent, client, debug=False):
         """ generate main app window."""
         self.parent = parent
         self.client = client
-        self.current_view = self.VIEW_LIST
+        if not self.client.config.view in self.VIEW_STYLES:
+            self.client.config.view = self.VIEW_STYLES[0]
         wx.Frame.__init__(self, parent, -1)
         Object.__init__(self)
         self.SetTitle(self.TITLE)
@@ -125,14 +126,14 @@ class Frame(wx.Frame, Object):
         self.info.Hide()
 
     def show_not_connection(self):
-        if not self.current_view:
+        if not self.client.config.view:
             if len(self.client.playlist):
                 self.show_playlist()
             else:
                 self.show_songlistfilter()
         else:
             try:
-                self.show_view(self.current_view)
+                self.show_view(self.client.config.view)
             except AttributeError:
                 self.show_list()
 
@@ -168,24 +169,24 @@ class Frame(wx.Frame, Object):
 
     def show_listfilter(self):
         """ Show listfilter and song info."""
-        self.current_view = self.VIEW_LISTFILTER
+        self.client.config.view = self.VIEW_LISTFILTER
         self.__show_views(self.listfilter)
 
     def show_list(self):
-        self.current_view = self.VIEW_LIST
+        self.client.config.view = self.VIEW_LIST
         self.__show_views(self.playlist)
 
     def show_list_grid(self):
-        self.current_view = self.VIEW_LIST_GRID
+        self.client.config.view = self.VIEW_LIST_GRID
         self.__show_views(self.albumlist,  self.playlist)
 
     def show_grid(self):
-        self.current_view = self.VIEW_GRID
+        self.client.config.view = self.VIEW_GRID
         self.__show_views(self.albumview)
     
     def show_lyric(self):
         """ Show lyric and song info."""
-        self.current_view = self.VIEW_LYRIC
+        self.client.config.view = self.VIEW_LYRIC
         self.__show_views(self.lyric)
 
     def __get_search_view(self):

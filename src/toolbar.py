@@ -136,7 +136,7 @@ class Toolbar(object):
         if not environment.userinterface.toolbar_toggle or environment.userinterface.toolbar_icon_dropdown:
             return
         for view in self.parent.VIEW_STYLES:
-            self.__tool.ToggleTool(self.__ids[view], view==self.parent.current_view)
+            self.__tool.ToggleTool(self.__ids[view], view==self.client.config.view)
 
     def OnTool(self, event):
         event_id = event.GetId()

@@ -295,7 +295,7 @@ class MenuBar(wx.MenuBar):
 
     def update_by_frame(self):
         """ change menubar items by main view. """
-        current = self.parent.current_view
+        current = self.client.config.view
         if not current:
             current = parent.VIEW_LIST
         id = self.__labels['View_' + current]
