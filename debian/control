@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: mei raka <meiraka.pre@gmail.com>
 Build-Depends: debhelper (>= 5), cdbs, coreutils (>= 8.5), hostname (>=3.0), python (>=2.6), python-central (>= 0.5), python-setuptools, python-docutils, python-mpd
 Build-Depends-Indep: python-distutils-extra
-Standards-Version: 3.9.1
+Standards-Version: 3.9.3
 XS-Python-Version: current
 
 Package: music-controller

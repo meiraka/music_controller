@@ -1,0 +1,20 @@
+*.pyc
+*.pyo
+
+# created by py2app
+build/*
+dist/*
+
+# created by debuild
+debian/music-controller*
+debian/files
+debian/python-module-stampdir/music-controller
+MusicController.egg-info*
+
+# created by setup.py
+src/buildinfo.py
+man/music-controller.1.gz
+man/*/music-controller.1.gz
+
+# created by merurial
+*.orig

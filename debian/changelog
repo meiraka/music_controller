@@ -1,6 +1,5 @@
-music-controller (3.0.0~ppa1) oneiric; urgency=low
+music-controller (3.2.0~ppa1) oneiric; urgency=low
 
-  * create deb package for ubuntu 11.10
+  * create deb package for ubuntu 12.04
 
- -- mei raka <meiraka.pre@gmail.com>  Sun, 05 Sep 2010 00:55:57 +0530
-
+ -- mei raka <meiraka.pre@gmail.com>  Sat, 17 May 2014 21:46:28 +0900

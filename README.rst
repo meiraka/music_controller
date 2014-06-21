@@ -2,6 +2,8 @@
 MusicController
 ===============
 
+.. image:: screenshot.png
+
 ABOUT
 =====
 
