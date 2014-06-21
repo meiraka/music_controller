@@ -5,7 +5,7 @@ Main window toolbar.
 
 import thread
 import wx
-from common import environment
+from core import environment
 
 def get_nonnull_bitmap(stock_labels):
     for label in stock_labels:

@@ -7,8 +7,8 @@ import os
 import sys
 import wx
 
-from common import client
-from common import environment
+from core import client
+from core import environment
 
 import thread
 import time

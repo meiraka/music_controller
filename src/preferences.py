@@ -6,7 +6,7 @@ Preferences dialogs.
 import wx
 
 import dialog
-from common import environment
+from core import environment
 
 class App(dialog.Frame):
     """

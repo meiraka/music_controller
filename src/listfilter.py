@@ -7,7 +7,7 @@ import thread
 import wx
 
 import artwork
-from common import environment
+from core import environment
 
 import dialog
 

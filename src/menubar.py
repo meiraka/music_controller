@@ -8,7 +8,7 @@ import webbrowser
 
 import wx
 
-from common import environment
+from core import environment
 
 import preferences
 import version
@@ -425,9 +425,9 @@ class MenuBar(wx.MenuBar):
 class AboutDialog(object):
     def __init__(self):
         info = wx.AboutDialogInfo()
-        info.SetName(environment.common.name)
+        info.SetName(environment.core.name)
         info.SetVersion(version.__version__)
-        app_description = _(environment.common.description)
+        app_description = _(environment.core.description)
         python_version = _('Python %(python)s on %(system)s') % \
             {u'python': sys.version.split()[0] , u'system':sys.platform}
         platform = list(wx.PlatformInfo[1:])
@@ -443,8 +443,8 @@ class AboutDialog(object):
             pass
         info.SetDescription(u'\n'.join([app_description, python_version, wx_info, build_info]))
         if environment.userinterface.about_licence:
-            info.SetLicence(environment.common.licence)
-        info.SetCopyright(environment.common.copyright)
+            info.SetLicence(environment.core.licence)
+        info.SetCopyright(environment.core.copyright)
         wx.AboutBox(info)
 
 

@@ -9,8 +9,8 @@ import Queue
 import wx
 import math
 
-from common import environment
-from common import Object
+from core import environment
+from core import Object
 
 import dialog
 

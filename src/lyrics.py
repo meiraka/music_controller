@@ -11,7 +11,7 @@ import json
 import thread
 import re
 
-from common import environment
+from core import environment
 
 import wx
 import dialog

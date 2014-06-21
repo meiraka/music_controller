@@ -5,8 +5,8 @@ Main application window.
 
 import wx
 
-from common import Object
-from common import environment
+from core import Object
+from core import environment
 import toolbar
 import playlist
 import listfilter

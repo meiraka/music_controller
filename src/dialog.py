@@ -5,7 +5,7 @@ Dialog windows.
 
 import thread
 import wx
-from common import environment
+from core import environment
 
 MIN_STYLE = wx.SYSTEM_MENU | wx.CAPTION | wx.CLOSE_BOX | wx.CLIP_CHILDREN | wx.FRAME_NO_TASKBAR
 
@@ -149,7 +149,7 @@ class SongInfo(Frame):
 
 class Downloader(Frame):
     """
-    common Download dialog.
+    core Download dialog.
 
     """
     def __init__(self, parent, database, song, labels):
@@ -158,7 +158,7 @@ class Downloader(Frame):
 
         Arguments:
             parent -- parent window.
-            database -- common.database.Database
+            database -- core.database.Database
             song -- Song for search method.
             labels -- Search query textctrl labels.
         """
