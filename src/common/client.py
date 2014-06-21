@@ -715,7 +715,7 @@ class Config(Object):
     def save(self):
         """ save current config.
         """
-        dumps = json.dumps(self.__config)
+        dumps = json.dumps(self.__config, indent=2, sort_keys=True)
         try:
             if not os.path.exists(self.path):
                 os.makedirs(self.path)
