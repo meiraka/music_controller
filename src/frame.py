@@ -15,6 +15,7 @@ import lyrics
 import menubar
 import preferences
 
+
 class Frame(wx.Frame, Object):
     TITLE = 'MusicController'
     VIEW = 'view'
@@ -23,12 +24,14 @@ class Frame(wx.Frame, Object):
     VIEW_GRID = u'Grid'
     VIEW_LISTFILTER = u'ListFilter'
     VIEW_LYRIC = u'Lyric'
-    VIEW_STYLES = [VIEW_LIST,  VIEW_LIST_GRID,  VIEW_GRID,  VIEW_LISTFILTER,  VIEW_LYRIC]
+    VIEW_STYLES = [VIEW_LIST, VIEW_LIST_GRID, VIEW_GRID,
+                   VIEW_LISTFILTER,  VIEW_LYRIC]
+
     def __init__(self, parent, client, debug=False):
         """ generate main app window."""
         self.parent = parent
         self.client = client
-        if not self.client.config.view in self.VIEW_STYLES:
+        if self.client.config.view not in self.VIEW_STYLES:
             self.client.config.view = self.VIEW_STYLES[0]
         wx.Frame.__init__(self, parent, -1)
         Object.__init__(self)
@@ -36,8 +39,9 @@ class Frame(wx.Frame, Object):
         icon = wx.ArtProvider.GetIcon('gtk-media-play-ltr', size=(128, 128))
         if icon.IsOk():
             self.SetIcon(icon)
-    
-        self.menubar = menubar.MenuBar(self, client, accele=False if environment.userinterface.style == 'mac' else True)
+
+        self.menubar = menubar.MenuBar(self, client,
+                                       environment.userinterface.accele)
         # add mac Help -> search item. (not work)
         wx.GetApp().SetMacHelpMenuTitleName(_('Help'))
         self.SetMenuBar(self.menubar)
@@ -70,7 +74,6 @@ class Frame(wx.Frame, Object):
         s.Add(self.albumview, 1, flag=wx.EXPAND)
         self.sizer.Add(s, 1, flag=wx.EXPAND)
         self.sizer.Add(self.info, 0, wx.EXPAND)
-        #self.sizer.Add(self.albumlist, 0, flag=wx.EXPAND)
         base.SetSizer(self.sizer)
         if environment.userinterface.fill_window_background:
             sizer = wx.BoxSizer()
@@ -95,20 +98,25 @@ class Frame(wx.Frame, Object):
             self.show_not_connection()
         self.Bind(wx.EVT_SIZE, self.OnSize)
         self.Show()
-        if debug: print 'sized.'
-        self.client.connection.bind(self.client.connection.UPDATE_PLAYING, self.change_title)
-        if debug: print 'binded.'
+        self.client.connection.bind(self.client.connection.UPDATE_PLAYING,
+                                    self.change_title)
 
     def can_get_info(self):
         for view in self.views:
-            if hasattr(view, 'selected_get_info') and hasattr(view, 'IsShown') and view.IsShown():
+            if (
+                    hasattr(view, 'selected_get_info')
+                    and hasattr(view, 'IsShown')
+                    and view.IsShown()):
                 return True
         else:
             return False
 
     def get_info(self):
         for view in self.views:
-            if hasattr(view, 'selected_get_info') and hasattr(view, 'IsShown') and view.IsShown():
+            if (
+                    hasattr(view, 'selected_get_info')
+                    and hasattr(view, 'IsShown')
+                    and view.IsShown()):
                 view.selected_get_info()
 
     def hide_children(self):
@@ -121,7 +129,7 @@ class Frame(wx.Frame, Object):
         self.lyric.Hide()
 
     def show_connection(self):
-        self.SetTitle(self.TITLE +' - '+ 'connection')
+        self.SetTitle(self.TITLE + ' - ' + 'connection')
         self.__show_views(self.connection)
         self.info.Hide()
 
@@ -156,7 +164,7 @@ class Frame(wx.Frame, Object):
             self.lyric,
             self.listfilter]
         for view in views:
-            if not view in shows:
+            if view not in shows:
                 view.Hide()
         self.Layout()
         for view in shows:
@@ -183,7 +191,7 @@ class Frame(wx.Frame, Object):
     def show_grid(self):
         self.client.config.view = self.VIEW_GRID
         self.__show_views(self.albumview)
-    
+
     def show_lyric(self):
         """ Show lyric and song info."""
         self.client.config.view = self.VIEW_LYRIC
@@ -223,11 +231,11 @@ class Frame(wx.Frame, Object):
     def __change_title(self):
         status = self.client.connection.server_status
         title = self.TITLE
-        if status and status.has_key(u'song'):
+        if status and u'song' in status:
             song_id = int(status[u'song'])
             if len(self.client.playlist) > song_id:
                 song = self.client.playlist[song_id]
-                title = self.TITLE +u' - '+ song.format('%title% - %artist%')
+                title = self.TITLE + u' - ' + song.format('%title% - %artist%')
         self.SetTitle(title)
 
     def show_preferences(self):
@@ -236,10 +244,9 @@ class Frame(wx.Frame, Object):
                 event.GetEventObject().Hide()
             self.preferences = preferences.App(None, self.client)
             self.preferences.Bind(wx.EVT_CLOSE, hide)
-            
+
         self.preferences.Show()
 
     def OnSize(self, event):
-        self.client.config.window_size =  self.GetSize()
+        self.client.config.window_size = self.GetSize()
         event.Skip()
-
