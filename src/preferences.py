@@ -1,6 +1,4 @@
-"""
-Preferences dialogs.
-
+"""Preferences dialogs.
 """
 
 import wx
@@ -8,9 +6,9 @@ import wx
 import dialog
 from core import environment
 
+
 class App(dialog.Frame):
-    """
-    Application preferences window.
+    """Application preferences window.
     """
     def __init__(self, parent, client, debug=False):
         dialog.Frame.__init__(self, parent)
@@ -51,7 +49,8 @@ class App(dialog.Frame):
         if environment.userinterface.fill_window_background:
             base = wx.Panel(self, -1)
 
-        self.__sizers = [config_class(base, client) for label, config_class, i in self.__windows]
+        self.__sizers = [config_class(base, client)
+                         for label, config_class, i in self.__windows]
         sizer = wx.BoxSizer()
         for config_sizer in self.__sizers:
             config_sizer.Hide()
@@ -69,7 +68,7 @@ class App(dialog.Frame):
         click_index = self.__indexes.index(click_id)
         for label, id in self.__ids.iteritems():
             if environment.userinterface.toolbar_toggle:
-                self.__tool.ToggleTool(id, id==click_id)
+                self.__tool.ToggleTool(id, id == click_id)
             if id == click_id:
                 self.SetTitle(_(label))
         for index, sizer in enumerate(self.__sizers):
@@ -90,15 +89,15 @@ class Artwork(wx.BoxSizer):
         self.__is_download = wx.CheckBox(parent, -1, _(u'Download Artwork'))
         self.__is_download.Bind(wx.EVT_CHECKBOX, self.click_is_download)
         self.__is_downloads_api = [
-            wx.CheckBox(parent, -1, _(u'Download from %s') % api) for api in self.__downloads_api
-            ]
+            wx.CheckBox(parent, -1, _(u'Download from %s') % api)
+            for api in self.__downloads_api]
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.__is_download, 0, wx.ALL, border=3)
         downloads_sizer = wx.BoxSizer(wx.VERTICAL)
         for download_api in self.__is_downloads_api:
             downloads_sizer.Add(download_api, 0, wx.ALL, border=3)
             download_api.Bind(wx.EVT_CHECKBOX, self.click_is_download_api)
-        sizer.Add(downloads_sizer, 0, wx.LEFT|wx.RIGHT, border=15)
+        sizer.Add(downloads_sizer, 0, wx.LEFT | wx.RIGHT, border=15)
         self.Add(sizer, 0, wx.ALL, border=6)
         self.load_config()
 
@@ -144,15 +143,15 @@ class Lyrics(wx.BoxSizer):
         self.__is_download = wx.CheckBox(parent, -1, _(u'Download Lyric'))
         self.__is_download.Bind(wx.EVT_CHECKBOX, self.click_is_download)
         self.__is_downloads_api = [
-            wx.CheckBox(parent, -1, _(u'Download from %s') % api) for api in self.__downloads_api
-            ]
+            wx.CheckBox(parent, -1, _(u'Download from %s') % api)
+            for api in self.__downloads_api]
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.__is_download, 0, wx.ALL, border=3)
         downloads_sizer = wx.BoxSizer(wx.VERTICAL)
         for download_api in self.__is_downloads_api:
             downloads_sizer.Add(download_api, 0, wx.ALL, border=3)
             download_api.Bind(wx.EVT_CHECKBOX, self.click_is_download_api)
-        sizer.Add(downloads_sizer, 0, wx.LEFT|wx.RIGHT, border=15)
+        sizer.Add(downloads_sizer, 0, wx.LEFT | wx.RIGHT, border=15)
         self.Add(sizer, 0, wx.ALL, border=6)
         self.load_config()
 
@@ -196,14 +195,21 @@ class Notify(wx.BoxSizer):
         self.growl = wx.CheckBox(parent, -1, _(u'Growl'))
         growl_host_label = wx.StaticText(parent, -1, _(u'Host')+u':')
         growl_pass_label = wx.StaticText(parent, -1, _(u'Password')+u':')
-        self.growl_host = wx.TextCtrl(parent, -1, self.client.config.notify_growl_host)
-        self.growl_pass = wx.TextCtrl(parent, -1, self.client.config.notify_growl_pass)
+        self.growl_host = wx.TextCtrl(parent, -1,
+                                      self.client.config.notify_growl_host)
+        self.growl_pass = wx.TextCtrl(parent, -1,
+                                      self.client.config.notify_growl_pass)
         self.osd = wx.CheckBox(parent, -1, _(u'Notify OSD'))
         self.test = wx.Button(parent, -1, _(u'Test'))
-        params = dict(flag=wx.ALL|wx.ALIGN_CENTRE_VERTICAL, border=3)
-        params_label = dict(flag=wx.ALL|wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT, border=3)
-        params_expand = dict(flag=wx.ALL|wx.EXPAND|wx.ALIGN_CENTRE_VERTICAL, border=3)
-        sizer.Add(wx.StaticText(parent, -1, _(u'Notify System')), (0, 0), (1, 2), **params)
+        params = dict(flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=3)
+        params_label = dict(
+            flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_RIGHT,
+            border=3)
+        params_expand = dict(
+            flag=wx.ALL | wx.EXPAND | wx.ALIGN_CENTRE_VERTICAL,
+            border=3)
+        sizer.Add(wx.StaticText(parent, -1, _(u'Notify System')),
+                  (0, 0), (1, 2), **params)
         sizer.Add(self.growl, (1, 1), (1, 2), **params)
         sizer.Add(growl_host_label, (2, 1), **params_label)
         sizer.Add(self.growl_host, (2, 2), (1, 3), **params_expand)
@@ -227,7 +233,7 @@ class Notify(wx.BoxSizer):
 
         self.osd.SetValue(self.client.config.notify_osd)
         self.growl.SetValue(self.client.config.notify_growl)
-        self.Add(sizer, 1, wx.ALL|wx.EXPAND, 9)
+        self.Add(sizer, 1, wx.ALL | wx.EXPAND, 9)
 
     def on_growl_settings(self, event):
         app = wx.GetApp()
@@ -238,7 +244,7 @@ class Notify(wx.BoxSizer):
             elif obj == self.growl_pass:
                 self.client.config.notify_growl_port = obj.GetValue()
             app.growlnotify.reconnect()
-        
+
     def on_activate(self, event):
         obj = event.GetEventObject()
         if obj == self.growl:
@@ -260,7 +266,6 @@ class Notify(wx.BoxSizer):
         self.parent.Layout()
 
 
-
 class Connection(wx.BoxSizer):
     def __init__(self, parent, client):
         wx.BoxSizer.__init__(self)
@@ -271,7 +276,7 @@ class Connection(wx.BoxSizer):
         self.box = wx.ListBox(parent, -1)
         self.add = wx.Button(parent, -1, '+', style=wx.BU_EXACTFIT)
         self.delete = wx.Button(parent, -1, '-', style=wx.BU_EXACTFIT)
-        
+
         self.mpd = wx.StaticText(parent, -1, u'mpd')
         self.profile_label = wx.StaticText(parent, -1, _(u'Profile')+':')
         self.profile = wx.TextCtrl(parent, -1)
@@ -285,9 +290,15 @@ class Connection(wx.BoxSizer):
         self.status = wx.StaticText(parent, -1, '')
         self.connect = wx.Button(parent, -1, _(u'Connect'))
         sizer = wx.GridBagSizer()
-        params = dict(flag=wx.ALL|wx.ALIGN_CENTRE_VERTICAL, border=3)
-        params_label = dict(flag=wx.ALL|wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT, border=3)
-        params_expand = dict(flag=wx.ALL|wx.EXPAND|wx.ALIGN_CENTRE_VERTICAL, border=3)
+        params = dict(
+            flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL,
+            border=3)
+        params_label = dict(
+            flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_RIGHT,
+            border=3)
+        params_expand = dict(
+            flag=wx.ALL | wx.EXPAND | wx.ALIGN_CENTRE_VERTICAL,
+            border=3)
         sizer.Add(self.box, (0, 0), (7, 3), **params_expand)
         sizer.Add(self.add, (7, 0), **params)
         sizer.Add(self.delete, (7, 1), **params)
@@ -304,8 +315,8 @@ class Connection(wx.BoxSizer):
         sizer.Add(self.connect, (7, 5), **params)
         sizer.AddGrowableCol(4)
         sizer.AddGrowableRow(5)
-        self.Add(sizer, 1, wx.ALL|wx.EXPAND, 9)
-    
+        self.Add(sizer, 1, wx.ALL | wx.EXPAND, 9)
+
         self.selected = None
         self.selected_index = -1
         self.__update()
@@ -352,7 +363,6 @@ class Connection(wx.BoxSizer):
             self.status.SetLabel(_('Connected %s:%s') % (host, port))
         else:
             self.status.SetLabel(_('Not Connected'))
-                
 
     def __update(self):
         profiles = self.config.profiles
@@ -379,7 +389,7 @@ class Connection(wx.BoxSizer):
         if labels.count(new_label):
             index = 1
             while True:
-                temp_label = new_label+ ' (%i)' % index
+                temp_label = new_label + ' (%i)' % index
                 if not labels.count(temp_label):
                     new_label = temp_label
                     break
@@ -403,7 +413,6 @@ class Connection(wx.BoxSizer):
 
     def OnCheck(self, event):
         profiles = self.config.profiles
-        current = profiles[self.selected_index][3]
         new = self.use_password.GetValue()
         profiles[self.selected_index][3] = new
         self.config.profiles = profiles
@@ -418,7 +427,10 @@ class Connection(wx.BoxSizer):
 
     def OnText(self, event):
         obj = event.GetEventObject()
-        index = {self.profile:0, self.host:1, self.port:2, self.password:4}
+        index = {self.profile: 0,
+                 self.host: 1,
+                 self.port: 2,
+                 self.password: 4}
         profiles = self.config.profiles
         current = profiles[self.selected_index][index[obj]]
         new = obj.GetValue()
@@ -443,9 +455,15 @@ class Connection(wx.BoxSizer):
 
 class Playback(wx.BoxSizer):
     def __init__(self, parent, client):
-        params = dict(flag=wx.ALL|wx.ALIGN_CENTRE_VERTICAL, border=3)
-        params_label = dict(flag=wx.ALL|wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT, border=3)
-        params_expand = dict(flag=wx.ALL|wx.EXPAND|wx.ALIGN_CENTRE_VERTICAL, border=3)
+        params = dict(
+            flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL,
+            border=3)
+        params_label = dict(
+            flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_RIGHT,
+            border=3)
+        params_expand = dict(
+            flag=wx.ALL | wx.EXPAND | wx.ALIGN_CENTRE_VERTICAL,
+            border=3)
         wx.BoxSizer.__init__(self)
         self.parent = parent
         self.connection = client.connection
@@ -458,14 +476,17 @@ class Playback(wx.BoxSizer):
             (u'Crossfade', u'crossfade', 0, 10),
             ]
         sizer = wx.GridBagSizer()
+
         def get_slider(sizer, index, name, attr, min, max):
             label = wx.StaticText(parent, -1, _(name))
             slider = wx.Slider(parent, -1, min, min, max)
             control = wx.SpinCtrl(parent, min=min, max=max)
             control.SetValue(min)
+
             def OnSlider(event):
                 control.SetValue(slider.GetValue())
                 setattr(self.playback, str(attr), slider.GetValue())
+
             def OnControl(event):
                 slider.SetValue(control.GetValue())
                 setattr(self.playback, str(attr), control.GetValue())
@@ -475,14 +496,18 @@ class Playback(wx.BoxSizer):
             sizer.Add(slider, (index*2+1, 1), **params_expand)
             sizer.Add(control, (index*2+1, 2), **params)
             return name, attr, label, slider, control
-        self.sliders = [get_slider(sizer, index, *gauge) for index, gauge in enumerate(gauges)]
-        sizer.Add(wx.StaticText(parent, -1, _(u'Devices')), (len(self.sliders)*2, 0), **params_label)
+
+        self.sliders = [get_slider(sizer, index, *gauge)
+                        for index, gauge in enumerate(gauges)]
+        sizer.Add(wx.StaticText(parent, -1, _(u'Devices')),
+                  (len(self.sliders)*2, 0), **params_label)
         self.devices = wx.CheckListBox(parent, -1)
         self.devices.Bind(wx.EVT_CHECKLISTBOX, self.on_devices)
-        sizer.Add(self.devices, (len(self.sliders)*2+1, 0), (1, 3), **params_expand)
+        sizer.Add(self.devices,
+                  (len(self.sliders)*2+1, 0), (1, 3), **params_expand)
         sizer.AddGrowableCol(1)
         sizer.AddGrowableRow(len(self.sliders)*2+1)
-        self.Add(sizer, 1, wx.ALL|wx.EXPAND, 9)
+        self.Add(sizer, 1, wx.ALL | wx.EXPAND, 9)
         self.Layout()
         self.update()
         self.connection.bind(self.connection.UPDATE, self.update)
@@ -490,6 +515,7 @@ class Playback(wx.BoxSizer):
     def update(self):
         if not self.parent.IsShown():
             return
+
         def update(devices):
             for name, attr, label, slider, control in self.sliders:
                 value = getattr(self.playback, attr)
@@ -506,6 +532,7 @@ class Playback(wx.BoxSizer):
                         self.devices.SetString(i, d.name)
                     if not self.devices.IsChecked(i) == d.is_enable():
                         self.devices.Check(i, d.is_enable())
+
         devices = self.playback.devices
         wx.CallAfter(update, devices)
 
@@ -522,5 +549,3 @@ class Playback(wx.BoxSizer):
         self.ShowItems(True)
         self.parent.Layout()
         self.update()
-
-
