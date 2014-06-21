@@ -155,6 +155,7 @@ class Frame(wx.Frame, Object):
         getattr(self,  'show_' + view.lower().replace(' ',  '_'))()
 
     def __show_views(self,  *shows):
+        """Show multipul views."""
         self.update_title()
         views = [
             self.connection,
@@ -176,24 +177,27 @@ class Frame(wx.Frame, Object):
         self.call(self.VIEW)
 
     def show_listfilter(self):
-        """ Show listfilter and song info."""
+        """Show Library listfilter."""
         self.client.config.view = self.VIEW_LISTFILTER
         self.__show_views(self.listfilter)
 
     def show_list(self):
+        """Show playlist listview."""
         self.client.config.view = self.VIEW_LIST
         self.__show_views(self.playlist)
 
     def show_list_grid(self):
+        """Show playlist list with grid view."""
         self.client.config.view = self.VIEW_LIST_GRID
         self.__show_views(self.albumlist,  self.playlist)
 
     def show_grid(self):
+        """Show playlist full grid view."""
         self.client.config.view = self.VIEW_GRID
         self.__show_views(self.albumview)
 
     def show_lyric(self):
-        """ Show lyric and song info."""
+        """ Show lyric."""
         self.client.config.view = self.VIEW_LYRIC
         self.__show_views(self.lyric)
 
@@ -206,21 +210,25 @@ class Frame(wx.Frame, Object):
             return None
 
     def search_focus(self):
+        """Set focus to search box."""
         view = self.__get_search_view()
         if view:
             self.toolbar.search.SetFocus()
 
     def search_unfocus(self):
+        """Unset focus to search box."""
         view = self.__get_search_view()
         if view:
             view.SetFocus()
 
     def search_first(self, text):
+        """Execute search to current view."""
         view = self.__get_search_view()
         if view:
             view.search_first(text)
 
     def search_next(self):
+        """Continue search from search_first()"""
         view = self.__get_search_view()
         if view:
             view.search_next()
