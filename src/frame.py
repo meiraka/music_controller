@@ -93,13 +93,13 @@ class Frame(wx.Frame, Object):
                 h = 100
             self.SetSize((w, h))
         self.preferences = None
-        self.change_title()
+        self.update_title()
         if self.client.connection.current:
             self.show_not_connection()
         self.Bind(wx.EVT_SIZE, self.OnSize)
         self.Show()
         self.client.connection.bind(self.client.connection.UPDATE_PLAYING,
-                                    self.change_title)
+                                    self.update_title)
 
     def can_get_info(self):
         for view in self.views:
@@ -155,7 +155,7 @@ class Frame(wx.Frame, Object):
         getattr(self,  'show_' + view.lower().replace(' ',  '_'))()
 
     def __show_views(self,  *shows):
-        self.change_title()
+        self.update_title()
         views = [
             self.connection,
             self.playlist,
@@ -225,10 +225,12 @@ class Frame(wx.Frame, Object):
         if view:
             view.search_next()
 
-    def change_title(self):
-        wx.CallAfter(self.__change_title)
+    def update_title(self):
+        """Update this frame title on MainLoop."""
+        wx.CallAfter(self.__update_title)
 
-    def __change_title(self):
+    def __update_title(self):
+        """Update this frame title."""
         status = self.client.connection.server_status
         title = self.TITLE
         if status and u'song' in status:
