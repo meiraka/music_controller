@@ -216,7 +216,7 @@ class Downloader(Frame):
                     wx.CallAfter(self.listview.Append, format(i))
                     self.items.append((get, i))
                 wx.CallAfter(self.Layout)
-            self.database.list(self.song, keywords, callback=download_callback)
+            self.database.list(keywords, callback=download_callback)
             if self.items:
                 wx.CallAfter(self.status_label.SetLabel, _('%i Items Found') % len(self.items))
             else:

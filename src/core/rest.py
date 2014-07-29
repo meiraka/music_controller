@@ -50,6 +50,8 @@ class GeciMe(Downloader):
     """
 
     def format(self, list_returns_line):
+        list_returns_line.setdefault(u'artist', '[no artist]')
+        list_returns_line.setdefault(u'song', '[no song title]')
         return u'geci.me #%(aid)s %(song)s - %(artist)s' %list_returns_line
     def list(self, **kwargs):
         if not 'title' in kwargs:
