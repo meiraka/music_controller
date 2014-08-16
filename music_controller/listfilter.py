@@ -38,6 +38,86 @@ default_settings = [
 
 default_sorter = '%albumartist% %disc% %date% %album% %track_index% %title%'
 
+
+class Model(object):
+    """ListFilter tree like item list model."""
+    class Child(object):
+        """child model."""
+        def __init__(self, all_songs, all_settings, songs, settings, sorter):
+            """Initialize child model as closed."""
+            self.__all_songs = all_songs
+            self.__all_settings = all_settings
+            self.songs = songs
+            self.song_format, self.style = settings[0]
+            self.__child_settings = settings[1:]
+            self.__sorter = sorter
+            self.__is_open = False
+            self.childlen = []
+
+        def open(self):
+            """Set this child model as opened.
+
+            initialize items if first time open.
+            """
+            self.__is_open = True
+            if not self.childlen:
+                self.childlen = self.__create_items()
+
+        def close(self):
+            """Set this child model as closed."""
+            self.__is_open = False
+            if self.childlen:
+                self.childlen = []
+
+        def is_open(self):
+            return self.__is_open
+
+        def __create_items(self):
+            """Returns child items or songs."""
+            label_songs = {}
+            for song in self.songs:
+                label = song.format(self.song_format)
+                label_songs.setdefault(label, []).append(song)
+            if self.__child_settings:
+                return sorted(
+                    [(label, Model.Child(self.__all_songs, self.__all_settings,
+                                         songs, self.__child_settings,
+                                         self.__sorter))
+                     for label, songs in label_songs.iteritems()])
+            else:
+                return sorted([ls for ls in label_songs.iteritems()])
+
+        def new_and(self):
+            """Returns logical conjunction new model."""
+            return Model(self.songs, self.__all_settings, self.__sorter)
+
+        def new_not(self):
+            """Returns inverion new model."""
+            songs = [song for song in self.__all_songs
+                     if song not in self.songs]
+            return Model(songs, self.__all_settings, self.__sorter)
+    
+
+    def __init__(self, songs, settings, sorter):
+        """Initialize model."""
+        self.songs = songs
+        self.style = CRITERIA_STYLE_ROOT
+        self.__all_settings = settings
+        self.__sorter = sorter
+        self.childlen = self.__create_items()
+
+    def __create_items(self):
+        """Returns child items."""
+
+        def create_child(settings):
+            """Creates child item from settings."""
+            label = settings[0][0]
+            child = Model.Child(self.songs, self.__all_settings,
+                                self.songs, settings[1:], self.__sorter)
+            return (label, child)
+            
+        return [create_child(settings) for settings in self.__all_settings]
+
 class ViewBase(wx.VListBox):
     def __init__(self, parent, client,
             criteria_default_height, criteria_root_height,
