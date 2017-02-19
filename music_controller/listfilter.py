@@ -27,7 +27,7 @@ default_settings = [
     ],
     [(u'albumartist', CRITERIA_STYLE_ROOT),
         (u'%albumartist%', CRITERIA_STYLE_DEFAULT),
-        (u'%disc% %album%', CRITERIA_STYLE_ALBUM)
+        (u'%album% %disc%', CRITERIA_STYLE_ALBUM)
     ],
     [(u'artist', CRITERIA_STYLE_ROOT),
         (u'%artist%', CRITERIA_STYLE_DEFAULT),
@@ -36,7 +36,7 @@ default_settings = [
     ]
 ]
 
-default_sorter = '%albumartist% %disc% %date% %album% %track_index% %title%'
+default_sorter = '%albumartist% %date% %album% %disc% %track_index% %title%'
 
 class ViewBase(wx.VListBox):
     def __init__(self, parent, client,
