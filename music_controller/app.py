@@ -28,6 +28,8 @@ class App(wx.App):
     def __init__(self, **params):
         """init this app"""
         self.config_dir = environment.config_dir
+        if not os.path.exists(self.config_dir):
+            os.makedirs(self.config_dir)
         self.client = client.Client(self.config_dir)
         self.client.connection.bind(
             self.client.connection.CLOSE_UNEXPECT, self.reconnect)
